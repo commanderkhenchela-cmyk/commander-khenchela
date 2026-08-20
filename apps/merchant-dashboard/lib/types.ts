@@ -11,6 +11,8 @@ export interface Merchant {
   address_text: string | null;
   phone: string | null;
   status: MerchantStatus;
+  latitude: number | null;
+  longitude: number | null;
   created_at: string;
 }
 

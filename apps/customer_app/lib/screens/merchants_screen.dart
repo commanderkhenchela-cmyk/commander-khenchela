@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/merchant.dart';
+import '../services/location_service.dart';
+import '../utils/distance.dart';
 import '../widgets/merchant_mini_card.dart';
 import '../widgets/open_status_badge.dart';
 import 'account_screen.dart';
@@ -13,12 +16,13 @@ import 'merchant_products_screen.dart';
 /// (status = approved)، نفس القاعدة المطبَّقة في RLS على جدول merchants.
 ///
 /// عند فتحها لتصنيف محدَّد، تُضاف فوق القائمة الكاملة أقسام ذكية أفقية
-/// (مميزة / الأكثر طلبًا / مفتوح الآن / المضافة حديثًا) — كل قسم يظهر
-/// فقط إن كانت له بيانات حقيقية (لا نعرض قسمًا فارغًا أو وهميًا).
-/// "مفتوح الآن" يُحسب محليًا في الجهاز من ساعات العمل التي يحفظها
-/// التاجر (راجع MerchantOpenStatus) — لا استعلام إضافي للخادم، لأنه
-/// مُشتق من نفس قائمة "كل المحلات" المجلوبة أصلًا. قسم "الأقرب إليك"
-/// غير موجود عمدًا: لا بيانات موقع جغرافي بعد — قرار Phase مؤجَّل.
+/// (مميزة / الأكثر طلبًا / مفتوح الآن / الأقرب إليك / المضافة حديثًا)
+/// — كل قسم يظهر فقط إن كانت له بيانات حقيقية (لا نعرض قسمًا فارغًا أو
+/// وهميًا). "مفتوح الآن" و"الأقرب إليك" يُحسبان محليًا في الجهاز (لا
+/// استعلام إضافي للخادم) — الأول من ساعات العمل (MerchantOpenStatus)،
+/// والثاني من موقع الجهاز الحالي (LocationService) مقابل إحداثيات كل
+/// محل (haversineKm). طلب إذن الموقع لا يُعطّل تحميل بقية الشاشة أبدًا
+/// — يجري بالتوازي، وقسم "الأقرب إليك" يظهر لاحقًا فور توفّره فقط.
 class MerchantsScreen extends StatefulWidget {
   final String locationName;
   final String? categoryId;
@@ -39,6 +43,7 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
   late Future<_MerchantsPageData> _pageFuture;
   final _searchController = TextEditingController();
   String _query = '';
+  Position? _devicePosition;
 
   @override
   void initState() {
@@ -47,6 +52,17 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
     _searchController.addListener(() {
       setState(() => _query = _searchController.text.trim());
     });
+
+    // مستقل تمامًا عن تحميل قائمة المحلات — لا ننتظره، ولا يظهر أي
+    // مؤشر تحميل أو خطأ خاص به. إن تأخّر أو رفض المستخدم الإذن، تبقى
+    // الشاشة تعمل بشكل طبيعي بدون قسم "الأقرب إليك" فقط.
+    if (widget.categoryId != null) {
+      LocationService.getCurrentPosition().then((position) {
+        if (mounted && position != null) {
+          setState(() => _devicePosition = position);
+        }
+      });
+    }
   }
 
   @override
@@ -58,7 +74,7 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
   Future<_MerchantsPageData> _fetchPageData() async {
     final client = Supabase.instance.client;
     const columns =
-        'id, store_name, phone, communes(name), '
+        'id, store_name, phone, communes(name), latitude, longitude, '
         'merchant_business_hours(day_of_week, open_time, close_time, is_closed)';
 
     var allQuery = client
@@ -145,6 +161,48 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
         .toList();
   }
 
+  /// المحلات الأقرب لموقع الجهاز الحالي، مرتَّبة تصاعديًا بالمسافة —
+  /// فارغة إن لم يتوفّر موقع الجهاز بعد، أو لم يحفظ أي محل موقعه.
+  List<Merchant> _nearestMerchants(List<Merchant> all) {
+    final position = _devicePosition;
+    if (position == null) return [];
+
+    final withLocation = all.where((m) => m.hasLocation).toList()
+      ..sort((a, b) {
+        final distanceA = haversineKm(
+          position.latitude,
+          position.longitude,
+          a.latitude!,
+          a.longitude!,
+        );
+        final distanceB = haversineKm(
+          position.latitude,
+          position.longitude,
+          b.latitude!,
+          b.longitude!,
+        );
+        return distanceA.compareTo(distanceB);
+      });
+
+    return withLocation.take(8).toList();
+  }
+
+  /// نص المسافة الجاهز للعرض بجانب اسم المحل في القائمة الرئيسية، أو
+  /// null إن لم تتوفّر كلتا الإحداثيتين (موقع الجهاز وموقع المحل معًا).
+  String? _distanceLabel(Merchant merchant) {
+    final position = _devicePosition;
+    if (position == null || !merchant.hasLocation) return null;
+
+    return formatDistance(
+      haversineKm(
+        position.latitude,
+        position.longitude,
+        merchant.latitude!,
+        merchant.longitude!,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -201,11 +259,13 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
             }
 
             final merchants = _filter(page.all);
+            final nearest = _nearestMerchants(page.all);
             final showSections =
                 _query.isEmpty &&
                 (page.featured.isNotEmpty ||
                     page.topOrdered.isNotEmpty ||
                     page.openNow.isNotEmpty ||
+                    nearest.isNotEmpty ||
                     page.newest.isNotEmpty);
 
             void openMerchant(Merchant merchant) {
@@ -252,6 +312,13 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
                             merchants: page.openNow,
                             onTapMerchant: openMerchant,
                           ),
+                        if (nearest.isNotEmpty)
+                          _SmartSection(
+                            title: 'الأقرب إليك',
+                            icon: Icons.near_me_rounded,
+                            merchants: nearest,
+                            onTapMerchant: openMerchant,
+                          ),
                         if (page.newest.isNotEmpty)
                           _SmartSection(
                             title: 'أُضيفت حديثًا',
@@ -293,6 +360,7 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
                         final merchant = merchants[index];
                         return _MerchantCard(
                           merchant: merchant,
+                          distanceLabel: _distanceLabel(merchant),
                           onTap: () => openMerchant(merchant),
                         );
                       },
@@ -364,9 +432,14 @@ class _SearchField extends StatelessWidget {
 
 class _MerchantCard extends StatelessWidget {
   final Merchant merchant;
+  final String? distanceLabel;
   final VoidCallback onTap;
 
-  const _MerchantCard({required this.merchant, required this.onTap});
+  const _MerchantCard({
+    required this.merchant,
+    required this.onTap,
+    this.distanceLabel,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -408,37 +481,24 @@ class _MerchantCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (merchant.communeName != null ||
-                        merchant.isOpenNow != null) ...[
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          if (merchant.communeName != null) ...[
-                            Icon(
-                              Icons.location_on_outlined,
-                              size: 14,
-                              color: theme.colorScheme.onSurface.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              merchant.communeName!,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.6,
-                                ),
-                              ),
-                            ),
-                          ],
-                          if (merchant.communeName != null &&
-                              merchant.isOpenNow != null)
-                            const SizedBox(width: 8),
-                          if (merchant.isOpenNow != null)
-                            OpenStatusBadge(isOpen: merchant.isOpenNow!),
-                        ],
-                      ),
-                    ],
+                    Builder(
+                      builder: (context) {
+                        final chips = _metaChips(theme);
+                        if (chips.isEmpty) return const SizedBox.shrink();
+
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Row(
+                            children: [
+                              for (var i = 0; i < chips.length; i++) ...[
+                                if (i > 0) const SizedBox(width: 8),
+                                chips[i],
+                              ],
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -452,6 +512,59 @@ class _MerchantCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// عناصر السطر الثاني (بلدية / مسافة / حالة فتح) — مبنيّة كقائمة حتى
+  /// نتحكّم في المسافات بينها بدون تكرار شروط. اسم البلدية داخل
+  /// Flexible مع Ellipsis لتفادي فيضان أفقي إن اجتمعت الثلاثة عناصر في
+  /// سطر ضيق (نفس منطق حماية الـ Overflow المتّبع في بقية الشاشة).
+  List<Widget> _metaChips(ThemeData theme) {
+    final chips = <Widget>[];
+
+    if (merchant.communeName != null) {
+      chips.add(
+        Flexible(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.location_on_outlined,
+                size: 14,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  merchant.communeName!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (distanceLabel != null) {
+      chips.add(
+        Text(
+          distanceLabel!,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
+        ),
+      );
+    }
+
+    if (merchant.isOpenNow != null) {
+      chips.add(OpenStatusBadge(isOpen: merchant.isOpenNow!));
+    }
+
+    return chips;
   }
 }
 

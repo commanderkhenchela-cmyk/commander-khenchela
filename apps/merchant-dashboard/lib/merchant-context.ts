@@ -23,7 +23,7 @@ export async function getMerchantContext(): Promise<MerchantContext | null> {
   const { data: merchant } = await supabase
     .from("merchants")
     .select(
-      "id, owner_user_id, store_name, wilaya_id, commune_id, address_text, phone, status, created_at",
+      "id, owner_user_id, store_name, wilaya_id, commune_id, address_text, phone, status, latitude, longitude, created_at",
     )
     .eq("owner_user_id", user.id)
     .maybeSingle();

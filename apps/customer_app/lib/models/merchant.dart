@@ -8,6 +8,8 @@ class Merchant {
   final String? communeName;
   final String? phone;
   final List<MerchantBusinessHours> businessHours;
+  final double? latitude;
+  final double? longitude;
 
   const Merchant({
     required this.id,
@@ -15,11 +17,16 @@ class Merchant {
     this.communeName,
     this.phone,
     this.businessHours = const [],
+    this.latitude,
+    this.longitude,
   });
 
   /// true = مفتوح الآن، false = مغلق الآن، null = لا معلومة كافية (لم
   /// يحفظ التاجر ساعات عمله بعد) — يجب إخفاء أي شارة في حالة null.
   bool? get isOpenNow => MerchantOpenStatus.isOpenNow(businessHours);
+
+  /// true إذا حفظ التاجر موقعه الجغرافي — شرط ظهوره في قسم "الأقرب إليك".
+  bool get hasLocation => latitude != null && longitude != null;
 
   factory Merchant.fromMap(Map<String, dynamic> map) {
     final commune = map['communes'] as Map<String, dynamic>?;
@@ -39,6 +46,8 @@ class Merchant {
                   ),
                 )
                 .toList(),
+      latitude: (map['latitude'] as num?)?.toDouble(),
+      longitude: (map['longitude'] as num?)?.toDouble(),
     );
   }
 }

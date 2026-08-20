@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- لازمة لقسم "الأقرب إليك": نطلب الموقع التقريبي على الأقل، والدقيق
+         إن سمح المستخدم. الاستخدام يقتصر على لحظة فتح الشاشة (لا خلفية،
+         لا تتبّع مستمر) — راجع LocationService لطلب الإذن نفسه. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <application
         android:label="Commander Khenchela"
         android:name="${applicationName}"
