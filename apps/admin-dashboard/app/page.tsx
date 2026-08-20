@@ -17,12 +17,6 @@ export default async function RootPage() {
             هذه اللوحة مخصَّصة لفريق الإدارة فقط. إذا كنت تاجرًا، استخدم لوحة
             تحكم التاجر بدلًا من هذه.
           </p>
-          <div className="mt-4 rounded-lg bg-black/5 p-3 text-left text-xs text-black/60 break-all">
-            <p>userId: {context.userId}</p>
-            <p>email: {context.email}</p>
-            <p>profile: {JSON.stringify(context.debugProfile)}</p>
-            <p>error: {context.debugError ?? "none"}</p>
-          </div>
           <LogoutButton className="inline-block mt-6 text-primary font-semibold" />
         </div>
       </main>

@@ -2,12 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 
 export interface AdminContext {
   userId: string;
-  email: string | undefined;
   fullName: string;
   isAdmin: boolean;
-  // معلومات تشخيصية مؤقتة — تُحذف بعد حل مشكلة "هذا الحساب ليس حساب إدارة"
-  debugProfile: unknown;
-  debugError: string | null;
 }
 
 /**
@@ -24,7 +20,7 @@ export async function getAdminContext(): Promise<AdminContext | null> {
 
   if (!user) return null;
 
-  const { data: profile, error } = await supabase
+  const { data: profile } = await supabase
     .from("users")
     .select("role, full_name")
     .eq("id", user.id)
@@ -32,10 +28,7 @@ export async function getAdminContext(): Promise<AdminContext | null> {
 
   return {
     userId: user.id,
-    email: user.email,
     fullName: profile?.full_name ?? "",
     isAdmin: profile?.role === "admin",
-    debugProfile: profile,
-    debugError: error ? `${error.code ?? ""} ${error.message}` : null,
   };
 }
