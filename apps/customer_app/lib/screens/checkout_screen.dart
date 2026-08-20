@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/auth_service.dart';
 import '../services/cart_service.dart';
-import 'address_screen.dart';
+import 'address_list_screen.dart';
 import 'login_screen.dart';
 import 'order_confirmation_screen.dart';
 
@@ -32,36 +32,42 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if (_isSignedIn) _loadAddress();
   }
 
+  /// يحمّل العنوان الافتراضي (أو أول عنوان إن لم يوجد افتراضي بعد)،
+  /// حتى لا يُجبَر العميل على اختيار عنوان في كل مرة إن كان عنده واحد فقط.
   Future<void> _loadAddress() async {
     setState(() => _isLoadingAddress = true);
     try {
       final userId = Supabase.instance.client.auth.currentUser!.id;
-      final existing = await Supabase.instance.client
+      final addresses = await Supabase.instance.client
           .from('addresses')
           .select('id, address_text, communes(name)')
           .eq('user_id', userId)
-          .limit(1)
-          .maybeSingle();
+          .order('is_default', ascending: false)
+          .order('created_at', ascending: false)
+          .limit(1);
+
+      final existing = (addresses as List).isEmpty ? null : addresses.first;
 
       if (existing != null) {
-        setState(() {
-          _addressId = existing['id'] as String;
-          final communeName =
-              (existing['communes'] as Map<String, dynamic>)['name']
-                  as String;
-          _addressSummary =
-              '$communeName — ${existing['address_text']}';
-        });
+        _applyAddress(existing);
       }
     } finally {
       if (mounted) setState(() => _isLoadingAddress = false);
     }
   }
 
+  void _applyAddress(Map<String, dynamic> row) {
+    setState(() {
+      _addressId = row['id'] as String;
+      final communeName =
+          (row['communes'] as Map<String, dynamic>)['name'] as String;
+      _addressSummary = '$communeName — ${row['address_text']}';
+    });
+  }
+
   Future<void> _goToLogin() async {
-    await Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const LoginScreen()));
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const LoginScreen()));
     if (mounted) {
       setState(() {});
       if (_isSignedIn) _loadAddress();
@@ -69,12 +75,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Future<void> _goToAddress() async {
-    final result = await Navigator.of(
-      context,
-    ).push<String>(MaterialPageRoute(builder: (_) => const AddressScreen()));
-    if (result != null && mounted) {
-      _loadAddress();
-    }
+    final addressId = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const AddressListScreen()),
+    );
+    if (addressId == null || !mounted) return;
+
+    final row = await Supabase.instance.client
+        .from('addresses')
+        .select('id, address_text, communes(name)')
+        .eq('id', addressId)
+        .single();
+
+    if (mounted) _applyAddress(row);
   }
 
   Future<void> _confirmOrder(CartService cart) async {
@@ -105,16 +117,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) =>
-              OrderConfirmationScreen(orderId: orderId as String),
+          builder: (_) => OrderConfirmationScreen(orderId: orderId as String),
         ),
       );
     } on PostgrestException catch (e) {
       setState(() => _errorMessage = e.message);
     } catch (e) {
-      setState(
-        () => _errorMessage = 'تعذّر إرسال الطلب. حاول مرة أخرى.',
-      );
+      setState(() => _errorMessage = 'تعذّر إرسال الطلب. حاول مرة أخرى.');
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -165,13 +174,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         const SizedBox(height: 8),
                         OutlinedButton(
                           onPressed: _goToAddress,
-                          child: const Text('تعديل العنوان'),
+                          child: const Text('تغيير العنوان'),
                         ),
                       ],
                     )
                   : ElevatedButton(
                       onPressed: _goToAddress,
-                      child: const Text('إضافة عنوان التوصيل'),
+                      child: const Text('اختيار عنوان التوصيل'),
                     ),
             ),
             const SizedBox(height: 12),
@@ -289,10 +298,7 @@ class _StepCard extends StatelessWidget {
                       : Colors.black26,
                   child: Text(
                     '$stepNumber',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                    ),
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
                   ),
                 ),
                 const SizedBox(width: 8),

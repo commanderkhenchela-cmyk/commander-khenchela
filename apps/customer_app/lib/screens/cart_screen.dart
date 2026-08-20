@@ -54,8 +54,7 @@ class CartScreen extends StatelessWidget {
                               ),
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.end,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text(
                                       item.productName,
@@ -159,9 +158,7 @@ class _CartSummaryBar extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const CheckoutScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const CheckoutScreen()),
                   );
                 },
                 child: const Text('متابعة الطلب'),

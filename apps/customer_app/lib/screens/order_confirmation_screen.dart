@@ -50,9 +50,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (_) => const MyOrdersScreen(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const MyOrdersScreen()),
                       (route) => route.isFirst,
                     );
                   },
@@ -62,9 +60,7 @@ class OrderConfirmationScreen extends StatelessWidget {
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () {
-                  Navigator.of(
-                    context,
-                  ).popUntil((route) => route.isFirst);
+                  Navigator.of(context).popUntil((route) => route.isFirst);
                 },
                 child: const Text('العودة للرئيسية'),
               ),

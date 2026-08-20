@@ -1,0 +1,245 @@
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../models/address.dart';
+import 'address_form_screen.dart';
+
+/// شاشة "عناويني" — تعرض كل عناوين العميل المحفوظة.
+/// عند فتحها من "إتمام الطلب": الضغط على عنوان يختاره ويرجع به مباشرة.
+/// عند فتحها من "حسابي": نفس الشاشة تُستخدم للإدارة (تعديل/حذف/تعيين
+/// كافتراضي) بدون الحاجة لشاشة منفصلة.
+class AddressListScreen extends StatefulWidget {
+  const AddressListScreen({super.key});
+
+  @override
+  State<AddressListScreen> createState() => _AddressListScreenState();
+}
+
+class _AddressListScreenState extends State<AddressListScreen> {
+  late Future<List<DeliveryAddress>> _addressesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _addressesFuture = _fetchAddresses();
+  }
+
+  Future<List<DeliveryAddress>> _fetchAddresses() async {
+    final userId = Supabase.instance.client.auth.currentUser!.id;
+    final data = await Supabase.instance.client
+        .from('addresses')
+        .select(
+          'id, commune_id, address_text, phone, is_default, communes(name)',
+        )
+        .eq('user_id', userId)
+        .order('is_default', ascending: false)
+        .order('created_at', ascending: false);
+
+    return (data as List)
+        .map((row) => DeliveryAddress.fromMap(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  void _refresh() {
+    setState(() {
+      _addressesFuture = _fetchAddresses();
+    });
+  }
+
+  Future<void> _addOrEdit({DeliveryAddress? address}) async {
+    final result = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => AddressFormScreen(existingAddress: address),
+      ),
+    );
+    if (result != null) _refresh();
+  }
+
+  Future<void> _makeDefault(DeliveryAddress address) async {
+    final client = Supabase.instance.client;
+    final userId = client.auth.currentUser!.id;
+
+    await client
+        .from('addresses')
+        .update({'is_default': false})
+        .eq('user_id', userId);
+    await client
+        .from('addresses')
+        .update({'is_default': true})
+        .eq('id', address.id);
+
+    _refresh();
+  }
+
+  Future<void> _delete(DeliveryAddress address) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('حذف العنوان'),
+        content: const Text('هل أنت متأكد من حذف هذا العنوان؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('تراجع'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await Supabase.instance.client
+          .from('addresses')
+          .delete()
+          .eq('id', address.id);
+      _refresh();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('لا يمكن حذف عنوان مستخدَم في طلب سابق.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('عناويني')),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _addOrEdit(),
+        icon: const Icon(Icons.add),
+        label: const Text('عنوان جديد'),
+      ),
+      body: FutureBuilder<List<DeliveryAddress>>(
+        future: _addressesFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return const Center(child: Text('تعذّر تحميل العناوين.'));
+          }
+
+          final addresses = snapshot.data ?? [];
+
+          if (addresses.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.location_on_outlined,
+                      size: 56,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'لا توجد عناوين محفوظة بعد. أضف أول عنوان لك.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
+            itemCount: addresses.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final address = addresses[index];
+              return Card(
+                child: InkWell(
+                  onTap: () => Navigator.of(context).pop(address.id),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                address.communeName,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            if (address.isDefault)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  'افتراضي',
+                                  style: TextStyle(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(address.addressText),
+                        const SizedBox(height: 2),
+                        Text(
+                          address.phone,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.black54,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            TextButton(
+                              onPressed: () => _addOrEdit(address: address),
+                              child: const Text('تعديل'),
+                            ),
+                            if (!address.isDefault)
+                              TextButton(
+                                onPressed: () => _makeDefault(address),
+                                child: const Text('اجعله الافتراضي'),
+                              ),
+                            const Spacer(),
+                            IconButton(
+                              icon: Icon(
+                                Icons.delete_outline,
+                                color: theme.colorScheme.error,
+                              ),
+                              onPressed: () => _delete(address),
+                              tooltip: 'حذف',
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}

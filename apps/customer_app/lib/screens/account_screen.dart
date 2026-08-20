@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
+import 'address_list_screen.dart';
 import 'login_screen.dart';
 import 'my_orders_screen.dart';
 import 'notifications_screen.dart';
@@ -15,9 +16,8 @@ class AccountScreen extends StatefulWidget {
 
 class _AccountScreenState extends State<AccountScreen> {
   Future<void> _login() async {
-    await Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const LoginScreen()));
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const LoginScreen()));
     if (mounted) setState(() {});
   }
 
@@ -68,6 +68,17 @@ class _AccountScreenState extends State<AccountScreen> {
                         );
                       },
                       child: const Text('إشعاراتي'),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const AddressListScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text('عناويني'),
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton(

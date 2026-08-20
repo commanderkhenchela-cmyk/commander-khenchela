@@ -50,9 +50,9 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
             icon: const Icon(Icons.person_outline_rounded),
             tooltip: 'حسابي',
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const AccountScreen()),
-              );
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const AccountScreen()));
             },
           ),
         ],

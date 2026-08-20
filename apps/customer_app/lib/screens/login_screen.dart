@@ -44,9 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       Navigator.of(context).pop();
     } on AuthException {
-      setState(
-        () => _errorMessage = 'رقم الهاتف أو كلمة السر غير صحيحة.',
-      );
+      setState(() => _errorMessage = 'رقم الهاتف أو كلمة السر غير صحيحة.');
     } catch (e) {
       setState(() => _errorMessage = 'حدث خطأ غير متوقع. حاول مرة أخرى.');
     } finally {
@@ -121,9 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const SignupScreen(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const SignupScreen()),
                     );
                   },
                   child: const Text('ليس لديك حساب؟ أنشئ حسابًا جديدًا'),

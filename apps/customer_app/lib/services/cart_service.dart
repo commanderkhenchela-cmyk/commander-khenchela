@@ -21,8 +21,7 @@ class CartService extends ChangeNotifier {
 
   bool get isEmpty => _items.isEmpty;
   int get itemCount => _items.fold(0, (sum, item) => sum + item.quantity);
-  double get subtotal =>
-      _items.fold(0, (sum, item) => sum + item.subtotal);
+  double get subtotal => _items.fold(0, (sum, item) => sum + item.subtotal);
 
   AddToCartResult addProduct({
     required Product product,

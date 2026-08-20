@@ -2,36 +2,46 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/commune.dart';
+import '../models/address.dart';
 
 const int _khenchelaWilayaId = 40;
 
-/// شاشة إدخال/تعديل عنوان التوصيل — V1 يكتفي بعنوان واحد لكل عميل،
-/// يُنشأ أو يُحدَّث هنا. البلدية تُختار هنا تحديدًا (عند الحاجة الفعلية
-/// لها)، بدل خطوة منفصلة في بداية التطبيق.
-class AddressScreen extends StatefulWidget {
-  const AddressScreen({super.key});
+/// شاشة إضافة عنوان جديد أو تعديل عنوان موجود (يُمرَّر عبر [existingAddress]).
+/// جزء من دعم عدة عناوين — كل عنوان مستقل، ولا يوجد "العنوان الوحيد" بعد الآن.
+class AddressFormScreen extends StatefulWidget {
+  final DeliveryAddress? existingAddress;
+
+  const AddressFormScreen({super.key, this.existingAddress});
 
   @override
-  State<AddressScreen> createState() => _AddressScreenState();
+  State<AddressFormScreen> createState() => _AddressFormScreenState();
 }
 
-class _AddressScreenState extends State<AddressScreen> {
+class _AddressFormScreenState extends State<AddressFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _addressTextController = TextEditingController();
-  final _phoneController = TextEditingController();
+  late final TextEditingController _addressTextController;
+  late final TextEditingController _phoneController;
 
   List<Commune> _communes = [];
   int? _selectedCommuneId;
-  String? _existingAddressId;
 
   bool _isLoading = true;
   bool _isSaving = false;
   String? _errorMessage;
 
+  bool get _isEdit => widget.existingAddress != null;
+
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _addressTextController = TextEditingController(
+      text: widget.existingAddress?.addressText ?? '',
+    );
+    _phoneController = TextEditingController(
+      text: widget.existingAddress?.phone ?? '',
+    );
+    _selectedCommuneId = widget.existingAddress?.communeId;
+    _loadCommunes();
   }
 
   @override
@@ -41,44 +51,21 @@ class _AddressScreenState extends State<AddressScreen> {
     super.dispose();
   }
 
-  Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
+  Future<void> _loadCommunes() async {
     try {
-      final client = Supabase.instance.client;
-
-      final communesData = await client
+      final communesData = await Supabase.instance.client
           .from('communes')
           .select('id, name')
           .eq('wilaya_id', _khenchelaWilayaId)
           .order('name');
 
-      final communes = (communesData as List)
-          .map((row) => Commune.fromMap(row as Map<String, dynamic>))
-          .toList();
-
-      final userId = client.auth.currentUser!.id;
-      final existing = await client
-          .from('addresses')
-          .select('id, commune_id, address_text, phone')
-          .eq('user_id', userId)
-          .limit(1)
-          .maybeSingle();
-
       setState(() {
-        _communes = communes;
-        if (existing != null) {
-          _existingAddressId = existing['id'] as String;
-          _selectedCommuneId = existing['commune_id'] as int;
-          _addressTextController.text = existing['address_text'] as String;
-          _phoneController.text = existing['phone'] as String? ?? '';
-        }
+        _communes = (communesData as List)
+            .map((row) => Commune.fromMap(row as Map<String, dynamic>))
+            .toList();
       });
     } catch (e) {
-      setState(() => _errorMessage = 'تعذّر تحميل البيانات. تحقق من اتصالك.');
+      setState(() => _errorMessage = 'تعذّر تحميل قائمة البلديات.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -106,20 +93,25 @@ class _AddressScreenState extends State<AddressScreen> {
         'commune_id': _selectedCommuneId,
         'address_text': _addressTextController.text.trim(),
         'phone': _phoneController.text.trim(),
-        'is_default': true,
       };
 
       String addressId;
-      if (_existingAddressId != null) {
+      if (_isEdit) {
         await client
             .from('addresses')
             .update(row)
-            .eq('id', _existingAddressId!);
-        addressId = _existingAddressId!;
+            .eq('id', widget.existingAddress!.id);
+        addressId = widget.existingAddress!.id;
       } else {
+        // أول عنوان يضيفه العميل يصبح الافتراضي تلقائيًا.
+        final existing = await client
+            .from('addresses')
+            .select('id')
+            .eq('user_id', userId);
+
         final inserted = await client
             .from('addresses')
-            .insert(row)
+            .insert({...row, 'is_default': (existing as List).isEmpty})
             .select('id')
             .single();
         addressId = inserted['id'] as String;
@@ -137,7 +129,9 @@ class _AddressScreenState extends State<AddressScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('عنوان التوصيل')),
+      appBar: AppBar(
+        title: Text(_isEdit ? 'تعديل العنوان' : 'إضافة عنوان جديد'),
+      ),
       body: SafeArea(
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -150,9 +144,7 @@ class _AddressScreenState extends State<AddressScreen> {
                     children: [
                       DropdownButtonFormField<int>(
                         initialValue: _selectedCommuneId,
-                        decoration: const InputDecoration(
-                          labelText: 'البلدية',
-                        ),
+                        decoration: const InputDecoration(labelText: 'البلدية'),
                         items: _communes
                             .map(
                               (commune) => DropdownMenuItem(
@@ -190,9 +182,7 @@ class _AddressScreenState extends State<AddressScreen> {
                         keyboardType: TextInputType.phone,
                         validator: (value) {
                           final phone = value?.trim() ?? '';
-                          final pattern = RegExp(
-                            r'^(\+213|0)(5|6|7)[0-9]{8}$',
-                          );
+                          final pattern = RegExp(r'^(\+213|0)(5|6|7)[0-9]{8}$');
                           if (!pattern.hasMatch(phone)) {
                             return 'أدخل رقم هاتف جزائري صحيح';
                           }

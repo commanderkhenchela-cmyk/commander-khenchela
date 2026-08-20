@@ -1,10 +1,13 @@
 /// نموذج عنوان توصيل، مطابق لجدول addresses في قاعدة البيانات.
+/// V1 كان يكتفي بعنوان واحد فقط لكل عميل؛ الآن يدعم عدة عناوين
+/// (مثال: "المنزل"، "العمل") يختار العميل بينها عند كل طلب.
 class DeliveryAddress {
   final String id;
   final int communeId;
   final String communeName;
   final String addressText;
   final String phone;
+  final bool isDefault;
 
   const DeliveryAddress({
     required this.id,
@@ -12,6 +15,7 @@ class DeliveryAddress {
     required this.communeName,
     required this.addressText,
     required this.phone,
+    required this.isDefault,
   });
 
   factory DeliveryAddress.fromMap(Map<String, dynamic> map) {
@@ -21,6 +25,7 @@ class DeliveryAddress {
       communeName: (map['communes'] as Map<String, dynamic>)['name'] as String,
       addressText: map['address_text'] as String,
       phone: map['phone'] as String? ?? '',
+      isDefault: map['is_default'] as bool? ?? false,
     );
   }
 }
