@@ -77,3 +77,42 @@ export interface Setting {
   value: string;
   updated_at: string;
 }
+
+export interface AppBranding {
+  id: string;
+  app_name: string;
+  logo_url: string | null;
+  primary_color: string;
+  error_color: string;
+  updated_at: string;
+}
+
+export interface ActivityLogEntry {
+  id: string;
+  admin_name: string;
+  action: string;
+  table_name: string;
+  record_id: string | null;
+  created_at: string;
+}
+
+const TABLE_LABELS: Record<string, string> = {
+  merchants: "محل",
+  app_branding: "الهوية والشعار",
+  app_contact: "بيانات التواصل",
+  categories: "تصنيف",
+};
+
+export function tableLabel(tableName: string): string {
+  return TABLE_LABELS[tableName] ?? tableName;
+}
+
+export interface AppContact {
+  id: string;
+  whatsapp_number: string;
+  display_phone: string;
+  support_email: string;
+  facebook_url: string | null;
+  instagram_url: string | null;
+  updated_at: string;
+}

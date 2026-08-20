@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../services/branding_service.dart';
+import '../widgets/app_logo.dart';
 import 'confirm_wilaya_screen.dart';
 
 /// شاشة الترحيب الأولى — بسيطة جدًا، بدون خيارات كثيرة، وفق مبدأ
@@ -19,23 +21,10 @@ class WelcomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(flex: 2),
-              // شعار مبسّط (نص الآن، يُستبدل لاحقًا بصورة حقيقية)
-              Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: const Icon(
-                  Icons.storefront_rounded,
-                  color: Colors.white,
-                  size: 48,
-                ),
-              ),
+              const AppLogo(size: 96),
               const SizedBox(height: 24),
               Text(
-                'كوموندور خنشلة',
+                BrandingService.appName,
                 style: theme.textTheme.headlineMedium,
                 textAlign: TextAlign.center,
               ),

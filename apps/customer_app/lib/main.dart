@@ -5,7 +5,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/supabase_config.dart';
 import 'screens/splash_screen.dart';
+import 'services/branding_service.dart';
 import 'services/cart_service.dart';
+import 'services/contact_service.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
@@ -15,6 +17,10 @@ Future<void> main() async {
     url: SupabaseConfig.url,
     publishableKey: SupabaseConfig.publishableKey,
   );
+
+  // تُحمَّل هوية التطبيق (الاسم/الشعار/الألوان، قابلة للتعديل من لوحة
+  // الإدارة) قبل أول رسم للواجهة، حتى لا "تقفز" الألوان لاحقًا.
+  await Future.wait([BrandingService.load(), ContactService.load()]);
 
   runApp(
     ChangeNotifierProvider(
@@ -30,9 +36,12 @@ class CommanderKhenchelaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'كوموندور خنشلة',
+      title: BrandingService.appName,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
+      theme: AppTheme.light(
+        primaryColor: BrandingService.primaryColor,
+        errorColor: BrandingService.errorColor,
+      ),
 
       // دعم اللغة العربية واتجاه RTL منذ البداية (Arabic-first)
       locale: const Locale('ar'),

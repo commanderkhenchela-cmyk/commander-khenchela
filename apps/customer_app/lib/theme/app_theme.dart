@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 
 /// تصميم موحّد للتطبيق: بسيط، واضح، ألوان بتباين جيد، أزرار كبيرة
 /// مناسبة لكل الأعمار (راجع قسم "Customer Experience" في وثيقة المتطلبات).
+///
+/// الألوان الافتراضية أدناه تُستخدم فقط قبل تحميل هوية التطبيق الحقيقية
+/// من قاعدة البيانات (BrandingService) — بعدها تُبنى الثيم فعليًا من
+/// الألوان التي يضبطها الأدمن من لوحة الإدارة (أنظر [light] بمعامِلاتها).
 class AppTheme {
   AppTheme._();
 
@@ -11,13 +15,16 @@ class AppTheme {
   static const Color textPrimary = Color(0xFF1A1A1A);
   static const Color error = Color(0xFFB3261E);
 
-  static ThemeData light() {
+  static ThemeData light({Color? primaryColor, Color? errorColor}) {
+    final seed = primaryColor ?? primary;
+    final err = errorColor ?? error;
+
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: primary,
-        primary: primary,
-        error: error,
+        seedColor: seed,
+        primary: seed,
+        error: err,
       ),
       scaffoldBackgroundColor: background,
       textTheme: const TextTheme(
@@ -36,7 +43,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primary,
+          backgroundColor: seed,
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(56), // زر كبير، سهل اللمس
           textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { tableLabel, type ActivityLogEntry } from "@/lib/types";
 
 export default async function DashboardOverviewPage() {
   const supabase = await createClient();
@@ -9,6 +10,7 @@ export default async function DashboardOverviewPage() {
     { count: pendingOrders },
     { count: activeMerchants },
     { count: totalOrders },
+    { data: recentActivity },
   ] = await Promise.all([
     supabase
       .from("merchants")
@@ -23,7 +25,14 @@ export default async function DashboardOverviewPage() {
       .select("id", { count: "exact", head: true })
       .eq("status", "approved"),
     supabase.from("orders").select("id", { count: "exact", head: true }),
+    supabase
+      .from("admin_activity_log")
+      .select("id, admin_name, action, table_name, record_id, created_at")
+      .order("created_at", { ascending: false })
+      .limit(5),
   ]);
+
+  const activity = (recentActivity ?? []) as ActivityLogEntry[];
 
   return (
     <div>
@@ -60,6 +69,42 @@ export default async function DashboardOverviewPage() {
           >
             متابعة التوصيل
           </Link>
+        )}
+      </div>
+
+      <div className="mt-8">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-bold">آخر النشاطات</h2>
+          <Link
+            href="/dashboard/activity-log"
+            className="text-sm text-primary font-medium"
+          >
+            عرض الكل
+          </Link>
+        </div>
+        {activity.length === 0 ? (
+          <p className="text-sm text-black/50">لا توجد نشاطات بعد.</p>
+        ) : (
+          <div className="grid gap-2">
+            {activity.map((log) => (
+              <div
+                key={log.id}
+                className="rounded-lg border border-border bg-card px-4 py-2.5 flex items-center justify-between text-sm"
+              >
+                <span>
+                  <span className="font-medium">
+                    {log.admin_name || "أدمن"}
+                  </span>{" "}
+                  <span className="text-black/60">
+                    {log.action} {tableLabel(log.table_name)}
+                  </span>
+                </span>
+                <span className="text-xs text-black/40 shrink-0">
+                  {new Date(log.created_at).toLocaleString("ar-DZ")}
+                </span>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

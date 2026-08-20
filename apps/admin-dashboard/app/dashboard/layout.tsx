@@ -27,6 +27,9 @@ export default async function DashboardLayout({
           <NavLink href="/dashboard/orders" label="الطلبات" />
           <NavLink href="/dashboard/categories" label="التصنيفات" />
           <NavLink href="/dashboard/settings" label="إعدادات المنصة" />
+          <NavLink href="/dashboard/branding" label="الهوية والشعار" />
+          <NavLink href="/dashboard/app-settings" label="بيانات التواصل" />
+          <NavLink href="/dashboard/activity-log" label="سجل النشاطات" />
         </nav>
         <div className="p-3 mt-auto hidden md:block">
           <LogoutButton className="w-full text-right text-error text-sm px-3 py-2" />

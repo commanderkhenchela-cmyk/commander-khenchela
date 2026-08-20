@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/branding_service.dart';
+import '../widgets/app_logo.dart';
 import 'merchants_screen.dart';
 import 'welcome_screen.dart';
 
@@ -54,23 +56,15 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Icon(
-                Icons.storefront_rounded,
-                color: theme.colorScheme.primary,
-                size: 48,
-              ),
+            AppLogo(
+              size: 96,
+              backgroundColor: Colors.white,
+              iconColor: theme.colorScheme.primary,
             ),
             const SizedBox(height: 20),
-            const Text(
-              'كوموندور خنشلة',
-              style: TextStyle(
+            Text(
+              BrandingService.appName,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,

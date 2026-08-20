@@ -1,31 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../config/support_config.dart';
+import '../services/contact_service.dart';
 
 /// شاشة "المساعدة" — أسئلة شائعة + طرق تواصل مباشرة، بدون الحاجة
-/// لأي حساب أو بحث في الإعدادات.
+/// لأي حساب أو بحث في الإعدادات. بيانات التواصل تُحمَّل من لوحة الإدارة
+/// (ContactService) — لا حاجة لتعديل هذا الملف عند تغيير رقم أو بريد.
 class SupportScreen extends StatelessWidget {
   const SupportScreen({super.key});
 
   Future<void> _openWhatsapp() async {
-    final uri = Uri.parse('https://wa.me/${SupportConfig.whatsappNumber}');
+    final uri = Uri.parse('https://wa.me/${ContactService.whatsappNumber}');
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   Future<void> _call() async {
-    final uri = Uri.parse('tel:${SupportConfig.whatsappNumber}');
+    final uri = Uri.parse('tel:${ContactService.whatsappNumber}');
     await launchUrl(uri);
   }
 
   Future<void> _email() async {
-    final uri = Uri.parse('mailto:${SupportConfig.supportEmail}');
+    final uri = Uri.parse('mailto:${ContactService.supportEmail}');
     await launchUrl(uri);
+  }
+
+  Future<void> _openLink(String url) async {
+    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final facebook = ContactService.facebookUrl;
+    final instagram = ContactService.instagramUrl;
 
     return Scaffold(
       appBar: AppBar(title: const Text('المساعدة')),
@@ -49,21 +56,35 @@ class SupportScreen extends StatelessWidget {
                     _ContactRow(
                       icon: Icons.chat_bubble_outline,
                       label: 'واتساب',
-                      value: SupportConfig.displayPhone,
+                      value: ContactService.displayPhone,
                       onTap: _openWhatsapp,
                     ),
                     _ContactRow(
                       icon: Icons.call_outlined,
                       label: 'اتصال',
-                      value: SupportConfig.displayPhone,
+                      value: ContactService.displayPhone,
                       onTap: _call,
                     ),
                     _ContactRow(
                       icon: Icons.email_outlined,
                       label: 'البريد الإلكتروني',
-                      value: SupportConfig.supportEmail,
+                      value: ContactService.supportEmail,
                       onTap: _email,
                     ),
+                    if (facebook != null && facebook.isNotEmpty)
+                      _ContactRow(
+                        icon: Icons.facebook_outlined,
+                        label: 'فيسبوك',
+                        value: 'صفحتنا على فيسبوك',
+                        onTap: () => _openLink(facebook),
+                      ),
+                    if (instagram != null && instagram.isNotEmpty)
+                      _ContactRow(
+                        icon: Icons.camera_alt_outlined,
+                        label: 'إنستغرام',
+                        value: 'حسابنا على إنستغرام',
+                        onTap: () => _openLink(instagram),
+                      ),
                   ],
                 ),
               ),
