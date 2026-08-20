@@ -34,7 +34,7 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
   Future<List<Product>> _fetchProducts() async {
     final data = await Supabase.instance.client
         .from('products')
-        .select('id, name, description, price')
+        .select('id, name, description, price, categories(name)')
         .eq('merchant_id', widget.merchantId)
         .eq('is_active', true)
         .order('name');
@@ -42,6 +42,20 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
     return (data as List)
         .map((row) => Product.fromMap(row as Map<String, dynamic>))
         .toList();
+  }
+
+  /// يجمّع المنتجات حسب التصنيف، ويرتّب التصنيفات أبجديًا، حتى يسهل على
+  /// العميل تصفّح محل فيه منتجات كثيرة ومتنوعة بدل قائمة طويلة واحدة.
+  Map<String, List<Product>> _groupByCategory(List<Product> products) {
+    final grouped = <String, List<Product>>{};
+
+    for (final product in products) {
+      final category = product.categoryName ?? 'أخرى';
+      grouped.putIfAbsent(category, () => []).add(product);
+    }
+
+    final sortedKeys = grouped.keys.toList()..sort();
+    return {for (final key in sortedKeys) key: grouped[key]!};
   }
 
   void _addToCart(Product product) {
@@ -192,71 +206,96 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
             );
           }
 
-          return ListView.separated(
+          final grouped = _groupByCategory(products);
+          // تسطيح الأقسام لعنصر واحد: عنوان تصنيف (String) أو منتج (Product)،
+          // حتى نستخدم ListView.builder عادية بدل ListView متداخلة.
+          final flatItems = <Object>[];
+          for (final entry in grouped.entries) {
+            flatItems.add(entry.key);
+            flatItems.addAll(entry.value);
+          }
+
+          return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: products.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemCount: flatItems.length,
             itemBuilder: (context, index) {
-              final product = products[index];
+              final item = flatItems[index];
+
+              if (item is String) {
+                return Padding(
+                  padding: EdgeInsets.only(top: index == 0 ? 0 : 20, bottom: 8),
+                  child: Text(
+                    item,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                );
+              }
+
+              final product = item as Product;
               // بناء يدوي بـ Row بدل ListTile: تجنّبًا لمشكلة "overflow"
               // التي ظهرت فعليًا على الجهاز الحقيقي مع محتوى trailing
               // متعدد الأسطر (السعر + زر الإضافة) داخل ListTile.
-              return Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      CircleAvatar(
-                        radius: 24,
-                        backgroundColor: theme.colorScheme.primary
-                            .withValues(alpha: 0.1),
-                        child: Icon(
-                          Icons.shopping_bag_outlined,
-                          color: theme.colorScheme.primary,
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 24,
+                          backgroundColor: theme.colorScheme.primary
+                              .withValues(alpha: 0.1),
+                          child: Icon(
+                            Icons.shopping_bag_outlined,
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              product.name,
-                              style: theme.textTheme.titleLarge,
-                            ),
-                            if (product.description != null) ...[
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                product.name,
+                                style: theme.textTheme.titleLarge,
+                              ),
+                              if (product.description != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  product.description!,
+                                  style: theme.textTheme.bodyMedium
+                                      ?.copyWith(color: Colors.black54),
+                                ),
+                              ],
                               const SizedBox(height: 4),
                               Text(
-                                product.description!,
+                                '${product.price.toStringAsFixed(0)} دج',
                                 style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: Colors.black54,
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ],
-                            const SizedBox(height: 4),
-                            Text(
-                              '${product.price.toStringAsFixed(0)} دج',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: Icon(
-                          Icons.add_circle,
-                          color: theme.colorScheme.primary,
-                          size: 32,
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: Icon(
+                            Icons.add_circle,
+                            color: theme.colorScheme.primary,
+                            size: 32,
+                          ),
+                          onPressed: () => _addToCart(product),
+                          tooltip: 'أضف للسلة',
                         ),
-                        onPressed: () => _addToCart(product),
-                        tooltip: 'أضف للسلة',
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );
