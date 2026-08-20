@@ -14,5 +14,6 @@ class SupabaseConfig {
   /// المفتاح العام (من Settings → API → Project API keys —
   /// قد يظهر باسم "publishable key" أو "anon public" حسب نسخة اللوحة)
   /// ضع القيمة الحقيقية هنا بدل النص أدناه.
-  static const String publishableKey = 'REPLACE_WITH_YOUR_PUBLISHABLE_KEY';
+  static const String publishableKey =
+      'sb_publishable_H9fV2tkBj8dSTA2U0oqvYw_rz2VbKtv';
 }
