@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/merchant.dart';
+import 'account_screen.dart';
 import 'merchant_products_screen.dart';
 
 /// شاشة قائمة المحلات — تظهر بعد تأكيد الولاية.
@@ -42,7 +43,20 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text('المحلات في ${widget.locationName}')),
+      appBar: AppBar(
+        title: Text('المحلات في ${widget.locationName}'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person_outline_rounded),
+            tooltip: 'حسابي',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AccountScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body: FutureBuilder<List<Merchant>>(
         future: _merchantsFuture,
         builder: (context, snapshot) {

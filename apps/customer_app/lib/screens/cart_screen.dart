@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../services/cart_service.dart';
+import 'checkout_screen.dart';
 
 /// شاشة السلة — عرض بسيط وواضح لكل عنصر، مع إمكانية تعديل الكمية أو الحذف.
 class CartScreen extends StatelessWidget {
@@ -157,11 +158,9 @@ class _CartSummaryBar extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'قريبًا: تسجيل الدخول وتأكيد الطلب',
-                      ),
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const CheckoutScreen(),
                     ),
                   );
                 },
