@@ -12,6 +12,8 @@ export interface Merchant {
   phone: string | null;
   status: MerchantStatus;
   category_id: string | null;
+  is_featured: boolean;
+  orders_count: number;
   created_at: string;
   communes?: { name: string } | null;
   merchant_categories?: { name: string; icon: string } | null;

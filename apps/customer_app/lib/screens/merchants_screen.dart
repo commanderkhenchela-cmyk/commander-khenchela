@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/merchant.dart';
+import '../widgets/merchant_mini_card.dart';
 import 'account_screen.dart';
 import 'merchant_products_screen.dart';
 
@@ -9,6 +10,12 @@ import 'merchant_products_screen.dart';
 /// لتصنيف محدَّد (categoryId) أو لكل المحلات (categoryId = null، بطاقة
 /// "كل المحلات"). تجلب فقط المحلات الموافَق عليها من طرف Admin
 /// (status = approved)، نفس القاعدة المطبَّقة في RLS على جدول merchants.
+///
+/// عند فتحها لتصنيف محدَّد، تُضاف فوق القائمة الكاملة أقسام ذكية أفقية
+/// (مميزة / الأكثر طلبًا / المضافة حديثًا) — كل قسم يظهر فقط إن كانت له
+/// بيانات حقيقية (لا نعرض قسمًا فارغًا أو وهميًا). قسم "الأقرب إليك"
+/// و"مفتوح الآن" غير موجودَين عمدًا: لا بيانات موقع جغرافي ولا ساعات
+/// عمل للمحلات بعد — قرار Phase مؤجَّل، وليس نسيانًا.
 class MerchantsScreen extends StatefulWidget {
   final String locationName;
   final String? categoryId;
@@ -26,14 +33,14 @@ class MerchantsScreen extends StatefulWidget {
 }
 
 class _MerchantsScreenState extends State<MerchantsScreen> {
-  late Future<List<Merchant>> _merchantsFuture;
+  late Future<_MerchantsPageData> _pageFuture;
   final _searchController = TextEditingController();
   String _query = '';
 
   @override
   void initState() {
     super.initState();
-    _merchantsFuture = _fetchMerchants();
+    _pageFuture = _fetchPageData();
     _searchController.addListener(() {
       setState(() => _query = _searchController.text.trim());
     });
@@ -45,19 +52,76 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
     super.dispose();
   }
 
-  Future<List<Merchant>> _fetchMerchants() async {
-    var query = Supabase.instance.client
-        .from('merchants')
-        .select('id, store_name, phone, communes(name)')
-        .eq('status', 'approved');
+  Future<_MerchantsPageData> _fetchPageData() async {
+    final client = Supabase.instance.client;
+    const columns = 'id, store_name, phone, communes(name)';
 
+    var allQuery = client
+        .from('merchants')
+        .select(columns)
+        .eq('status', 'approved');
     if (widget.categoryId != null) {
-      query = query.eq('category_id', widget.categoryId!);
+      allQuery = allQuery.eq('category_id', widget.categoryId!);
+    }
+    final allFuture = allQuery.order('store_name');
+
+    // الأقسام الذكية معنى لها فقط داخل تصنيف محدَّد — عرضها فوق "كل
+    // المحلات" (بدون فلتر) سيكرّر نفس المحتوى بلا فائدة إضافية.
+    if (widget.categoryId == null) {
+      final all = _toMerchants(await allFuture);
+      return _MerchantsPageData(
+        all: all,
+        featured: [],
+        topOrdered: [],
+        newest: [],
+      );
     }
 
-    final data = await query.order('store_name');
+    final featuredFuture = client
+        .from('merchants')
+        .select(columns)
+        .eq('status', 'approved')
+        .eq('category_id', widget.categoryId!)
+        .eq('is_featured', true)
+        .order('store_name')
+        .limit(8);
 
-    return (data as List)
+    final topOrderedFuture = client
+        .from('merchants')
+        .select(columns)
+        .eq('status', 'approved')
+        .eq('category_id', widget.categoryId!)
+        .gt('orders_count', 0)
+        .order('orders_count', ascending: false)
+        .limit(8);
+
+    final newestFuture = client
+        .from('merchants')
+        .select(columns)
+        .eq('status', 'approved')
+        .eq('category_id', widget.categoryId!)
+        .order('created_at', ascending: false)
+        .limit(8);
+
+    final results = await Future.wait([
+      allFuture,
+      featuredFuture,
+      topOrderedFuture,
+      newestFuture,
+    ]);
+
+    return _MerchantsPageData(
+      all: _toMerchants(results[0]),
+      featured: _toMerchants(results[1]),
+      topOrdered: _toMerchants(results[2]),
+      // "المضافة حديثًا" لا تُظهر شيئًا مميّزًا في تصنيف صغير (كل المحلات
+      // فيه أصلًا حديثة) — نعرضها فقط إن كان في التصنيف أكثر من 4 محلات.
+      newest: results[0].length > 4 ? _toMerchants(results[3]) : [],
+    );
+  }
+
+  List<Merchant> _toMerchants(List<dynamic> rows) {
+    return rows
         .map((row) => Merchant.fromMap(row as Map<String, dynamic>))
         .toList();
   }
@@ -91,78 +155,154 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<List<Merchant>>(
-        future: _merchantsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const _MerchantsLoadingSkeleton();
-          }
+      // سقف أعلى لتكبير خط النظام — نفس إصلاح Overflow المطبَّق في شبكة
+      // التصنيفات (MerchantCategoriesScreen)، لأن بطاقات هذه الشاشة
+      // (الأفقية والعمودية) لها ارتفاعات محسوبة مسبقًا أيضًا.
+      body: MediaQuery.withClampedTextScaling(
+        maxScaleFactor: 1.25,
+        child: FutureBuilder<_MerchantsPageData>(
+          future: _pageFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const _MerchantsLoadingSkeleton();
+            }
 
-          if (snapshot.hasError) {
-            return _StateMessage(
-              icon: Icons.wifi_off_rounded,
-              message: 'تعذّر تحميل قائمة المحلات. تحقق من اتصالك بالإنترنت.',
-              actionLabel: 'إعادة المحاولة',
-              onAction: () {
-                setState(() {
-                  _merchantsFuture = _fetchMerchants();
-                });
-              },
+            if (snapshot.hasError) {
+              return _StateMessage(
+                icon: Icons.wifi_off_rounded,
+                message: 'تعذّر تحميل قائمة المحلات. تحقق من اتصالك بالإنترنت.',
+                actionLabel: 'إعادة المحاولة',
+                onAction: () {
+                  setState(() {
+                    _pageFuture = _fetchPageData();
+                  });
+                },
+              );
+            }
+
+            final page = snapshot.data!;
+
+            if (page.all.isEmpty) {
+              return const _StateMessage(
+                icon: Icons.storefront_outlined,
+                message: 'لا توجد محلات متاحة حاليًا. عد قريبًا!',
+              );
+            }
+
+            final merchants = _filter(page.all);
+            final showSections =
+                _query.isEmpty &&
+                (page.featured.isNotEmpty ||
+                    page.topOrdered.isNotEmpty ||
+                    page.newest.isNotEmpty);
+
+            void openMerchant(Merchant merchant) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => MerchantProductsScreen(
+                    merchantId: merchant.id,
+                    storeName: merchant.storeName,
+                  ),
+                ),
+              );
+            }
+
+            return CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  sliver: SliverToBoxAdapter(
+                    child: _SearchField(controller: _searchController),
+                  ),
+                ),
+                if (showSections)
+                  SliverToBoxAdapter(
+                    child: Column(
+                      children: [
+                        if (page.featured.isNotEmpty)
+                          _SmartSection(
+                            title: 'مميزة',
+                            icon: Icons.star_rounded,
+                            merchants: page.featured,
+                            onTapMerchant: openMerchant,
+                          ),
+                        if (page.topOrdered.isNotEmpty)
+                          _SmartSection(
+                            title: 'الأكثر طلبًا',
+                            icon: Icons.local_fire_department_rounded,
+                            merchants: page.topOrdered,
+                            onTapMerchant: openMerchant,
+                          ),
+                        if (page.newest.isNotEmpty)
+                          _SmartSection(
+                            title: 'أُضيفت حديثًا',
+                            icon: Icons.fiber_new_rounded,
+                            merchants: page.newest,
+                            onTapMerchant: openMerchant,
+                          ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                          child: Row(
+                            children: [
+                              Text(
+                                'كل المحلات',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (merchants.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _StateMessage(
+                      icon: Icons.search_off_rounded,
+                      message: 'لا توجد نتائج لـ "$_query"',
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                    sliver: SliverList.separated(
+                      itemCount: merchants.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final merchant = merchants[index];
+                        return _MerchantCard(
+                          merchant: merchant,
+                          onTap: () => openMerchant(merchant),
+                        );
+                      },
+                    ),
+                  ),
+              ],
             );
-          }
-
-          final allMerchants = snapshot.data ?? [];
-
-          if (allMerchants.isEmpty) {
-            return const _StateMessage(
-              icon: Icons.storefront_outlined,
-              message: 'لا توجد محلات متاحة حاليًا. عد قريبًا!',
-            );
-          }
-
-          final merchants = _filter(allMerchants);
-
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                child: _SearchField(controller: _searchController),
-              ),
-              Expanded(
-                child: merchants.isEmpty
-                    ? _StateMessage(
-                        icon: Icons.search_off_rounded,
-                        message: 'لا توجد نتائج لـ "$_query"',
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                        itemCount: merchants.length,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final merchant = merchants[index];
-                          return _MerchantCard(
-                            merchant: merchant,
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => MerchantProductsScreen(
-                                    merchantId: merchant.id,
-                                    storeName: merchant.storeName,
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-              ),
-            ],
-          );
-        },
+          },
+        ),
       ),
     );
   }
+}
+
+/// حزمة بيانات صفحة المحلات: القائمة الكاملة + الأقسام الذكية الثلاثة
+/// (تبقى فارغة تلقائيًا عند فتح الشاشة بدون تصنيف محدَّد، أو حين لا
+/// توجد بيانات حقيقية كافية لأي قسم — لا نعرض قسمًا فارغًا أبدًا).
+class _MerchantsPageData {
+  final List<Merchant> all;
+  final List<Merchant> featured;
+  final List<Merchant> topOrdered;
+  final List<Merchant> newest;
+
+  const _MerchantsPageData({
+    required this.all,
+    required this.featured,
+    required this.topOrdered,
+    required this.newest,
+  });
 }
 
 class _SearchField extends StatelessWidget {
@@ -281,6 +421,67 @@ class _MerchantCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// قسم أفقي قابل للتمرير (مميزة / الأكثر طلبًا / المضافة حديثًا) —
+/// يظهر فقط عبر الاستدعاء الشرطي في build()، لا يعرض نفسه فارغًا أبدًا.
+class _SmartSection extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final List<Merchant> merchants;
+  final ValueChanged<Merchant> onTapMerchant;
+
+  const _SmartSection({
+    required this.title,
+    required this.icon,
+    required this.merchants,
+    required this.onTapMerchant,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Row(
+              children: [
+                Icon(icon, size: 18, color: theme.colorScheme.primary),
+                const SizedBox(width: 6),
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 118,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: merchants.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 10),
+              itemBuilder: (context, index) {
+                final merchant = merchants[index];
+                return MerchantMiniCard(
+                  merchant: merchant,
+                  onTap: () => onTapMerchant(merchant),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

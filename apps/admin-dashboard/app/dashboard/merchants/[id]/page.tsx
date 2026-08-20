@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Merchant, MerchantCategory } from "@/lib/types";
 import MerchantActions from "./merchant-actions";
 import MerchantCategorySelect from "./merchant-category-select";
+import MerchantFeaturedToggle from "./merchant-featured-toggle";
 
 export default async function MerchantDetailPage({
   params,
@@ -15,7 +16,7 @@ export default async function MerchantDetailPage({
   const { data: merchant } = await supabase
     .from("merchants")
     .select(
-      "id, owner_user_id, store_name, wilaya_id, commune_id, address_text, phone, status, category_id, created_at, communes(name), merchant_categories(name, icon)",
+      "id, owner_user_id, store_name, wilaya_id, commune_id, address_text, phone, status, category_id, is_featured, orders_count, created_at, communes(name), merchant_categories(name, icon)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -54,6 +55,7 @@ export default async function MerchantDetailPage({
         <InfoRow label="العنوان" value={m.address_text ?? "—"} />
         <InfoRow label="هاتف المحل" value={m.phone ?? "—"} />
         <InfoRow label="عدد المنتجات" value={String(productsCount ?? 0)} />
+        <InfoRow label="عدد الطلبات (كل الأوقات)" value={String(m.orders_count)} />
         <InfoRow
           label="تصنيف المحل"
           value={
@@ -77,6 +79,10 @@ export default async function MerchantDetailPage({
           categoryId={m.category_id}
           categories={categories}
         />
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-5 mb-4">
+        <MerchantFeaturedToggle merchantId={m.id} isFeatured={m.is_featured} />
       </div>
 
       <div className="rounded-xl border border-border bg-card p-5">

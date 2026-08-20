@@ -176,16 +176,15 @@ class _MerchantCategoriesScreenState extends State<MerchantCategoriesScreen>
 
                   return GridView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                    gridDelegate:
-                        SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          // ارتفاع ثابت بالبكسل بدل aspectRatio — يتّسع
-                          // لسطرين من النص مهما طال، هذا هو إصلاح الـ
-                          // Overflow الفعلي (راجع تعليق أعلى الملف).
-                          mainAxisExtent: 152,
-                        ),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      // ارتفاع ثابت بالبكسل بدل aspectRatio — يتّسع
+                      // لسطرين من النص مهما طال، هذا هو إصلاح الـ
+                      // Overflow الفعلي (راجع تعليق أعلى الملف).
+                      mainAxisExtent: 152,
+                    ),
                     itemCount: itemCount,
                     itemBuilder: (context, index) {
                       final tile = index == 0
@@ -291,7 +290,6 @@ class _StaggeredEntrance extends StatelessWidget {
     );
   }
 }
-
 
 /// حالة موحَّدة لعرض رسالة في منتصف الشاشة: فارغة أو خطأ.
 class _StateMessage extends StatelessWidget {
