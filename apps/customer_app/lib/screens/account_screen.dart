@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
 import 'my_orders_screen.dart';
+import 'notifications_screen.dart';
 
 /// شاشة "حسابي" — نقطة الدخول لتسجيل الدخول أو إدارة الحساب.
 class AccountScreen extends StatefulWidget {
@@ -56,6 +57,17 @@ class _AccountScreenState extends State<AccountScreen> {
                         );
                       },
                       child: const Text('طلباتي'),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const NotificationsScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text('إشعاراتي'),
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton(
