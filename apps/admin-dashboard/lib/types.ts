@@ -11,14 +11,29 @@ export interface Merchant {
   address_text: string | null;
   phone: string | null;
   status: MerchantStatus;
+  category_id: string | null;
   created_at: string;
   communes?: { name: string } | null;
+  merchant_categories?: { name: string; icon: string } | null;
 }
 
 export interface Category {
   id: string;
   name: string;
   is_active: boolean;
+  created_at: string;
+}
+
+/// تصنيفات المحلات (مطاعم، بقالة...) — مختلفة عن Category أعلاه التي
+/// تصنّف المنتجات *داخل* محل واحد. انظر تعليق migration
+/// 20260820090000_merchant_categories.sql للتفاصيل الكاملة.
+export interface MerchantCategory {
+  id: string;
+  name: string;
+  icon: string;
+  sort_order: number;
+  is_active: boolean;
+  parent_id: string | null;
   created_at: string;
 }
 
@@ -101,6 +116,7 @@ const TABLE_LABELS: Record<string, string> = {
   app_branding: "الهوية والشعار",
   app_contact: "بيانات التواصل",
   categories: "تصنيف",
+  merchant_categories: "تصنيف محلات",
 };
 
 export function tableLabel(tableName: string): string {

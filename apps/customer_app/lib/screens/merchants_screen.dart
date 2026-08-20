@@ -5,13 +5,21 @@ import '../models/merchant.dart';
 import 'account_screen.dart';
 import 'merchant_products_screen.dart';
 
-/// شاشة قائمة المحلات — تظهر بعد تأكيد الولاية.
-/// تجلب فقط المحلات الموافَق عليها من طرف Admin (status = approved)،
-/// نفس القاعدة المطبَّقة في RLS على جدول merchants.
+/// شاشة قائمة المحلات — تُفتح دائمًا من MerchantCategoriesScreen، إما
+/// لتصنيف محدَّد (categoryId) أو لكل المحلات (categoryId = null، بطاقة
+/// "كل المحلات"). تجلب فقط المحلات الموافَق عليها من طرف Admin
+/// (status = approved)، نفس القاعدة المطبَّقة في RLS على جدول merchants.
 class MerchantsScreen extends StatefulWidget {
   final String locationName;
+  final String? categoryId;
+  final String? categoryName;
 
-  const MerchantsScreen({super.key, required this.locationName});
+  const MerchantsScreen({
+    super.key,
+    required this.locationName,
+    this.categoryId,
+    this.categoryName,
+  });
 
   @override
   State<MerchantsScreen> createState() => _MerchantsScreenState();
@@ -38,11 +46,16 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
   }
 
   Future<List<Merchant>> _fetchMerchants() async {
-    final data = await Supabase.instance.client
+    var query = Supabase.instance.client
         .from('merchants')
         .select('id, store_name, phone, communes(name)')
-        .eq('status', 'approved')
-        .order('store_name');
+        .eq('status', 'approved');
+
+    if (widget.categoryId != null) {
+      query = query.eq('category_id', widget.categoryId!);
+    }
+
+    final data = await query.order('store_name');
 
     return (data as List)
         .map((row) => Merchant.fromMap(row as Map<String, dynamic>))
@@ -61,7 +74,11 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('المحلات في ${widget.locationName}'),
+        title: Text(
+          widget.categoryName != null
+              ? '${widget.categoryName} في ${widget.locationName}'
+              : 'كل المحلات في ${widget.locationName}',
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.person_outline_rounded),

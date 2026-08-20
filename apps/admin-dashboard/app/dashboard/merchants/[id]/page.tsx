@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { Merchant } from "@/lib/types";
+import type { Merchant, MerchantCategory } from "@/lib/types";
 import MerchantActions from "./merchant-actions";
+import MerchantCategorySelect from "./merchant-category-select";
 
 export default async function MerchantDetailPage({
   params,
@@ -14,7 +15,7 @@ export default async function MerchantDetailPage({
   const { data: merchant } = await supabase
     .from("merchants")
     .select(
-      "id, owner_user_id, store_name, wilaya_id, commune_id, address_text, phone, status, created_at, communes(name)",
+      "id, owner_user_id, store_name, wilaya_id, commune_id, address_text, phone, status, category_id, created_at, communes(name), merchant_categories(name, icon)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -32,7 +33,13 @@ export default async function MerchantDetailPage({
     .select("id", { count: "exact", head: true })
     .eq("merchant_id", id);
 
+  const { data: allCategories } = await supabase
+    .from("merchant_categories")
+    .select("id, name, icon, sort_order, is_active, parent_id, created_at")
+    .order("sort_order");
+
   const m = merchant as unknown as Merchant;
+  const categories = (allCategories ?? []) as MerchantCategory[];
 
   return (
     <div className="max-w-lg">
@@ -47,12 +54,29 @@ export default async function MerchantDetailPage({
         <InfoRow label="العنوان" value={m.address_text ?? "—"} />
         <InfoRow label="هاتف المحل" value={m.phone ?? "—"} />
         <InfoRow label="عدد المنتجات" value={String(productsCount ?? 0)} />
+        <InfoRow
+          label="تصنيف المحل"
+          value={
+            m.merchant_categories
+              ? `${m.merchant_categories.icon} ${m.merchant_categories.name}`
+              : "بدون تصنيف"
+          }
+        />
       </div>
 
       <div className="rounded-xl border border-border bg-card p-5 mb-4">
         <p className="font-semibold mb-3">صاحب المحل</p>
         <InfoRow label="الاسم" value={owner?.full_name ?? "—"} />
         <InfoRow label="الهاتف" value={owner?.phone ?? "—"} />
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-5 mb-4">
+        <p className="font-semibold mb-3">تصنيف المحل</p>
+        <MerchantCategorySelect
+          merchantId={m.id}
+          categoryId={m.category_id}
+          categories={categories}
+        />
       </div>
 
       <div className="rounded-xl border border-border bg-card p-5">
