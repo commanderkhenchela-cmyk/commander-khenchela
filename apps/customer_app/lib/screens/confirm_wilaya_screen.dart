@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'home_screen.dart';
+import 'merchants_screen.dart';
 
 /// V1 يعمل في ولاية خنشلة فقط. بدل قائمة بلديات طويلة (21 بلدية) منذ أول
 /// خطوة، نكتفي بشاشة تأكيد بسيطة — نضيف اختيار البلدية تدريجيًا لاحقًا
@@ -20,7 +20,7 @@ class ConfirmWilayaScreen extends StatelessWidget {
     if (!context.mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) => const HomeScreen(locationName: _wilayaName),
+        builder: (_) => const MerchantsScreen(locationName: _wilayaName),
       ),
     );
   }
