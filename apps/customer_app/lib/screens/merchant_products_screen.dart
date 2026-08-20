@@ -18,8 +18,7 @@ class MerchantProductsScreen extends StatefulWidget {
   });
 
   @override
-  State<MerchantProductsScreen> createState() =>
-      _MerchantProductsScreenState();
+  State<MerchantProductsScreen> createState() => _MerchantProductsScreenState();
 }
 
 class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
@@ -34,7 +33,9 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
   Future<List<Product>> _fetchProducts() async {
     final data = await Supabase.instance.client
         .from('products')
-        .select('id, name, description, price, categories(name)')
+        .select(
+          'id, name, description, price, categories(name), product_images(image_url)',
+        )
         .eq('merchant_id', widget.merchantId)
         .eq('is_active', true)
         .order('name');
@@ -130,9 +131,9 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
               IconButton(
                 icon: const Icon(Icons.shopping_cart_outlined),
                 onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const CartScreen()),
-                  );
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (_) => const CartScreen()));
                 },
               ),
               if (cart.itemCount > 0)
@@ -147,10 +148,7 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
                     ),
                     child: Text(
                       '${cart.itemCount}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 11),
                     ),
                   ),
                 ),
@@ -246,15 +244,21 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        CircleAvatar(
-                          radius: 24,
-                          backgroundColor: theme.colorScheme.primary
-                              .withValues(alpha: 0.1),
-                          child: Icon(
-                            Icons.shopping_bag_outlined,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
+                        product.imageUrl != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  product.imageUrl!,
+                                  width: 48,
+                                  height: 48,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      _ProductIcon(
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                ),
+                              )
+                            : _ProductIcon(color: theme.colorScheme.primary),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -269,8 +273,9 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
                                 const SizedBox(height: 4),
                                 Text(
                                   product.description!,
-                                  style: theme.textTheme.bodyMedium
-                                      ?.copyWith(color: Colors.black54),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: Colors.black54,
+                                  ),
                                 ),
                               ],
                               const SizedBox(height: 4),
@@ -303,6 +308,22 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
           );
         },
       ),
+    );
+  }
+}
+
+/// أيقونة بديلة عند عدم وجود صورة للمنتج (أو تعذّر تحميلها).
+class _ProductIcon extends StatelessWidget {
+  final Color color;
+
+  const _ProductIcon({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return CircleAvatar(
+      radius: 24,
+      backgroundColor: color.withValues(alpha: 0.1),
+      child: Icon(Icons.shopping_bag_outlined, color: color),
     );
   }
 }
