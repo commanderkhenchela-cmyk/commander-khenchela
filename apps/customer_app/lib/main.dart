@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/supabase_config.dart';
-import 'screens/welcome_screen.dart';
+import 'screens/splash_screen.dart';
 import 'services/cart_service.dart';
 import 'theme/app_theme.dart';
 
@@ -43,7 +43,7 @@ class CommanderKhenchelaApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
 
-      home: const WelcomeScreen(),
+      home: const SplashScreen(),
     );
   }
 }

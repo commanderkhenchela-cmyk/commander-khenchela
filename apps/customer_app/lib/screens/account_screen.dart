@@ -5,6 +5,7 @@ import 'address_list_screen.dart';
 import 'login_screen.dart';
 import 'my_orders_screen.dart';
 import 'notifications_screen.dart';
+import 'support_screen.dart';
 
 /// شاشة "حسابي" — نقطة الدخول لتسجيل الدخول أو إدارة الحساب.
 class AccountScreen extends StatefulWidget {
@@ -82,6 +83,17 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const SupportScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text('المساعدة'),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton(
                       onPressed: _logout,
                       child: const Text('تسجيل الخروج'),
                     ),
@@ -105,6 +117,17 @@ class _AccountScreenState extends State<AccountScreen> {
                     ElevatedButton(
                       onPressed: _login,
                       child: const Text('تسجيل الدخول / إنشاء حساب'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const SupportScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text('المساعدة'),
                     ),
                   ],
                 ),
