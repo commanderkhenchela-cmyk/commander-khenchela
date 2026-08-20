@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/merchant.dart';
 import '../widgets/merchant_mini_card.dart';
+import '../widgets/open_status_badge.dart';
 import 'account_screen.dart';
 import 'merchant_products_screen.dart';
 
@@ -12,10 +13,12 @@ import 'merchant_products_screen.dart';
 /// (status = approved)، نفس القاعدة المطبَّقة في RLS على جدول merchants.
 ///
 /// عند فتحها لتصنيف محدَّد، تُضاف فوق القائمة الكاملة أقسام ذكية أفقية
-/// (مميزة / الأكثر طلبًا / المضافة حديثًا) — كل قسم يظهر فقط إن كانت له
-/// بيانات حقيقية (لا نعرض قسمًا فارغًا أو وهميًا). قسم "الأقرب إليك"
-/// و"مفتوح الآن" غير موجودَين عمدًا: لا بيانات موقع جغرافي ولا ساعات
-/// عمل للمحلات بعد — قرار Phase مؤجَّل، وليس نسيانًا.
+/// (مميزة / الأكثر طلبًا / مفتوح الآن / المضافة حديثًا) — كل قسم يظهر
+/// فقط إن كانت له بيانات حقيقية (لا نعرض قسمًا فارغًا أو وهميًا).
+/// "مفتوح الآن" يُحسب محليًا في الجهاز من ساعات العمل التي يحفظها
+/// التاجر (راجع MerchantOpenStatus) — لا استعلام إضافي للخادم، لأنه
+/// مُشتق من نفس قائمة "كل المحلات" المجلوبة أصلًا. قسم "الأقرب إليك"
+/// غير موجود عمدًا: لا بيانات موقع جغرافي بعد — قرار Phase مؤجَّل.
 class MerchantsScreen extends StatefulWidget {
   final String locationName;
   final String? categoryId;
@@ -54,7 +57,9 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
 
   Future<_MerchantsPageData> _fetchPageData() async {
     final client = Supabase.instance.client;
-    const columns = 'id, store_name, phone, communes(name)';
+    const columns =
+        'id, store_name, phone, communes(name), '
+        'merchant_business_hours(day_of_week, open_time, close_time, is_closed)';
 
     var allQuery = client
         .from('merchants')
@@ -74,6 +79,7 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
         featured: [],
         topOrdered: [],
         newest: [],
+        openNow: [],
       );
     }
 
@@ -110,13 +116,18 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
       newestFuture,
     ]);
 
+    final all = _toMerchants(results[0]);
+
     return _MerchantsPageData(
-      all: _toMerchants(results[0]),
+      all: all,
       featured: _toMerchants(results[1]),
       topOrdered: _toMerchants(results[2]),
       // "المضافة حديثًا" لا تُظهر شيئًا مميّزًا في تصنيف صغير (كل المحلات
       // فيه أصلًا حديثة) — نعرضها فقط إن كان في التصنيف أكثر من 4 محلات.
-      newest: results[0].length > 4 ? _toMerchants(results[3]) : [],
+      newest: all.length > 4 ? _toMerchants(results[3]) : [],
+      // يُحسب محليًا من نفس القائمة الكاملة (لا استعلام إضافي) — راجع
+      // تعليق الشاشة أعلاه.
+      openNow: all.where((m) => m.isOpenNow == true).take(8).toList(),
     );
   }
 
@@ -194,6 +205,7 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
                 _query.isEmpty &&
                 (page.featured.isNotEmpty ||
                     page.topOrdered.isNotEmpty ||
+                    page.openNow.isNotEmpty ||
                     page.newest.isNotEmpty);
 
             void openMerchant(Merchant merchant) {
@@ -231,6 +243,13 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
                             title: 'الأكثر طلبًا',
                             icon: Icons.local_fire_department_rounded,
                             merchants: page.topOrdered,
+                            onTapMerchant: openMerchant,
+                          ),
+                        if (page.openNow.isNotEmpty)
+                          _SmartSection(
+                            title: 'مفتوح الآن',
+                            icon: Icons.access_time_filled_rounded,
+                            merchants: page.openNow,
                             onTapMerchant: openMerchant,
                           ),
                         if (page.newest.isNotEmpty)
@@ -288,19 +307,21 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
   }
 }
 
-/// حزمة بيانات صفحة المحلات: القائمة الكاملة + الأقسام الذكية الثلاثة
+/// حزمة بيانات صفحة المحلات: القائمة الكاملة + الأقسام الذكية الأربعة
 /// (تبقى فارغة تلقائيًا عند فتح الشاشة بدون تصنيف محدَّد، أو حين لا
 /// توجد بيانات حقيقية كافية لأي قسم — لا نعرض قسمًا فارغًا أبدًا).
 class _MerchantsPageData {
   final List<Merchant> all;
   final List<Merchant> featured;
   final List<Merchant> topOrdered;
+  final List<Merchant> openNow;
   final List<Merchant> newest;
 
   const _MerchantsPageData({
     required this.all,
     required this.featured,
     required this.topOrdered,
+    required this.openNow,
     required this.newest,
   });
 }
@@ -387,26 +408,34 @@ class _MerchantCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    if (merchant.communeName != null) ...[
+                    if (merchant.communeName != null ||
+                        merchant.isOpenNow != null) ...[
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(
-                            Icons.location_on_outlined,
-                            size: 14,
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.5,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            merchant.communeName!,
-                            style: theme.textTheme.bodySmall?.copyWith(
+                          if (merchant.communeName != null) ...[
+                            Icon(
+                              Icons.location_on_outlined,
+                              size: 14,
                               color: theme.colorScheme.onSurface.withValues(
-                                alpha: 0.6,
+                                alpha: 0.5,
                               ),
                             ),
-                          ),
+                            const SizedBox(width: 4),
+                            Text(
+                              merchant.communeName!,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
+                              ),
+                            ),
+                          ],
+                          if (merchant.communeName != null &&
+                              merchant.isOpenNow != null)
+                            const SizedBox(width: 8),
+                          if (merchant.isOpenNow != null)
+                            OpenStatusBadge(isOpen: merchant.isOpenNow!),
                         ],
                       ),
                     ],
@@ -426,8 +455,9 @@ class _MerchantCard extends StatelessWidget {
   }
 }
 
-/// قسم أفقي قابل للتمرير (مميزة / الأكثر طلبًا / المضافة حديثًا) —
-/// يظهر فقط عبر الاستدعاء الشرطي في build()، لا يعرض نفسه فارغًا أبدًا.
+/// قسم أفقي قابل للتمرير (مميزة / الأكثر طلبًا / مفتوح الآن / المضافة
+/// حديثًا) — يظهر فقط عبر الاستدعاء الشرطي في build()، لا يعرض نفسه
+/// فارغًا أبدًا.
 class _SmartSection extends StatelessWidget {
   final String title;
   final IconData icon;

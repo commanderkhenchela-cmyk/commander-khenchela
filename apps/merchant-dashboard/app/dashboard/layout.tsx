@@ -25,6 +25,7 @@ export default async function DashboardLayout({
           <NavLink href="/dashboard" label="نظرة عامة" />
           <NavLink href="/dashboard/orders" label="الطلبات" />
           <NavLink href="/dashboard/products" label="المنتجات" />
+          <NavLink href="/dashboard/hours" label="ساعات العمل" />
           <NavLink href="/dashboard/settings" label="إعدادات المحل" />
         </nav>
         <div className="p-3 mt-auto hidden md:block">

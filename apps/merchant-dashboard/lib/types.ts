@@ -85,5 +85,25 @@ export interface Commune {
   wilaya_id: number;
 }
 
+/** 0=الأحد ... 6=السبت — راجع تعليق migration 20260821020000 للتفاصيل. */
+export interface MerchantBusinessHours {
+  id: string;
+  merchant_id: string;
+  day_of_week: number;
+  open_time: string | null;
+  close_time: string | null;
+  is_closed: boolean;
+}
+
+export const DAY_NAMES = [
+  "الأحد",
+  "الاثنين",
+  "الثلاثاء",
+  "الأربعاء",
+  "الخميس",
+  "الجمعة",
+  "السبت",
+];
+
 /** كود ولاية خنشلة الرسمي — المحل الوحيد المدعوم في V1. */
 export const KHENCHELA_WILAYA_ID = 40;
