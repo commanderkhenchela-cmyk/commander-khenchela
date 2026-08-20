@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/order.dart';
+import 'order_detail_screen.dart';
 
 /// شاشة "طلباتي" — قائمة طلبات العميل الحالي فقط (تحميها RLS تلقائيًا،
 /// لا يمكن لأي عميل رؤية طلبات عميل آخر مهما حدث في التطبيق نفسه).
@@ -113,49 +114,63 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             itemBuilder: (context, index) {
               final order = orders[index];
               return Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            order.merchantName,
-                            style: theme.textTheme.titleLarge,
+                child: InkWell(
+                  onTap: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => OrderDetailScreen(orderId: order.id),
+                      ),
+                    );
+                    if (mounted) {
+                      setState(() {
+                        _ordersFuture = _fetchOrders();
+                      });
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              order.merchantName,
+                              style: theme.textTheme.titleLarge,
+                            ),
+                            Text(
+                              '${order.totalAmount.toStringAsFixed(0)} دج',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
                           ),
-                          Text(
-                            '${order.totalAmount.toStringAsFixed(0)} دج',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.bold,
+                          decoration: BoxDecoration(
+                            color: _statusColor(
+                              context,
+                              order.status,
+                            ).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            CustomerOrder.statusLabel(order.status),
+                            style: TextStyle(
+                              color: _statusColor(context, order.status),
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
                         ),
-                        decoration: BoxDecoration(
-                          color: _statusColor(
-                            context,
-                            order.status,
-                          ).withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          CustomerOrder.statusLabel(order.status),
-                          style: TextStyle(
-                            color: _statusColor(context, order.status),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );
