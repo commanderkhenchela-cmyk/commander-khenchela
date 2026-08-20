@@ -32,8 +32,9 @@ class _SplashScreenState extends State<SplashScreen> {
     final prefs = await SharedPreferences.getInstance();
     final wilayaConfirmed = prefs.getBool(_prefsWilayaConfirmedKey) ?? false;
 
-    // مدة قصيرة كافية لعرض الشعار بشكل مريح بدون الشعور ببطء التطبيق.
-    await Future.delayed(const Duration(milliseconds: 700));
+    // 3 ثوانٍ كاملة لعرض الشعار (طلب صريح) — يكفي أيضًا لتحميل هوية
+    // التطبيق (BrandingService/ContactService) في main() قبل هذه الشاشة.
+    await Future.delayed(const Duration(seconds: 3));
 
     if (!mounted) return;
 

@@ -23,8 +23,31 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('تسجيل الخروج'),
+        content: const Text('هل تريد تسجيل الخروج من حسابك؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('تراجع'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('تسجيل الخروج'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
     await AuthService.signOut();
     if (mounted) setState(() {});
+  }
+
+  void _push(Widget screen) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
   }
 
   @override
@@ -33,104 +56,250 @@ class _AccountScreenState extends State<AccountScreen> {
     final isSignedIn = AuthService.isSignedIn;
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(title: const Text('حسابي')),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: isSignedIn
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: isSignedIn ? _buildSignedIn(theme) : _buildSignedOut(theme),
+      ),
+    );
+  }
+
+  Widget _buildSignedIn(ThemeData theme) {
+    final fullName =
+        AuthService.currentUser?.userMetadata?['full_name'] as String? ?? '';
+    final phone =
+        AuthService.currentUser?.userMetadata?['phone'] as String? ?? '';
+    final initial = fullName.isNotEmpty ? fullName.substring(0, 1) : '؟';
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      children: [
+        // ---------- Header ----------
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: [
+                theme.colorScheme.primary,
+                theme.colorScheme.primary.withValues(alpha: 0.85),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: Colors.white,
+                child: Text(
+                  initial,
+                  style: TextStyle(
+                    color: theme.colorScheme.primary,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AuthService.currentUser?.userMetadata?['full_name']
-                              as String? ??
-                          'مرحبًا بك',
-                      style: theme.textTheme.headlineMedium,
-                      textAlign: TextAlign.center,
+                      fullName.isEmpty ? 'مرحبًا بك' : fullName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 19,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const MyOrdersScreen(),
-                          ),
-                        );
-                      },
-                      child: const Text('طلباتي'),
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const NotificationsScreen(),
-                          ),
-                        );
-                      },
-                      child: const Text('إشعاراتي'),
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const AddressListScreen(),
-                          ),
-                        );
-                      },
-                      child: const Text('عناويني'),
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const SupportScreen(),
-                          ),
-                        );
-                      },
-                      child: const Text('المساعدة'),
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton(
-                      onPressed: _logout,
-                      child: const Text('تسجيل الخروج'),
-                    ),
-                  ],
-                )
-              : Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.person_outline_rounded,
-                      size: 72,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'سجّل الدخول لمتابعة طلباتك',
-                      style: theme.textTheme.titleLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: _login,
-                      child: const Text('تسجيل الدخول / إنشاء حساب'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const SupportScreen(),
-                          ),
-                        );
-                      },
-                      child: const Text('المساعدة'),
-                    ),
+                    if (phone.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        phone,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // ---------- Menu ----------
+        _MenuGroup(
+          children: [
+            _MenuTile(
+              icon: Icons.receipt_long_outlined,
+              label: 'طلباتي',
+              onTap: () => _push(const MyOrdersScreen()),
+            ),
+            _MenuTile(
+              icon: Icons.notifications_none_rounded,
+              label: 'إشعاراتي',
+              onTap: () => _push(const NotificationsScreen()),
+            ),
+            _MenuTile(
+              icon: Icons.location_on_outlined,
+              label: 'عناويني',
+              onTap: () => _push(const AddressListScreen()),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        _MenuGroup(
+          children: [
+            _MenuTile(
+              icon: Icons.help_outline_rounded,
+              label: 'المساعدة',
+              onTap: () => _push(const SupportScreen()),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        _MenuGroup(
+          children: [
+            _MenuTile(
+              icon: Icons.logout_rounded,
+              label: 'تسجيل الخروج',
+              color: theme.colorScheme.error,
+              onTap: _logout,
+              showChevron: false,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSignedOut(ThemeData theme) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.person_outline_rounded,
+                size: 48,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'سجّل الدخول لمتابعة طلباتك',
+              style: theme.textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'وحفظ عناوينك ومتابعة إشعاراتك',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _login,
+                child: const Text('تسجيل الدخول / إنشاء حساب'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => _push(const SupportScreen()),
+              child: const Text('المساعدة'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// بطاقة تجمع عدة عناصر قائمة مع فواصل بينها — نمط موحَّد لكل الشاشة.
+class _MenuGroup extends StatelessWidget {
+  final List<Widget> children;
+
+  const _MenuGroup({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (int i = 0; i < children.length; i++) ...[
+            if (i > 0) const Divider(height: 1, indent: 56),
+            children[i],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _MenuTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Color? color;
+  final bool showChevron;
+
+  const _MenuTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.color,
+    this.showChevron = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tileColor = color ?? theme.colorScheme.onSurface;
+
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Icon(icon, color: color ?? theme.colorScheme.primary, size: 22),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                label,
+                style: theme.textTheme.bodyLarge?.copyWith(color: tileColor),
+              ),
+            ),
+            if (showChevron)
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+              ),
+          ],
         ),
       ),
     );

@@ -15,8 +15,8 @@ void main() {
     // شاشة البداية تظهر أولًا (تحمل اسم التطبيق أيضًا)
     expect(find.text('كوموندور خنشلة'), findsOneWidget);
 
-    // ننتظر مدة العرض القصيرة للانتقال لشاشة الترحيب
-    await tester.pump(const Duration(milliseconds: 700));
+    // ننتظر مدة عرض شاشة البداية (3 ثوانٍ) قبل الانتقال لشاشة الترحيب
+    await tester.pump(const Duration(seconds: 3));
     await tester.pumpAndSettle();
 
     expect(find.text('كوموندور خنشلة'), findsOneWidget);
