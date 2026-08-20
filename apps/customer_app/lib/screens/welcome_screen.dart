@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'confirm_wilaya_screen.dart';
+
 /// شاشة الترحيب الأولى — بسيطة جدًا، بدون خيارات كثيرة، وفق مبدأ
 /// "أقل عدد ممكن من الخطوات" و"عدم إغراق المستخدم بالخيارات".
 class WelcomeScreen extends StatelessWidget {
@@ -50,7 +52,11 @@ class WelcomeScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // لاحقًا: الانتقال إلى شاشة اختيار البلدية / تسجيل الدخول
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ConfirmWilayaScreen(),
+                      ),
+                    );
                   },
                   child: const Text('ابدأ'),
                 ),
