@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/product.dart';
+import '../services/cart_service.dart';
+import 'cart_screen.dart';
 
 /// شاشة منتجات محل واحد، مرتّبة، بسيطة، بدون تعقيد.
 class MerchantProductsScreen extends StatefulWidget {
@@ -41,12 +44,107 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
         .toList();
   }
 
+  void _addToCart(Product product) {
+    final cart = context.read<CartService>();
+    final result = cart.addProduct(
+      product: product,
+      merchantId: widget.merchantId,
+      merchantName: widget.storeName,
+    );
+
+    if (result == AddToCartResult.differentMerchantConflict) {
+      _showDifferentMerchantDialog(product, cart);
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('أُضيف "${product.name}" إلى السلة'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+  /// القاعدة من PHASE 1: الطلب الواحد من تاجر واحد فقط. هذا الحوار يشرح
+  /// الموقف بوضوح ويعطي المستخدم خيارًا صريحًا، بدل رفض صامت أو خلط تلقائي.
+  void _showDifferentMerchantDialog(Product product, CartService cart) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('سلتك من محل آخر'),
+        content: Text(
+          'سلتك تحتوي منتجات من "${cart.merchantName}". '
+          'لا يمكن الطلب من محلّين في نفس الوقت. '
+          'هل تريد إفراغ السلة وإضافة هذا المنتج من "${widget.storeName}" بدلاً منها؟',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              cart.clearAndAddProduct(
+                product: product,
+                merchantId: widget.merchantId,
+                merchantName: widget.storeName,
+              );
+              Navigator.of(dialogContext).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('أُضيف "${product.name}" إلى السلة')),
+              );
+            },
+            child: const Text('نعم، إفراغ السلة'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cart = context.watch<CartService>();
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.storeName)),
+      appBar: AppBar(
+        title: Text(widget.storeName),
+        actions: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.shopping_cart_outlined),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const CartScreen()),
+                  );
+                },
+              ),
+              if (cart.itemCount > 0)
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.error,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '${cart.itemCount}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: FutureBuilder<List<Product>>(
         future: _productsFuture,
         builder: (context, snapshot) {
@@ -120,12 +218,25 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
                   subtitle: product.description == null
                       ? null
                       : Text(product.description!),
-                  trailing: Text(
-                    '${product.price.toStringAsFixed(0)} دج',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  trailing: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${product.price.toStringAsFixed(0)} دج',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.add_circle,
+                          color: theme.colorScheme.primary,
+                        ),
+                        onPressed: () => _addToCart(product),
+                        tooltip: 'أضف للسلة',
+                      ),
+                    ],
                   ),
                 ),
               );

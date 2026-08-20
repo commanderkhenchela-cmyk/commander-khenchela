@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/supabase_config.dart';
 import 'screens/welcome_screen.dart';
+import 'services/cart_service.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
@@ -14,7 +16,12 @@ Future<void> main() async {
     publishableKey: SupabaseConfig.publishableKey,
   );
 
-  runApp(const CommanderKhenchelaApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => CartService(),
+      child: const CommanderKhenchelaApp(),
+    ),
+  );
 }
 
 class CommanderKhenchelaApp extends StatelessWidget {
