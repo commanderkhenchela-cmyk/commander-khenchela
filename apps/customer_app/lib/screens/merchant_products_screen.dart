@@ -218,25 +218,32 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
                   subtitle: product.description == null
                       ? null
                       : Text(product.description!),
-                  trailing: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '${product.price.toStringAsFixed(0)} دج',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.bold,
+                  trailing: SizedBox(
+                    width: 84,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '${product.price.toStringAsFixed(0)} دج',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.add_circle,
-                          color: theme.colorScheme.primary,
+                        IconButton(
+                          icon: Icon(
+                            Icons.add_circle,
+                            color: theme.colorScheme.primary,
+                          ),
+                          iconSize: 28,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () => _addToCart(product),
+                          tooltip: 'أضف للسلة',
                         ),
-                        onPressed: () => _addToCart(product),
-                        tooltip: 'أضف للسلة',
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );
