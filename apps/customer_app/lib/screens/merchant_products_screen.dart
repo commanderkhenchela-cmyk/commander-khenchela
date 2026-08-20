@@ -198,52 +198,65 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final product = products[index];
+              // بناء يدوي بـ Row بدل ListTile: تجنّبًا لمشكلة "overflow"
+              // التي ظهرت فعليًا على الجهاز الحقيقي مع محتوى trailing
+              // متعدد الأسطر (السعر + زر الإضافة) داخل ListTile.
               return Card(
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(16),
-                  leading: CircleAvatar(
-                    radius: 24,
-                    backgroundColor: theme.colorScheme.primary.withValues(
-                      alpha: 0.1,
-                    ),
-                    child: Icon(
-                      Icons.shopping_bag_outlined,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                  title: Text(
-                    product.name,
-                    style: theme.textTheme.titleLarge,
-                  ),
-                  subtitle: product.description == null
-                      ? null
-                      : Text(product.description!),
-                  trailing: SizedBox(
-                    width: 84,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '${product.price.toStringAsFixed(0)} دج',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundColor: theme.colorScheme.primary
+                            .withValues(alpha: 0.1),
+                        child: Icon(
+                          Icons.shopping_bag_outlined,
+                          color: theme.colorScheme.primary,
                         ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.add_circle,
-                            color: theme.colorScheme.primary,
-                          ),
-                          iconSize: 28,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          onPressed: () => _addToCart(product),
-                          tooltip: 'أضف للسلة',
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              product.name,
+                              style: theme.textTheme.titleLarge,
+                            ),
+                            if (product.description != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                product.description!,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 4),
+                            Text(
+                              '${product.price.toStringAsFixed(0)} دج',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: Icon(
+                          Icons.add_circle,
+                          color: theme.colorScheme.primary,
+                          size: 32,
+                        ),
+                        onPressed: () => _addToCart(product),
+                        tooltip: 'أضف للسلة',
+                      ),
+                    ],
                   ),
                 ),
               );
