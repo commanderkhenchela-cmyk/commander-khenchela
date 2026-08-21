@@ -3,9 +3,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/order.dart';
 import '../models/order_detail.dart';
+import '../widgets/review_stars.dart';
 
 /// شاشة تفاصيل طلب واحد — تعرض المنتجات والعنوان، وتسمح للعميل بإلغاء
-/// طلبه بنفسه طالما لم يوافق عليه التاجر بعد (pending فقط).
+/// طلبه بنفسه طالما لم يوافق عليه التاجر بعد (pending فقط)، وبتقييم
+/// المحل بعد تسليم الطلب فعليًا (راجع CustomerOrderDetail.canBeReviewed).
 class OrderDetailScreen extends StatefulWidget {
   final String orderId;
 
@@ -16,7 +18,7 @@ class OrderDetailScreen extends StatefulWidget {
 }
 
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
-  late Future<CustomerOrderDetail> _orderFuture;
+  late Future<_OrderPageData> _orderFuture;
   bool _isCancelling = false;
 
   @override
@@ -25,19 +27,66 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     _orderFuture = _fetchOrder();
   }
 
-  Future<CustomerOrderDetail> _fetchOrder() async {
-    final data = await Supabase.instance.client
+  Future<_OrderPageData> _fetchOrder() async {
+    final client = Supabase.instance.client;
+
+    final orderFuture = client
         .from('orders')
         .select('''
           id, status, subtotal, delivery_fee, total_amount, created_at,
-          merchants(store_name, phone),
+          merchants(id, store_name, phone),
           addresses(address_text, communes(name)),
           order_items(quantity, unit_price, subtotal, products(name))
         ''')
         .eq('id', widget.orderId)
         .single();
 
-    return CustomerOrderDetail.fromMap(data);
+    final reviewFuture = client
+        .from('reviews')
+        .select('id, rating, comment')
+        .eq('order_id', widget.orderId)
+        .maybeSingle();
+
+    final (orderRow, reviewRow) = await (orderFuture, reviewFuture).wait;
+
+    return _OrderPageData(
+      order: CustomerOrderDetail.fromMap(orderRow),
+      review: reviewRow == null ? null : CustomerReview.fromMap(reviewRow),
+    );
+  }
+
+  Future<void> _submitReview(int rating, String? comment) async {
+    final order = (await _orderFuture).order;
+
+    try {
+      await Supabase.instance.client.from('reviews').insert({
+        'order_id': widget.orderId,
+        'customer_id': Supabase.instance.client.auth.currentUser!.id,
+        'merchant_id': order.merchantId,
+        'rating': rating,
+        if (comment != null && comment.trim().isNotEmpty)
+          'comment': comment.trim(),
+      });
+
+      if (!mounted) return;
+      setState(() => _orderFuture = _fetchOrder());
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('شكرًا على تقييمك!')));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تعذّر إرسال التقييم. حاول مرة أخرى.')),
+      );
+    }
+  }
+
+  Future<void> _openReviewDialog() async {
+    final result = await showDialog<_ReviewInput>(
+      context: context,
+      builder: (dialogContext) => const _ReviewDialog(),
+    );
+    if (result == null) return;
+    await _submitReview(result.rating, result.comment);
   }
 
   Future<void> _cancelOrder() async {
@@ -90,7 +139,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('تفاصيل الطلب')),
-      body: FutureBuilder<CustomerOrderDetail>(
+      body: FutureBuilder<_OrderPageData>(
         future: _orderFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -101,7 +150,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             return const Center(child: Text('تعذّر تحميل تفاصيل الطلب.'));
           }
 
-          final order = snapshot.data!;
+          final order = snapshot.data!.order;
+          final review = snapshot.data!.review;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -215,6 +265,45 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     ),
                   ),
                 ),
+                if (order.canBeReviewed) ...[
+                  const SizedBox(height: 12),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: review == null
+                          ? Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'كيف كانت تجربتك مع هذا المحل؟',
+                                    style: theme.textTheme.titleMedium,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ElevatedButton(
+                                  onPressed: _openReviewDialog,
+                                  child: const Text('قيّم الآن'),
+                                ),
+                              ],
+                            )
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'تقييمك',
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                                const SizedBox(height: 6),
+                                ReviewStars(rating: review.rating, size: 22),
+                                if (review.comment != null) ...[
+                                  const SizedBox(height: 8),
+                                  Text(review.comment!),
+                                ],
+                              ],
+                            ),
+                    ),
+                  ),
+                ],
                 if (order.canBeCancelledByCustomer) ...[
                   const SizedBox(height: 20),
                   OutlinedButton(
@@ -237,6 +326,82 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           );
         },
       ),
+    );
+  }
+}
+
+/// حزمة بيانات الشاشة: تفاصيل الطلب + تقييمه الحالي إن وُجد (null قبل
+/// أن يُقيَّم الطلب من طرف العميل).
+class _OrderPageData {
+  final CustomerOrderDetail order;
+  final CustomerReview? review;
+
+  const _OrderPageData({required this.order, this.review});
+}
+
+/// نتيجة حوار التقييم — rating إجباري (1-5)، comment اختياري.
+class _ReviewInput {
+  final int rating;
+  final String? comment;
+
+  const _ReviewInput({required this.rating, this.comment});
+}
+
+/// حوار اختيار تقييم (1-5 نجوم) + تعليق اختياري، قبل الإرسال الفعلي —
+/// الإرسال نفسه يتم من الشاشة المستدعية (OrderDetailScreen) عبر
+/// Navigator.pop بالنتيجة، حتى تبقى منطق الشبكة في مكان واحد.
+class _ReviewDialog extends StatefulWidget {
+  const _ReviewDialog();
+
+  @override
+  State<_ReviewDialog> createState() => _ReviewDialogState();
+}
+
+class _ReviewDialogState extends State<_ReviewDialog> {
+  int _rating = 5;
+  final _commentController = TextEditingController();
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('قيّم تجربتك'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ReviewStars(
+            rating: _rating,
+            size: 36,
+            onChanged: (value) => setState(() => _rating = value),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _commentController,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              hintText: 'تعليق (اختياري)...',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('إلغاء'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(
+            _ReviewInput(rating: _rating, comment: _commentController.text),
+          ),
+          child: const Text('إرسال'),
+        ),
+      ],
     );
   }
 }

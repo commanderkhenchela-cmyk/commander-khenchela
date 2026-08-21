@@ -12,6 +12,8 @@ class Merchant {
   final double? longitude;
   final String? logoUrl;
   final String? coverUrl;
+  final double ratingAvg;
+  final int ratingCount;
 
   const Merchant({
     required this.id,
@@ -23,7 +25,12 @@ class Merchant {
     this.longitude,
     this.logoUrl,
     this.coverUrl,
+    this.ratingAvg = 0,
+    this.ratingCount = 0,
   });
+
+  /// لا نعرض شارة تقييم أبدًا بلا تقييمات حقيقية (0.0 وهمي بلا معنى).
+  bool get hasRating => ratingCount > 0;
 
   /// true = مفتوح الآن، false = مغلق الآن، null = لا معلومة كافية (لم
   /// يحفظ التاجر ساعات عمله بعد) — يجب إخفاء أي شارة في حالة null.
@@ -54,6 +61,8 @@ class Merchant {
       longitude: (map['longitude'] as num?)?.toDouble(),
       logoUrl: map['logo_url'] as String?,
       coverUrl: map['cover_url'] as String?,
+      ratingAvg: (map['rating_avg'] as num?)?.toDouble() ?? 0,
+      ratingCount: (map['rating_count'] as num?)?.toInt() ?? 0,
     );
   }
 }

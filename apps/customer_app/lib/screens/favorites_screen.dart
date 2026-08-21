@@ -28,7 +28,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
     const columns =
         'id, store_name, phone, communes(name), latitude, longitude, '
-        'logo_url, cover_url, '
+        'logo_url, cover_url, rating_avg, rating_count, '
         'merchant_business_hours(day_of_week, open_time, close_time, is_closed)';
 
     final data = await Supabase.instance.client

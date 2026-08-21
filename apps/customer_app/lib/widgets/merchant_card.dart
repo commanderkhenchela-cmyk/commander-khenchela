@@ -4,6 +4,7 @@ import '../models/merchant.dart';
 import 'favorite_button.dart';
 import 'merchant_logo.dart';
 import 'open_status_badge.dart';
+import 'rating_badge.dart';
 
 /// بطاقة محل عمودية كاملة (قائمة "كل المحلات" في شاشة التصنيف، وأي قائمة
 /// عمودية أخرى). Component عام وقابل لإعادة الاستخدام — مستخرج من
@@ -114,6 +115,15 @@ class MerchantCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      );
+    }
+
+    if (merchant.hasRating) {
+      chips.add(
+        RatingBadge(
+          ratingAvg: merchant.ratingAvg,
+          ratingCount: merchant.ratingCount,
         ),
       );
     }
