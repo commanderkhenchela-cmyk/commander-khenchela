@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAdminContext } from "@/lib/admin-context";
 import { tableLabel, type ActivityLogEntry } from "@/lib/types";
 
 const ACTION_COLORS: Record<string, string> = {
@@ -8,6 +10,9 @@ const ACTION_COLORS: Record<string, string> = {
 };
 
 export default async function ActivityLogPage() {
+  const context = await getAdminContext();
+  if (!context?.isSuperAdmin) redirect("/dashboard");
+
   const supabase = await createClient();
   const { data: logs } = await supabase
     .from("admin_activity_log")

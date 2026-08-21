@@ -3,6 +3,12 @@ import Link from "next/link";
 import { getAdminContext } from "@/lib/admin-context";
 import LogoutButton from "@/components/logout-button";
 
+const ROLE_LABELS: Record<string, string> = {
+  admin: "مدير عام (صلاحية كاملة)",
+  manager: "مدير",
+  ads_manager: "مدير الإعلانات",
+};
+
 export default async function DashboardLayout({
   children,
 }: {
@@ -20,24 +26,44 @@ export default async function DashboardLayout({
           <p className="text-xs text-black/50 mt-0.5">
             {context.fullName || "مرحبًا"}
           </p>
+          <p className="text-xs text-primary font-medium mt-1">
+            {context.role ? ROLE_LABELS[context.role] : ""}
+          </p>
         </div>
         <nav className="flex md:flex-col p-3 gap-1 overflow-x-auto">
           <NavLink href="/dashboard" label="نظرة عامة" />
-          <NavLink href="/dashboard/merchants" label="المحلات" />
-          <NavLink href="/dashboard/orders" label="الطلبات" />
-          <NavLink href="/dashboard/categories" label="التصنيفات" />
-          <NavLink
-            href="/dashboard/merchant-categories"
-            label="تصنيفات المحلات"
-          />
-          <NavLink
-            href="/dashboard/advertisements"
-            label="لوحة إعلانات الفيديو"
-          />
-          <NavLink href="/dashboard/settings" label="إعدادات المنصة" />
-          <NavLink href="/dashboard/branding" label="الهوية والشعار" />
-          <NavLink href="/dashboard/app-settings" label="بيانات التواصل" />
-          <NavLink href="/dashboard/activity-log" label="سجل النشاطات" />
+
+          {context.canManageStores && (
+            <>
+              <NavLink href="/dashboard/merchants" label="المحلات" />
+              <NavLink href="/dashboard/categories" label="التصنيفات" />
+              <NavLink
+                href="/dashboard/merchant-categories"
+                label="تصنيفات المحلات"
+              />
+            </>
+          )}
+
+          {context.isSuperAdmin && (
+            <NavLink href="/dashboard/orders" label="الطلبات" />
+          )}
+
+          {context.canManageAds && (
+            <NavLink
+              href="/dashboard/advertisements"
+              label="لوحة إعلانات الفيديو"
+            />
+          )}
+
+          {context.isSuperAdmin && (
+            <>
+              <NavLink href="/dashboard/settings" label="إعدادات المنصة" />
+              <NavLink href="/dashboard/branding" label="الهوية والشعار" />
+              <NavLink href="/dashboard/app-settings" label="بيانات التواصل" />
+              <NavLink href="/dashboard/activity-log" label="سجل النشاطات" />
+              <NavLink href="/dashboard/team" label="فريق الإدارة" />
+            </>
+          )}
         </nav>
         <div className="p-3 mt-auto hidden md:block">
           <LogoutButton className="w-full text-right text-error text-sm px-3 py-2" />

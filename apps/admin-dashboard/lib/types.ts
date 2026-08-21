@@ -120,11 +120,32 @@ const TABLE_LABELS: Record<string, string> = {
   categories: "تصنيف",
   merchant_categories: "تصنيف محلات",
   advertisements: "إعلان",
+  users: "دور مستخدم",
 };
 
 export function tableLabel(tableName: string): string {
   return TABLE_LABELS[tableName] ?? tableName;
 }
+
+export type UserRole = "customer" | "merchant" | "admin" | "manager" | "ads_manager";
+
+export interface TeamMember {
+  id: string;
+  full_name: string;
+  phone: string | null;
+  role: UserRole;
+  created_at: string;
+}
+
+export const ROLE_LABELS: Record<UserRole, string> = {
+  customer: "عميل",
+  merchant: "تاجر",
+  admin: "مدير عام (صلاحية كاملة)",
+  manager: "مدير",
+  ads_manager: "مدير الإعلانات",
+};
+
+export const ADMIN_PANEL_ROLES: UserRole[] = ["admin", "manager", "ads_manager"];
 
 export interface Advertisement {
   id: string;

@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAdminContext } from "@/lib/admin-context";
 import { ORDER_STATUS_LABELS, type AdminOrder } from "@/lib/types";
 import OrderActions from "./order-actions";
 import DeliveryFeeForm from "./delivery-fee-form";
@@ -9,6 +10,9 @@ export default async function OrderDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const context = await getAdminContext();
+  if (!context?.isSuperAdmin) redirect("/dashboard");
+
   const { id } = await params;
   const supabase = await createClient();
 

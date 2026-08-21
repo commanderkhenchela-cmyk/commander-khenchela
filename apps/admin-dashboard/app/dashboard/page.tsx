@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getAdminContext } from "@/lib/admin-context";
 import { tableLabel, type ActivityLogEntry } from "@/lib/types";
 
 export default async function DashboardOverviewPage() {
+  const context = await getAdminContext();
   const supabase = await createClient();
 
   const [
@@ -39,22 +41,30 @@ export default async function DashboardOverviewPage() {
       <h1 className="text-2xl font-bold mb-6">نظرة عامة</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard
-          label="محلات بانتظار الموافقة"
-          value={pendingMerchants ?? 0}
-          highlight={(pendingMerchants ?? 0) > 0}
-        />
-        <StatCard
-          label="طلبات جاهزة للاستلام (تحتاج توصيل)"
-          value={pendingOrders ?? 0}
-          highlight={(pendingOrders ?? 0) > 0}
-        />
-        <StatCard label="محلات نشطة" value={activeMerchants ?? 0} />
-        <StatCard label="إجمالي الطلبات" value={totalOrders ?? 0} />
+        {context?.canManageStores && (
+          <>
+            <StatCard
+              label="محلات بانتظار الموافقة"
+              value={pendingMerchants ?? 0}
+              highlight={(pendingMerchants ?? 0) > 0}
+            />
+            <StatCard label="محلات نشطة" value={activeMerchants ?? 0} />
+          </>
+        )}
+        {context?.isSuperAdmin && (
+          <>
+            <StatCard
+              label="طلبات جاهزة للاستلام (تحتاج توصيل)"
+              value={pendingOrders ?? 0}
+              highlight={(pendingOrders ?? 0) > 0}
+            />
+            <StatCard label="إجمالي الطلبات" value={totalOrders ?? 0} />
+          </>
+        )}
       </div>
 
       <div className="flex gap-3 flex-wrap">
-        {(pendingMerchants ?? 0) > 0 && (
+        {context?.canManageStores && (pendingMerchants ?? 0) > 0 && (
           <Link
             href="/dashboard/merchants?status=pending"
             className="rounded-lg bg-primary text-white font-semibold px-5 py-3"
@@ -62,7 +72,7 @@ export default async function DashboardOverviewPage() {
             مراجعة المحلات الجديدة
           </Link>
         )}
-        {(pendingOrders ?? 0) > 0 && (
+        {context?.isSuperAdmin && (pendingOrders ?? 0) > 0 && (
           <Link
             href="/dashboard/orders?status=ready_for_pickup"
             className="rounded-lg border border-primary text-primary font-semibold px-5 py-3"
@@ -72,6 +82,7 @@ export default async function DashboardOverviewPage() {
         )}
       </div>
 
+      {context?.isSuperAdmin && (
       <div className="mt-8">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-bold">آخر النشاطات</h2>
@@ -107,6 +118,7 @@ export default async function DashboardOverviewPage() {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

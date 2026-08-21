@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAdminContext } from "@/lib/admin-context";
 import { ORDER_STATUS_LABELS, type AdminOrder, type OrderStatus } from "@/lib/types";
 
 const FILTERS: { value: OrderStatus | "all"; label: string }[] = [
@@ -18,6 +20,9 @@ export default async function OrdersPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  const context = await getAdminContext();
+  if (!context?.isSuperAdmin) redirect("/dashboard");
+
   const { status } = await searchParams;
   const supabase = await createClient();
 

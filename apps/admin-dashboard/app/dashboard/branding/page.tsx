@@ -1,8 +1,13 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAdminContext } from "@/lib/admin-context";
 import type { AppBranding } from "@/lib/types";
 import BrandingForm from "./branding-form";
 
 export default async function BrandingPage() {
+  const context = await getAdminContext();
+  if (!context?.isSuperAdmin) redirect("/dashboard");
+
   const supabase = await createClient();
   const { data: branding } = await supabase
     .from("app_branding")

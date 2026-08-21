@@ -1,8 +1,13 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAdminContext } from "@/lib/admin-context";
 import type { Setting } from "@/lib/types";
 import SettingsForm from "./settings-form";
 
 export default async function SettingsPage() {
+  const context = await getAdminContext();
+  if (!context?.isSuperAdmin) redirect("/dashboard");
+
   const supabase = await createClient();
   const { data: settings } = await supabase.rpc("admin_get_settings");
 

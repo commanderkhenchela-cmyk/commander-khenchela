@@ -1,8 +1,13 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAdminContext } from "@/lib/admin-context";
 import type { AppContact } from "@/lib/types";
 import ContactForm from "./contact-form";
 
 export default async function AppSettingsPage() {
+  const context = await getAdminContext();
+  if (!context?.isSuperAdmin) redirect("/dashboard");
+
   const supabase = await createClient();
   const { data: contact } = await supabase
     .from("app_contact")
