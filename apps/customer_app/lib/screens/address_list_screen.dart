@@ -59,14 +59,26 @@ class _AddressListScreenState extends State<AddressListScreen> {
     final client = Supabase.instance.client;
     final userId = client.auth.currentUser!.id;
 
-    await client
-        .from('addresses')
-        .update({'is_default': false})
-        .eq('user_id', userId);
-    await client
-        .from('addresses')
-        .update({'is_default': true})
-        .eq('id', address.id);
+    try {
+      await client
+          .from('addresses')
+          .update({'is_default': false})
+          .eq('user_id', userId);
+      await client
+          .from('addresses')
+          .update({'is_default': true})
+          .eq('id', address.id);
+    } catch (_) {
+      // لو فشل الطلب الثاني بعد نجاح الأول (مثلاً انقطاع شبكة لحظي)، لا
+      // يبقى العميل بدون أي عنوان افتراضي بصمت — نعرض خطأ واضحًا،
+      // و_refresh() أدناه يعكس الحالة الفعلية في قاعدة البيانات بأي حال.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تعذّر تعيين العنوان كافتراضي. حاول مرة أخرى.'),
+        ),
+      );
+    }
 
     _refresh();
   }

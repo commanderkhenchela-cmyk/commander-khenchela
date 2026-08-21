@@ -11,9 +11,20 @@ class AuthService {
   static final SupabaseClient _client = Supabase.instance.client;
 
   /// يحوّل رقم الهاتف إلى بريد مموّه ثابت لنفس الرقم دائمًا.
+  ///
+  /// إصلاح خلل حقيقي: نموذج إنشاء الحساب وشاشة العنوان يقبلان كلا
+  /// الصيغتين "0555xxxxxx" و"+213555xxxxxx" كرقم صحيح (نفس الرقم
+  /// فعليًا)، لكن بدون التطبيع أدناه كانتا تُنتجان بريدَين مموَّهَين
+  /// مختلفَين تمامًا لنفس الرقم — فلو سجّل عميل حسابه بصيغة وحاول
+  /// الدخول لاحقًا بالصيغة الأخرى، يفشل الدخول بـ"بيانات غير صحيحة"
+  /// رغم صحة كل شيء. الآن تُحوَّل صيغة +213 دائمًا لصيغتها المحلية
+  /// (0xxxxxxxxx) أولًا، فتتطابق الصيغتان دومًا على نفس البريد المموَّه.
   static String phoneToEmail(String phone) {
-    final digitsOnly = phone.replaceAll(RegExp(r'[^0-9]'), '');
-    return '$digitsOnly$_emailDomain';
+    var digits = phone.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.startsWith('213') && digits.length == 12) {
+      digits = '0${digits.substring(3)}';
+    }
+    return '$digits$_emailDomain';
   }
 
   static User? get currentUser => _client.auth.currentUser;
