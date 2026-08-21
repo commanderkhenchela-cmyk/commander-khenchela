@@ -47,6 +47,7 @@ class _SearchScreenState extends State<SearchScreen> {
     final client = Supabase.instance.client;
     const merchantColumns =
         'id, store_name, phone, communes(name), latitude, longitude, '
+        'logo_url, cover_url, '
         'merchant_business_hours(day_of_week, open_time, close_time, is_closed)';
 
     final merchantsFuture = client
@@ -79,6 +80,8 @@ class _SearchScreenState extends State<SearchScreen> {
         builder: (_) => MerchantProductsScreen(
           merchantId: merchant.id,
           storeName: merchant.storeName,
+          logoUrl: merchant.logoUrl,
+          coverUrl: merchant.coverUrl,
         ),
       ),
     );

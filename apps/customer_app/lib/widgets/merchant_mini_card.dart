@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/merchant.dart';
+import 'merchant_logo.dart';
 
 /// بطاقة محل مصغّرة لقسم أفقي قابل للتمرير (مميزة / الأكثر طلبًا /
 /// المضافة حديثًا داخل صفحة تصنيف). Component مستقل وقابل للاختبار
@@ -36,18 +37,11 @@ class MerchantMiniCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.storefront_rounded,
-                    color: theme.colorScheme.primary,
-                    size: 20,
-                  ),
+                MerchantLogo(
+                  url: merchant.logoUrl,
+                  size: 40,
+                  iconSize: 20,
+                  borderRadius: 12,
                 ),
                 const SizedBox(height: 8),
                 Expanded(

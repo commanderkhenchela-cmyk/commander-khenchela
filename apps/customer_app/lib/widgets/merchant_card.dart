@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/merchant.dart';
+import 'merchant_logo.dart';
 import 'open_status_badge.dart';
 
 /// بطاقة محل عمودية كاملة (قائمة "كل المحلات" في شاشة التصنيف، وأي قائمة
@@ -33,19 +34,7 @@ class MerchantCard extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           child: Row(
             children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  Icons.storefront_rounded,
-                  color: theme.colorScheme.primary,
-                  size: 28,
-                ),
-              ),
+              MerchantLogo(url: merchant.logoUrl, size: 56, iconSize: 28),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(

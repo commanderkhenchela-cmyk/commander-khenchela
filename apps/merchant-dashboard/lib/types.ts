@@ -13,6 +13,8 @@ export interface Merchant {
   status: MerchantStatus;
   latitude: number | null;
   longitude: number | null;
+  logo_url: string | null;
+  cover_url: string | null;
   created_at: string;
 }
 

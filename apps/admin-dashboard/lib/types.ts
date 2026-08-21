@@ -14,6 +14,8 @@ export interface Merchant {
   category_id: string | null;
   is_featured: boolean;
   orders_count: number;
+  logo_url: string | null;
+  cover_url: string | null;
   created_at: string;
   communes?: { name: string } | null;
   merchant_categories?: { name: string; icon: string } | null;

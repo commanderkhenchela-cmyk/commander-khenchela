@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import type { Merchant, MerchantStatus } from "@/lib/types";
 
@@ -27,7 +28,7 @@ export default async function MerchantsPage({
   let query = supabase
     .from("merchants")
     .select(
-      "id, owner_user_id, store_name, wilaya_id, commune_id, address_text, phone, status, created_at, communes(name)",
+      "id, owner_user_id, store_name, wilaya_id, commune_id, address_text, phone, status, logo_url, created_at, communes(name)",
     )
     .order("created_at", { ascending: false });
 
@@ -66,9 +67,20 @@ export default async function MerchantsPage({
             <Link
               key={m.id}
               href={`/dashboard/merchants/${m.id}`}
-              className="rounded-xl border border-border bg-card p-4 flex items-center justify-between gap-4"
+              className="rounded-xl border border-border bg-card p-4 flex items-center gap-4"
             >
-              <div className="min-w-0">
+              <div className="w-11 h-11 rounded-lg overflow-hidden border border-border bg-background shrink-0 relative">
+                {m.logo_url && (
+                  <Image
+                    src={m.logo_url}
+                    alt=""
+                    fill
+                    unoptimized
+                    className="object-cover"
+                  />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
                 <p className="font-semibold truncate">{m.store_name}</p>
                 <p className="text-sm text-black/60 truncate">
                   {m.communes?.name} — {m.phone}

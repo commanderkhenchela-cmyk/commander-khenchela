@@ -10,6 +10,8 @@ class Merchant {
   final List<MerchantBusinessHours> businessHours;
   final double? latitude;
   final double? longitude;
+  final String? logoUrl;
+  final String? coverUrl;
 
   const Merchant({
     required this.id,
@@ -19,6 +21,8 @@ class Merchant {
     this.businessHours = const [],
     this.latitude,
     this.longitude,
+    this.logoUrl,
+    this.coverUrl,
   });
 
   /// true = مفتوح الآن، false = مغلق الآن، null = لا معلومة كافية (لم
@@ -48,6 +52,8 @@ class Merchant {
                 .toList(),
       latitude: (map['latitude'] as num?)?.toDouble(),
       longitude: (map['longitude'] as num?)?.toDouble(),
+      logoUrl: map['logo_url'] as String?,
+      coverUrl: map['cover_url'] as String?,
     );
   }
 }
