@@ -2,6 +2,9 @@ plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // PHASE 11: يقرأ google-services.json في هذا المجلد (android/app/)
+    // ويولّد إعدادات الاتصال بمشروع Firebase تلقائيًا.
+    id("com.google.gms.google-services")
 }
 
 android {

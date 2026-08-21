@@ -46,3 +46,8 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# PHASE 11: ملف إعدادات مشروع Firebase الحقيقي — خاص بكل بيئة/جهاز،
+# لا يُرفع لـ GitHub (نفس منطق .env.local). ضعه محليًا في
+# android/app/google-services.json فقط.
+android/app/google-services.json
