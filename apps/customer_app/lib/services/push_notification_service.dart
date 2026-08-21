@@ -34,8 +34,10 @@ class PushNotificationService {
     try {
       await Firebase.initializeApp();
       _initialized = true;
+      debugPrint('[Push] Firebase.initializeApp نجحت');
 
-      await FirebaseMessaging.instance.requestPermission();
+      final settings = await FirebaseMessaging.instance.requestPermission();
+      debugPrint('[Push] إذن الإشعارات: ${settings.authorizationStatus}');
 
       // يحفظ التوكن فور تسجيل الدخول، ويحدّثه تلقائيًا عند تجدده أو عند
       // تغيّر حالة تسجيل الدخول — نفس نمط FavoritesController: استماع
@@ -54,28 +56,38 @@ class PushNotificationService {
       // بدل أن يختفي الإشعار بصمت. الإشعار يبقى مسجَّلًا في "إشعاراتي"
       // بغض النظر عن هذا تمامًا.
       FirebaseMessaging.onMessage.listen(_showForegroundBanner);
-    } catch (_) {
+    } catch (e, st) {
       // Firebase غير مربوط بعد أو فشل التهيئة لأي سبب — تجاهل بهدوء، راجع
-      // تعليق الصف أعلاه.
+      // تعليق الصف أعلاه. الطباعة هنا مؤقتة للتشخيص فقط أثناء تفعيل
+      // PHASE 11 لأول مرة — راجع نتيجتها ثم يمكن حذفها لاحقًا.
+      debugPrint('[Push] فشلت تهيئة Firebase: $e');
+      debugPrint('[Push] $st');
     }
   }
 
   static Future<void> _saveTokenIfSignedIn() async {
     try {
       final userId = Supabase.instance.client.auth.currentUser?.id;
-      if (userId == null) return;
+      if (userId == null) {
+        debugPrint('[Push] لا يوجد مستخدم مسجَّل دخوله — تخطّي حفظ التوكن');
+        return;
+      }
 
       final token = await FirebaseMessaging.instance.getToken();
+      debugPrint('[Push] التوكن الناتج من getToken(): $token');
       if (token == null) return;
 
       await Supabase.instance.client
           .from('users')
           .update({'fcm_token': token})
           .eq('id', userId);
-    } catch (_) {
+      debugPrint('[Push] تم حفظ التوكن في قاعدة البيانات بنجاح');
+    } catch (e, st) {
       // فشل حفظ التوكن (لا إنترنت مثلًا) لا يجب أن يزعج المستخدم بأي
       // شكل — ستُعاد المحاولة تلقائيًا عند أي تغيّر لاحق في حالة الدخول
-      // أو تجدد التوكن.
+      // أو تجدد التوكن. الطباعة هنا مؤقتة للتشخيص، راجع تعليق initialize.
+      debugPrint('[Push] فشل حفظ التوكن: $e');
+      debugPrint('[Push] $st');
     }
   }
 
