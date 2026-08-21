@@ -1,14 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'app_navigation.dart';
 import 'config/supabase_config.dart';
 import 'screens/splash_screen.dart';
 import 'services/branding_service.dart';
 import 'services/cart_service.dart';
 import 'services/contact_service.dart';
 import 'services/favorites_controller.dart';
+import 'services/push_notification_service.dart';
 import 'services/theme_controller.dart';
 import 'theme/app_theme.dart';
 
@@ -31,6 +35,11 @@ Future<void> main() async {
     themeController.load(),
   ]);
 
+  // إشعارات Push (PHASE 11) — لا تُنتظَر أبدًا قبل أول رسم للواجهة (قد
+  // تستغرق ثوانٍ بسبب حوار إذن النظام)، وتفشل بهدوء بالكامل إن لم يكن
+  // مشروع Firebase مربوطًا بعد (راجع تعليق الخدمة نفسها).
+  unawaited(PushNotificationService.initialize());
+
   runApp(
     MultiProvider(
       providers: [
@@ -51,6 +60,7 @@ class CommanderKhenchelaApp extends StatelessWidget {
     final themeController = context.watch<ThemeController>();
 
     return MaterialApp(
+      navigatorKey: appNavigatorKey,
       title: BrandingService.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(

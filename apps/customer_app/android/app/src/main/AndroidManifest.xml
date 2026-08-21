@@ -4,6 +4,10 @@
          لا تتبّع مستمر) — راجع LocationService لطلب الإذن نفسه. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- لازمة لإشعارات Push (PHASE 11) على أندرويد 13 فما فوق — بدونها
+         تُرفض الإشعارات صامتًا حتى لو نجح كل شيء آخر. راجع
+         PushNotificationService لطلب الإذن نفسه وقت التشغيل. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
         android:label="Commander Khenchela"
         android:name="${applicationName}"
