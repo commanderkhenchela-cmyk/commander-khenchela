@@ -6,18 +6,31 @@
 // HTTPS) — بالضبط القرار المعماري الموثَّق في create_order (Phase 6):
 // عمل DB بحت → دالة Postgres، عمل يحتاج خدمة خارجية → Edge Function.
 //
-// كيف تُستدعى: عبر "Database Webhook" في Supabase Dashboard
-// (Database → Webhooks)، مضبوطة على جدول orders، أحداث INSERT وUPDATE.
-// Supabase يرسل تلقائيًا payload بالشكل:
+// كيف تُستدعى: الخيار الأصلي كان "Database Webhook" الجاهز من واجهة
+// Supabase (Database → Webhooks) — لكن بعض المشاريع تفتقد جدول/schema
+// داخليًا (supabase_functions) يلزم لهذه الميزة تحديدًا (خلل منصّة
+// نادر، ظهر فعليًا هنا)، فتفشل إضافة الـ webhook برسالة "schema
+// supabase_functions does not exist". البديل المستخدَم هنا بدلًا منها:
+// Trigger عادي على جدول orders يستدعي هذه الدالة مباشرة عبر
+// pg_net.http_post (راجع migration 20260821110000_order_notify_trigger)
+// — لا يعتمد على ميزة Webhooks الجاهزة إطلاقًا، فيتجاوز هذا الخلل
+// تمامًا. الشكل النهائي للـ payload الذي يرسله الـ Trigger مطابق تمامًا
+// لما كانت السترجعه ميزة Webhooks أصلًا:
 //   { type: "INSERT" | "UPDATE", table, schema, record, old_record }
-// وهذا يوفّر بديلًا أبسط بكثير من كتابة pg_net + Vault يدويًا — كل
-// الإعداد يتم بنقرات في الواجهة، بدون SQL إضافي.
+//
+// حماية بديلة عن التحقق التلقائي من JWT (verify_jwt) — الدالة مَنشورة
+// بـ --no-verify-jwt (لأن مفتاح anon الحديث بصيغة sb_publishable_ ليس
+// JWT صالحًا لهذا التحقق أصلًا)، والحماية الفعلية هنا: مفتاح سرّي مشترك
+// بسيط (WEBHOOK_SECRET) يرسله الـ Trigger في ترويسة x-webhook-secret،
+// وتتحقق منه هذه الدالة قبل تنفيذ أي شيء — يمنع أي طرف خارجي (لا يعرف
+// السرّ) من انتحال أحداث طلبات وهمية.
 //
 // الأسرار المطلوبة (تُضبط في Supabase Dashboard → Edge Functions →
 // Secrets، ليست في الكود ولا في GitHub إطلاقًا):
 //   FCM_PROJECT_ID     — معرّف مشروع Firebase
 //   FCM_CLIENT_EMAIL   — بريد Service Account من Firebase
 //   FCM_PRIVATE_KEY    — المفتاح الخاص من نفس ملف Service Account JSON
+//   WEBHOOK_SECRET      — سرّ مشترك عشوائي بين هذه الدالة والـ Trigger
 // (SUPABASE_URL و SUPABASE_SERVICE_ROLE_KEY متوفرة تلقائيًا لكل Edge
 // Function في مشروع Supabase، لا حاجة لضبطهما يدويًا)
 // ============================================================
@@ -52,6 +65,12 @@ interface WebhookPayload {
 
 Deno.serve(async (req) => {
   try {
+    const expectedSecret = Deno.env.get("WEBHOOK_SECRET");
+    const providedSecret = req.headers.get("x-webhook-secret");
+    if (!expectedSecret || providedSecret !== expectedSecret) {
+      return new Response("unauthorized", { status: 401 });
+    }
+
     const payload: WebhookPayload = await req.json();
 
     if (payload.table !== "orders") {
