@@ -24,18 +24,20 @@ import 'search_screen.dart';
 /// الصفحة الرئيسية الفعلية للتطبيق — Feed ديناميكي متعدد الأقسام، تحلّ
 /// محل الشبكة الثابتة القديمة (كانت MerchantCategoriesScreen هي نقطة
 /// الدخول، تعرض شبكة تصنيفات فقط + إعلانات أعلاها). كل قسم من أقسام هذه
-/// الصفحة (hero/categories/featured/nearby/newest/most_ordered) يظهر
-/// بترتيب وعنوان تتحكّم بهما لوحة الإدارة بالكامل (جدول home_sections)،
-/// ويختفي تلقائيًا إن لم توجد له بيانات حقيقية كافية — لا نعرض أبدًا
-/// قسمًا فارغًا أو "قريبًا" مكرَّرة (راجع تعليق _buildSection أدناه).
+/// الصفحة (hero/categories/featured/nearby/newest/most_ordered/
+/// most_viewed) يظهر بترتيب وعنوان تتحكّم بهما لوحة الإدارة بالكامل
+/// (جدول home_sections)، ويختفي تلقائيًا إن لم توجد له بيانات حقيقية
+/// كافية — لا نعرض أبدًا قسمًا فارغًا أو "قريبًا" مكرَّرة (راجع تعليق
+/// _buildSection أدناه). "الأكثر مشاهدة" مبني على views_count حقيقي
+/// (راجع MerchantViewsService وmigration merchant_views) — كان مستبعدًا
+/// سابقًا لعدم وجود تتبّع مشاهدات، فبُني التتبّع نفسه بدل تلفيق ترتيب.
 ///
 /// كتالوج الأقسام مقصود أنه محدود (وليس منشئ صفحات حر) — راجع تعليق
 /// migration 20260821060000_home_sections.sql للتفسير الكامل. أقسام
-/// طلبها المستخدم صراحةً استُبعدت هنا لعدم وجود نموذج بيانات حقيقي
-/// يدعمها بعد (بدل تلفيق بيانات وهمية): "أفضل العروض" (لا جدول خصومات)،
-/// "الأكثر مشاهدة" (لا تتبّع مشاهدات على المحلات)، "مقترح لك" (لا محرّك
-/// توصية حقيقي). عند إضافة تلك النماذج لاحقًا، تُضاف كأنواع section_key
-/// جديدة بنفس النمط بالضبط.
+/// أخرى طلبها المستخدم صراحةً لا تزال مستبعدة لعدم وجود نموذج بيانات
+/// حقيقي يدعمها بعد (بدل تلفيق بيانات وهمية): "أفضل العروض" (لا جدول
+/// خصومات)، "مقترح لك" (لا محرّك توصية حقيقي). عند إضافة تلك النماذج
+/// لاحقًا، تُضاف كأنواع section_key جديدة بنفس النمط بالضبط.
 class HomeScreen extends StatefulWidget {
   final String locationName;
 
@@ -120,6 +122,14 @@ class _HomeScreenState extends State<HomeScreen> {
         .order('orders_count', ascending: false)
         .limit(10);
 
+    final mostViewedFuture = client
+        .from('merchants')
+        .select(merchantColumns)
+        .eq('status', 'approved')
+        .gt('views_count', 0)
+        .order('views_count', ascending: false)
+        .limit(10);
+
     // مجمّع مرشَّحين لقسم "بالقرب منك": كل محل حفظ موقعه الجغرافي، غير
     // مرتَّب بعد بالمسافة (يُرتَّب محليًا بمجرّد توفّر موقع الجهاز — راجع
     // nearestMerchants). سقف 60 محلًا كافٍ جدًا لحجم بيانات خنشلة الحالي
@@ -140,6 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
       featuredFuture,
       newestFuture,
       topOrderedFuture,
+      mostViewedFuture,
       nearbyPoolFuture,
     ]);
 
@@ -170,7 +181,8 @@ class _HomeScreenState extends State<HomeScreen> {
       featured: _toMerchants(results[4]),
       newest: _toMerchants(results[5]),
       topOrdered: _toMerchants(results[6]),
-      nearbyPool: _toMerchants(results[7]),
+      mostViewed: _toMerchants(results[7]),
+      nearbyPool: _toMerchants(results[8]),
     );
   }
 
@@ -385,6 +397,15 @@ class _HomeScreenState extends State<HomeScreen> {
           onTapMerchant: _openMerchant,
         );
 
+      case HomeSectionKey.mostViewed:
+        if (data.mostViewed.isEmpty) return null;
+        return MerchantSmartSection(
+          title: section.title,
+          icon: Icons.visibility_rounded,
+          merchants: data.mostViewed,
+          onTapMerchant: _openMerchant,
+        );
+
       case HomeSectionKey.unknown:
         return null;
     }
@@ -401,6 +422,7 @@ class _HomeData {
   final List<Merchant> featured;
   final List<Merchant> newest;
   final List<Merchant> topOrdered;
+  final List<Merchant> mostViewed;
   final List<Merchant> nearbyPool;
 
   const _HomeData({
@@ -411,6 +433,7 @@ class _HomeData {
     required this.featured,
     required this.newest,
     required this.topOrdered,
+    required this.mostViewed,
     required this.nearbyPool,
   });
 }

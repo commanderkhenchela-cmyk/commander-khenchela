@@ -10,6 +10,7 @@ enum HomeSectionKey {
   nearby,
   newest,
   mostOrdered,
+  mostViewed,
   unknown;
 
   static HomeSectionKey fromKey(String key) {
@@ -26,6 +27,8 @@ enum HomeSectionKey {
         return HomeSectionKey.newest;
       case 'most_ordered':
         return HomeSectionKey.mostOrdered;
+      case 'most_viewed':
+        return HomeSectionKey.mostViewed;
       default:
         return HomeSectionKey.unknown;
     }

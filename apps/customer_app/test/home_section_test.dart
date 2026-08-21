@@ -14,6 +14,7 @@ void main() {
         HomeSectionKey.fromKey('most_ordered'),
         HomeSectionKey.mostOrdered,
       );
+      expect(HomeSectionKey.fromKey('most_viewed'), HomeSectionKey.mostViewed);
     });
 
     test('مفتاح غير معروف → unknown بدل استثناء يُسقط الصفحة', () {

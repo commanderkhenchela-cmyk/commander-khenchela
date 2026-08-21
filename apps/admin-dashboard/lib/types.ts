@@ -156,7 +156,8 @@ export type HomeSectionKey =
   | "featured"
   | "nearby"
   | "newest"
-  | "most_ordered";
+  | "most_ordered"
+  | "most_viewed";
 
 export const HOME_SECTION_KEY_LABELS: Record<HomeSectionKey, string> = {
   hero: "الإعلانات (أعلى الصفحة)",
@@ -165,6 +166,7 @@ export const HOME_SECTION_KEY_LABELS: Record<HomeSectionKey, string> = {
   nearby: "بالقرب منك",
   newest: "جديد في خنشلة",
   most_ordered: "الأكثر طلبًا",
+  most_viewed: "الأكثر مشاهدة",
 };
 
 export interface HomeSection {

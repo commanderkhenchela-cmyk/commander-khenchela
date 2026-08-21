@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/product.dart';
 import '../services/cart_service.dart';
+import '../services/merchant_views_service.dart';
 import '../widgets/merchant_logo.dart';
 import 'cart_screen.dart';
 
@@ -38,6 +39,9 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
   void initState() {
     super.initState();
     _productsFuture = _fetchProducts();
+    // مستقل تمامًا عن تحميل المنتجات — لا ننتظره ولا يؤثر على الشاشة
+    // بأي شكل حتى لو فشل (راجع فلسفة MerchantViewsService).
+    MerchantViewsService.recordView(widget.merchantId);
   }
 
   Future<List<Product>> _fetchProducts() async {
