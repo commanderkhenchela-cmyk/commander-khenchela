@@ -121,6 +121,7 @@ const TABLE_LABELS: Record<string, string> = {
   merchant_categories: "تصنيف محلات",
   advertisements: "إعلان",
   users: "دور مستخدم",
+  home_sections: "قسم الصفحة الرئيسية",
 };
 
 export function tableLabel(tableName: string): string {
@@ -146,6 +147,32 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 };
 
 export const ADMIN_PANEL_ROLES: UserRole[] = ["admin", "manager", "ads_manager"];
+
+export type HomeSectionKey =
+  | "hero"
+  | "categories"
+  | "featured"
+  | "nearby"
+  | "newest"
+  | "most_ordered";
+
+export const HOME_SECTION_KEY_LABELS: Record<HomeSectionKey, string> = {
+  hero: "الإعلانات (أعلى الصفحة)",
+  categories: "التصنيفات",
+  featured: "متاجر مميزة",
+  nearby: "بالقرب منك",
+  newest: "جديد في خنشلة",
+  most_ordered: "الأكثر طلبًا",
+};
+
+export interface HomeSection {
+  id: string;
+  section_key: HomeSectionKey;
+  title: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+}
 
 export interface Advertisement {
   id: string;

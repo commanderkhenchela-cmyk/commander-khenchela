@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../services/auth_service.dart';
+import '../services/theme_controller.dart';
 import 'address_list_screen.dart';
 import 'login_screen.dart';
 import 'my_orders_screen.dart';
@@ -50,18 +52,98 @@ class _AccountScreenState extends State<AccountScreen> {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
   }
 
+  Future<void> _showThemeSheet() async {
+    final controller = context.read<ThemeController>();
+
+    await showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    'مظهر التطبيق',
+                    style: Theme.of(sheetContext).textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _ThemeModeOption(
+                  icon: Icons.brightness_auto_rounded,
+                  label: 'تلقائي (حسب إعداد الجهاز)',
+                  selected: controller.mode == ThemeMode.system,
+                  onTap: () {
+                    controller.setMode(ThemeMode.system);
+                    Navigator.of(sheetContext).pop();
+                  },
+                ),
+                _ThemeModeOption(
+                  icon: Icons.light_mode_rounded,
+                  label: 'فاتح',
+                  selected: controller.mode == ThemeMode.light,
+                  onTap: () {
+                    controller.setMode(ThemeMode.light);
+                    Navigator.of(sheetContext).pop();
+                  },
+                ),
+                _ThemeModeOption(
+                  icon: Icons.dark_mode_rounded,
+                  label: 'داكن',
+                  selected: controller.mode == ThemeMode.dark,
+                  onTap: () {
+                    controller.setMode(ThemeMode.dark);
+                    Navigator.of(sheetContext).pop();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isSignedIn = AuthService.isSignedIn;
+    final themeMode = context.watch<ThemeController>().mode;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(title: const Text('حسابي')),
+      appBar: AppBar(
+        title: const Text('حسابي'),
+        actions: [
+          IconButton(
+            icon: Icon(_themeModeIcon(themeMode)),
+            tooltip: 'مظهر التطبيق',
+            onPressed: _showThemeSheet,
+          ),
+        ],
+      ),
       body: SafeArea(
         child: isSignedIn ? _buildSignedIn(theme) : _buildSignedOut(theme),
       ),
     );
+  }
+
+  IconData _themeModeIcon(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return Icons.light_mode_rounded;
+      case ThemeMode.dark:
+        return Icons.dark_mode_rounded;
+      case ThemeMode.system:
+        return Icons.brightness_auto_rounded;
+    }
   }
 
   Widget _buildSignedIn(ThemeData theme) {
@@ -299,6 +381,55 @@ class _MenuTile extends StatelessWidget {
                 size: 14,
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// خيار واحد داخل ورقة اختيار مظهر التطبيق (مظهر النظام/فاتح/داكن).
+class _ThemeModeOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ThemeModeOption({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: selected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                label,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: selected ? theme.colorScheme.primary : null,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                ),
+              ),
+            ),
+            if (selected)
+              Icon(Icons.check_rounded, color: theme.colorScheme.primary),
           ],
         ),
       ),

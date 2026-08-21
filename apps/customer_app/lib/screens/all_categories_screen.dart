@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../models/advertisement.dart';
 import '../models/merchant_category.dart';
 import '../utils/merchant_category_icon.dart';
-import '../widgets/ad_carousel.dart';
 import '../widgets/category_grid_tile.dart';
 import 'account_screen.dart';
 import 'merchants_screen.dart';
 
-/// شاشة الدخول الرئيسية بعد تأكيد الولاية — تعرض شبكة تصنيفات المحلات
-/// (مطاعم، بقالة، صيدليات...) أولًا، قبل أي قائمة محلات، حسب طلب صريح:
-/// "الصفحة الرئيسية يجب أن تعرض تصنيفات المحلات أولاً... وليس قائمة
-/// مباشرة بكل المحلات". التصنيفات ديناميكية بالكامل من جدول
-/// merchant_categories (لوحة الإدارة تتحكم بها) — لا شيء هنا Hardcoded،
-/// بما في ذلك الأيقونة واللون (انظر MerchantCategoryIcon).
+/// شاشة "كل التصنيفات" — شبكة كاملة بكل تصنيفات المحلات، تُفتح من زر
+/// "عرض الكل" في قسم التصنيفات بالصفحة الرئيسية (HomeScreen). كانت هذه
+/// الشبكة سابقًا *هي* الصفحة الرئيسية نفسها (MerchantCategoriesScreen)؛
+/// أُعيد تسميتها وفصلها هنا بعد أن أصبحت الصفحة الرئيسية Feed متعدد
+/// الأقسام (تعرض قسم تصنيفات مختصرًا فقط: شرائح أفقية محدودة العدد) —
+/// راجع تعليق home_screen.dart. لوحة الإعلانات (AdCarousel) انتقلت
+/// بالكامل إلى قسم "hero" في الصفحة الرئيسية، فلم تعد هذه الشاشة بحاجة
+/// إليها.
 ///
 /// ملاحظة تصميم مهمة (إصلاح Overflow — راجع CategoryGridTile وملف
 /// category_grid_tile_test.dart للإثبات): البطاقة القديمة كانت تضع Text
@@ -28,17 +28,16 @@ import 'merchants_screen.dart';
 /// النظام داخل هذه الشبكة تحديدًا (1.25x) — للحفاظ على مظهر مقروء
 /// ومتناسق عند إعدادات "خط كبير جدًا"، لا لمنع الانهيار (ذلك مضمون من
 /// نقطة 1 أصلاً).
-class MerchantCategoriesScreen extends StatefulWidget {
+class AllCategoriesScreen extends StatefulWidget {
   final String locationName;
 
-  const MerchantCategoriesScreen({super.key, required this.locationName});
+  const AllCategoriesScreen({super.key, required this.locationName});
 
   @override
-  State<MerchantCategoriesScreen> createState() =>
-      _MerchantCategoriesScreenState();
+  State<AllCategoriesScreen> createState() => _AllCategoriesScreenState();
 }
 
-class _MerchantCategoriesScreenState extends State<MerchantCategoriesScreen>
+class _AllCategoriesScreenState extends State<AllCategoriesScreen>
     with SingleTickerProviderStateMixin {
   late Future<_CategoriesData> _dataFuture;
   late final AnimationController _entranceController;
@@ -83,23 +82,7 @@ class _MerchantCategoriesScreenState extends State<MerchantCategoriesScreen>
         .select('category_id')
         .eq('status', 'approved');
 
-    // RLS تسمح بقراءة is_active=true فقط؛ فلترة نطاق التاريخ الدقيقة
-    // (Advertisement.isCurrentlyActive) تتم على الجهاز — راجع تعليق
-    // النموذج والـ migration.
-    final adsFuture = client
-        .from('advertisements')
-        .select(
-          'id, title, description, advertiser_name, video_url, '
-          'thumbnail_url, link_url, start_date, end_date',
-        )
-        .eq('is_active', true)
-        .order('sort_order', ascending: true);
-
-    final results = await Future.wait([
-      categoriesFuture,
-      merchantsFuture,
-      adsFuture,
-    ]);
+    final results = await Future.wait([categoriesFuture, merchantsFuture]);
 
     final merchantsData = results[1];
     final counts = <String, int>{};
@@ -113,16 +96,10 @@ class _MerchantCategoriesScreenState extends State<MerchantCategoriesScreen>
         .map((row) => MerchantCategory.fromMap(row))
         .toList();
 
-    final ads = results[2]
-        .map((row) => Advertisement.fromMap(row))
-        .where((ad) => ad.isCurrentlyActive)
-        .toList();
-
     return _CategoriesData(
       categories: categories,
       counts: counts,
       totalMerchants: merchantsData.length,
-      ads: ads,
     );
   }
 
@@ -146,9 +123,9 @@ class _MerchantCategoriesScreenState extends State<MerchantCategoriesScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'المحلات في ${widget.locationName}',
-          style: const TextStyle(fontWeight: FontWeight.w700),
+        title: const Text(
+          'كل التصنيفات',
+          style: TextStyle(fontWeight: FontWeight.w700),
         ),
         centerTitle: false,
         actions: [
@@ -202,8 +179,6 @@ class _MerchantCategoriesScreenState extends State<MerchantCategoriesScreen>
 
                   return CustomScrollView(
                     slivers: [
-                      if (data.ads.isNotEmpty)
-                        SliverToBoxAdapter(child: AdCarousel(ads: data.ads)),
                       SliverPadding(
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                         sliver: SliverGrid(
@@ -283,13 +258,11 @@ class _CategoriesData {
   final List<MerchantCategory> categories;
   final Map<String, int> counts;
   final int totalMerchants;
-  final List<Advertisement> ads;
 
   const _CategoriesData({
     required this.categories,
     required this.counts,
     required this.totalMerchants,
-    required this.ads,
   });
 }
 

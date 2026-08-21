@@ -8,6 +8,7 @@ import 'screens/splash_screen.dart';
 import 'services/branding_service.dart';
 import 'services/cart_service.dart';
 import 'services/contact_service.dart';
+import 'services/theme_controller.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
@@ -18,13 +19,23 @@ Future<void> main() async {
     publishableKey: SupabaseConfig.publishableKey,
   );
 
+  final themeController = ThemeController();
+
   // تُحمَّل هوية التطبيق (الاسم/الشعار/الألوان، قابلة للتعديل من لوحة
-  // الإدارة) قبل أول رسم للواجهة، حتى لا "تقفز" الألوان لاحقًا.
-  await Future.wait([BrandingService.load(), ContactService.load()]);
+  // الإدارة) وتفضيل الوضع الداكن المحفوظ قبل أول رسم للواجهة، حتى لا
+  // "تقفز" الألوان أو الثيم لاحقًا.
+  await Future.wait([
+    BrandingService.load(),
+    ContactService.load(),
+    themeController.load(),
+  ]);
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => CartService(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CartService()),
+        ChangeNotifierProvider<ThemeController>.value(value: themeController),
+      ],
       child: const CommanderKhenchelaApp(),
     ),
   );
@@ -35,6 +46,8 @@ class CommanderKhenchelaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeController = context.watch<ThemeController>();
+
     return MaterialApp(
       title: BrandingService.appName,
       debugShowCheckedModeBanner: false,
@@ -42,6 +55,11 @@ class CommanderKhenchelaApp extends StatelessWidget {
         primaryColor: BrandingService.primaryColor,
         errorColor: BrandingService.errorColor,
       ),
+      darkTheme: AppTheme.dark(
+        primaryColor: BrandingService.primaryColor,
+        errorColor: BrandingService.errorColor,
+      ),
+      themeMode: themeController.mode,
 
       // دعم اللغة العربية واتجاه RTL منذ البداية (Arabic-first)
       locale: const Locale('ar'),

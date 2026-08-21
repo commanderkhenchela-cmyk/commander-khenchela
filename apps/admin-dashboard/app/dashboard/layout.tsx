@@ -41,6 +41,10 @@ export default async function DashboardLayout({
                 href="/dashboard/merchant-categories"
                 label="تصنيفات المحلات"
               />
+              <NavLink
+                href="/dashboard/home-sections"
+                label="أقسام الصفحة الرئيسية"
+              />
             </>
           )}
 

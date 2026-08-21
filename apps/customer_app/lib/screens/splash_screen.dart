@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/branding_service.dart';
 import '../widgets/app_logo.dart';
-import 'merchant_categories_screen.dart';
+import 'home_screen.dart';
 import 'welcome_screen.dart';
 
 const String _prefsWilayaConfirmedKey = 'wilaya_confirmed';
@@ -41,7 +41,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => wilayaConfirmed
-            ? const MerchantCategoriesScreen(locationName: _wilayaName)
+            ? const HomeScreen(locationName: _wilayaName)
             : const WelcomeScreen(),
       ),
     );

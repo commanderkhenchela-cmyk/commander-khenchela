@@ -71,9 +71,15 @@ class CategoryGridTile extends StatelessWidget {
                     ),
                   ),
                 ),
+                // العدد يظهر فقط عند وجود محل واحد فعلي على الأقل — لا نملأ
+                // كل بطاقة فارغة بكلمة "قريبًا" مكرَّرة (كانت هذه الصيغة
+                // القديمة سبب الشكوى الصريحة بأن الشبكة "تبدو ميتة").
+                // بطاقة بلا عدّاد سطر ثانٍ تبقى مفهومة تمامًا: الاسم
+                // والأيقونة وحدهما كافيان، والمساحة الفارغة أهدأ بصريًا من
+                // نص متكرر بلا معنى فعلي.
                 const SizedBox(height: 2),
                 Text(
-                  count > 0 ? '$count محل' : 'قريبًا',
+                  count > 0 ? '$count محل' : ' ',
                   maxLines: 1,
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.45),

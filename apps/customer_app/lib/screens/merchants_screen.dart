@@ -4,13 +4,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/merchant.dart';
 import '../services/location_service.dart';
-import '../utils/distance.dart';
-import '../widgets/merchant_mini_card.dart';
-import '../widgets/open_status_badge.dart';
+import '../utils/nearest_merchants.dart';
+import '../widgets/merchant_card.dart';
+import '../widgets/merchant_smart_section.dart';
+import '../widgets/search_field.dart';
 import 'account_screen.dart';
 import 'merchant_products_screen.dart';
 
-/// شاشة قائمة المحلات — تُفتح دائمًا من MerchantCategoriesScreen، إما
+/// شاشة قائمة المحلات — تُفتح من HomeScreen أو AllCategoriesScreen، إما
 /// لتصنيف محدَّد (categoryId) أو لكل المحلات (categoryId = null، بطاقة
 /// "كل المحلات"). تجلب فقط المحلات الموافَق عليها من طرف Admin
 /// (status = approved)، نفس القاعدة المطبَّقة في RLS على جدول merchants.
@@ -21,8 +22,9 @@ import 'merchant_products_screen.dart';
 /// وهميًا). "مفتوح الآن" و"الأقرب إليك" يُحسبان محليًا في الجهاز (لا
 /// استعلام إضافي للخادم) — الأول من ساعات العمل (MerchantOpenStatus)،
 /// والثاني من موقع الجهاز الحالي (LocationService) مقابل إحداثيات كل
-/// محل (haversineKm). طلب إذن الموقع لا يُعطّل تحميل بقية الشاشة أبدًا
-/// — يجري بالتوازي، وقسم "الأقرب إليك" يظهر لاحقًا فور توفّره فقط.
+/// محل (haversineKm، عبر nearest_merchants.dart المشترك مع HomeScreen).
+/// طلب إذن الموقع لا يُعطّل تحميل بقية الشاشة أبدًا — يجري بالتوازي،
+/// وقسم "الأقرب إليك" يظهر لاحقًا فور توفّره فقط.
 class MerchantsScreen extends StatefulWidget {
   final String locationName;
   final String? categoryId;
@@ -161,48 +163,6 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
         .toList();
   }
 
-  /// المحلات الأقرب لموقع الجهاز الحالي، مرتَّبة تصاعديًا بالمسافة —
-  /// فارغة إن لم يتوفّر موقع الجهاز بعد، أو لم يحفظ أي محل موقعه.
-  List<Merchant> _nearestMerchants(List<Merchant> all) {
-    final position = _devicePosition;
-    if (position == null) return [];
-
-    final withLocation = all.where((m) => m.hasLocation).toList()
-      ..sort((a, b) {
-        final distanceA = haversineKm(
-          position.latitude,
-          position.longitude,
-          a.latitude!,
-          a.longitude!,
-        );
-        final distanceB = haversineKm(
-          position.latitude,
-          position.longitude,
-          b.latitude!,
-          b.longitude!,
-        );
-        return distanceA.compareTo(distanceB);
-      });
-
-    return withLocation.take(8).toList();
-  }
-
-  /// نص المسافة الجاهز للعرض بجانب اسم المحل في القائمة الرئيسية، أو
-  /// null إن لم تتوفّر كلتا الإحداثيتين (موقع الجهاز وموقع المحل معًا).
-  String? _distanceLabel(Merchant merchant) {
-    final position = _devicePosition;
-    if (position == null || !merchant.hasLocation) return null;
-
-    return formatDistance(
-      haversineKm(
-        position.latitude,
-        position.longitude,
-        merchant.latitude!,
-        merchant.longitude!,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -225,8 +185,8 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
         ],
       ),
       // سقف أعلى لتكبير خط النظام — نفس إصلاح Overflow المطبَّق في شبكة
-      // التصنيفات (MerchantCategoriesScreen)، لأن بطاقات هذه الشاشة
-      // (الأفقية والعمودية) لها ارتفاعات محسوبة مسبقًا أيضًا.
+      // التصنيفات (AllCategoriesScreen)، لأن بطاقات هذه الشاشة (الأفقية
+      // والعمودية) لها ارتفاعات محسوبة مسبقًا أيضًا.
       body: MediaQuery.withClampedTextScaling(
         maxScaleFactor: 1.25,
         child: FutureBuilder<_MerchantsPageData>(
@@ -259,7 +219,7 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
             }
 
             final merchants = _filter(page.all);
-            final nearest = _nearestMerchants(page.all);
+            final nearest = nearestMerchants(page.all, _devicePosition);
             final showSections =
                 _query.isEmpty &&
                 (page.featured.isNotEmpty ||
@@ -284,7 +244,7 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                   sliver: SliverToBoxAdapter(
-                    child: _SearchField(controller: _searchController),
+                    child: SearchField(controller: _searchController),
                   ),
                 ),
                 if (showSections)
@@ -292,35 +252,35 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
                     child: Column(
                       children: [
                         if (page.featured.isNotEmpty)
-                          _SmartSection(
+                          MerchantSmartSection(
                             title: 'مميزة',
                             icon: Icons.star_rounded,
                             merchants: page.featured,
                             onTapMerchant: openMerchant,
                           ),
                         if (page.topOrdered.isNotEmpty)
-                          _SmartSection(
+                          MerchantSmartSection(
                             title: 'الأكثر طلبًا',
                             icon: Icons.local_fire_department_rounded,
                             merchants: page.topOrdered,
                             onTapMerchant: openMerchant,
                           ),
                         if (page.openNow.isNotEmpty)
-                          _SmartSection(
+                          MerchantSmartSection(
                             title: 'مفتوح الآن',
                             icon: Icons.access_time_filled_rounded,
                             merchants: page.openNow,
                             onTapMerchant: openMerchant,
                           ),
                         if (nearest.isNotEmpty)
-                          _SmartSection(
+                          MerchantSmartSection(
                             title: 'الأقرب إليك',
                             icon: Icons.near_me_rounded,
                             merchants: nearest,
                             onTapMerchant: openMerchant,
                           ),
                         if (page.newest.isNotEmpty)
-                          _SmartSection(
+                          MerchantSmartSection(
                             title: 'أُضيفت حديثًا',
                             icon: Icons.fiber_new_rounded,
                             merchants: page.newest,
@@ -358,9 +318,12 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
                           const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final merchant = merchants[index];
-                        return _MerchantCard(
+                        return MerchantCard(
                           merchant: merchant,
-                          distanceLabel: _distanceLabel(merchant),
+                          distanceLabel: distanceLabelFor(
+                            merchant,
+                            _devicePosition,
+                          ),
                           onTap: () => openMerchant(merchant),
                         );
                       },
@@ -392,242 +355,6 @@ class _MerchantsPageData {
     required this.openNow,
     required this.newest,
   });
-}
-
-class _SearchField extends StatelessWidget {
-  final TextEditingController controller;
-
-  const _SearchField({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return TextField(
-      controller: controller,
-      textInputAction: TextInputAction.search,
-      decoration: InputDecoration(
-        hintText: 'ابحث عن محل...',
-        prefixIcon: const Icon(Icons.search_rounded),
-        suffixIcon: ValueListenableBuilder<TextEditingValue>(
-          valueListenable: controller,
-          builder: (context, value, _) => value.text.isEmpty
-              ? const SizedBox.shrink()
-              : IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 18),
-                  onPressed: controller.clear,
-                ),
-        ),
-        filled: true,
-        fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 14),
-      ),
-    );
-  }
-}
-
-class _MerchantCard extends StatelessWidget {
-  final Merchant merchant;
-  final String? distanceLabel;
-  final VoidCallback onTap;
-
-  const _MerchantCard({
-    required this.merchant,
-    required this.onTap,
-    this.distanceLabel,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  Icons.storefront_rounded,
-                  color: theme.colorScheme.primary,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      merchant.storeName,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Builder(
-                      builder: (context) {
-                        final chips = _metaChips(theme);
-                        if (chips.isEmpty) return const SizedBox.shrink();
-
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Row(
-                            children: [
-                              for (var i = 0; i < chips.length; i++) ...[
-                                if (i > 0) const SizedBox(width: 8),
-                                chips[i],
-                              ],
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 16,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// عناصر السطر الثاني (بلدية / مسافة / حالة فتح) — مبنيّة كقائمة حتى
-  /// نتحكّم في المسافات بينها بدون تكرار شروط. اسم البلدية داخل
-  /// Flexible مع Ellipsis لتفادي فيضان أفقي إن اجتمعت الثلاثة عناصر في
-  /// سطر ضيق (نفس منطق حماية الـ Overflow المتّبع في بقية الشاشة).
-  List<Widget> _metaChips(ThemeData theme) {
-    final chips = <Widget>[];
-
-    if (merchant.communeName != null) {
-      chips.add(
-        Flexible(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.location_on_outlined,
-                size: 14,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  merchant.communeName!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (distanceLabel != null) {
-      chips.add(
-        Text(
-          distanceLabel!,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-          ),
-        ),
-      );
-    }
-
-    if (merchant.isOpenNow != null) {
-      chips.add(OpenStatusBadge(isOpen: merchant.isOpenNow!));
-    }
-
-    return chips;
-  }
-}
-
-/// قسم أفقي قابل للتمرير (مميزة / الأكثر طلبًا / مفتوح الآن / المضافة
-/// حديثًا) — يظهر فقط عبر الاستدعاء الشرطي في build()، لا يعرض نفسه
-/// فارغًا أبدًا.
-class _SmartSection extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final List<Merchant> merchants;
-  final ValueChanged<Merchant> onTapMerchant;
-
-  const _SmartSection({
-    required this.title,
-    required this.icon,
-    required this.merchants,
-    required this.onTapMerchant,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-            child: Row(
-              children: [
-                Icon(icon, size: 18, color: theme.colorScheme.primary),
-                const SizedBox(width: 6),
-                Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 118,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: merchants.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                final merchant = merchants[index];
-                return MerchantMiniCard(
-                  merchant: merchant,
-                  onTap: () => onTapMerchant(merchant),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 /// حالة موحَّدة لعرض رسالة في منتصف الشاشة: فارغة، خطأ، أو بحث بلا نتائج.
