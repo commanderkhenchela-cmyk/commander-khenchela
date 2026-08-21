@@ -42,6 +42,17 @@ export default function OnboardingForm({ communes }: { communes: Commune[] }) {
     });
 
     if (error) {
+      // 23505 = unique_violation على قيد merchants_owner_user_id_key — يعني
+      // أن هذا المستخدم يملك محلًا بالفعل (حالة نادرة: كان يقف على هذه
+      // الصفحة قبل أن يلحق السياق تحديث حالته). التوجيه لـ "/" يرسله
+      // تلقائيًا لمكانه الصحيح (قيد المراجعة/مرفوض/لوحة التحكم) بدل رسالة
+      // خطأ عامة لا تشرح له شيئًا.
+      if (error.code === "23505") {
+        router.replace("/");
+        router.refresh();
+        return;
+      }
+
       setError("تعذّر إنشاء المحل. حاول مرة أخرى.");
       setLoading(false);
       return;
