@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../models/advertisement.dart';
 import '../models/merchant_category.dart';
 import '../utils/merchant_category_icon.dart';
+import '../widgets/ad_carousel.dart';
 import '../widgets/category_grid_tile.dart';
 import 'account_screen.dart';
 import 'merchants_screen.dart';
@@ -67,7 +69,7 @@ class _MerchantCategoriesScreenState extends State<MerchantCategoriesScreen>
   Future<_CategoriesData> _fetchData() async {
     final client = Supabase.instance.client;
 
-    final categoriesData = await client
+    final categoriesFuture = client
         .from('merchant_categories')
         .select('id, name, icon')
         .eq('is_active', true)
@@ -76,27 +78,51 @@ class _MerchantCategoriesScreenState extends State<MerchantCategoriesScreen>
     // عدد المحلات لكل تصنيف يُحسب هنا محليًا من قائمة المحلات الموافَق
     // عليها فقط — لا حاجة لدالة group by في قاعدة البيانات عند هذا الحجم
     // من البيانات (نفس منطق البحث الآني المستخدَم في MerchantsScreen).
-    final merchantsData = await client
+    final merchantsFuture = client
         .from('merchants')
         .select('category_id')
         .eq('status', 'approved');
 
+    // RLS تسمح بقراءة is_active=true فقط؛ فلترة نطاق التاريخ الدقيقة
+    // (Advertisement.isCurrentlyActive) تتم على الجهاز — راجع تعليق
+    // النموذج والـ migration.
+    final adsFuture = client
+        .from('advertisements')
+        .select(
+          'id, title, description, advertiser_name, video_url, '
+          'thumbnail_url, link_url, start_date, end_date',
+        )
+        .eq('is_active', true)
+        .order('sort_order', ascending: true);
+
+    final results = await Future.wait([
+      categoriesFuture,
+      merchantsFuture,
+      adsFuture,
+    ]);
+
+    final merchantsData = results[1];
     final counts = <String, int>{};
-    for (final row in merchantsData as List) {
-      final categoryId =
-          (row as Map<String, dynamic>)['category_id'] as String?;
+    for (final row in merchantsData) {
+      final categoryId = row['category_id'] as String?;
       if (categoryId == null) continue;
       counts[categoryId] = (counts[categoryId] ?? 0) + 1;
     }
 
-    final categories = (categoriesData as List)
-        .map((row) => MerchantCategory.fromMap(row as Map<String, dynamic>))
+    final categories = results[0]
+        .map((row) => MerchantCategory.fromMap(row))
+        .toList();
+
+    final ads = results[2]
+        .map((row) => Advertisement.fromMap(row))
+        .where((ad) => ad.isCurrentlyActive)
         .toList();
 
     return _CategoriesData(
       categories: categories,
       counts: counts,
-      totalMerchants: (merchantsData).length,
+      totalMerchants: merchantsData.length,
+      ads: ads,
     );
   }
 
@@ -174,52 +200,67 @@ class _MerchantCategoriesScreenState extends State<MerchantCategoriesScreen>
                   final crossAxisCount = _columnsFor(constraints.maxWidth);
                   final itemCount = data.categories.length + 1;
 
-                  return GridView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      // ارتفاع ثابت بالبكسل بدل aspectRatio — يتّسع
-                      // لسطرين من النص مهما طال، هذا هو إصلاح الـ
-                      // Overflow الفعلي (راجع تعليق أعلى الملف).
-                      mainAxisExtent: 152,
-                    ),
-                    itemCount: itemCount,
-                    itemBuilder: (context, index) {
-                      final tile = index == 0
-                          ? CategoryGridTile(
-                              icon: Icons.apps_rounded,
-                              color: theme.colorScheme.primary,
-                              label: 'كل المحلات',
-                              count: data.totalMerchants,
-                              onTap: () => _openMerchants(),
-                            )
-                          : Builder(
-                              builder: (context) {
-                                final category = data.categories[index - 1];
-                                return CategoryGridTile(
-                                  icon: MerchantCategoryIcon.iconFor(category),
-                                  color: MerchantCategoryIcon.colorFor(
-                                    category.id,
-                                  ),
-                                  label: category.name,
-                                  count: data.counts[category.id] ?? 0,
-                                  onTap: () => _openMerchants(
-                                    categoryId: category.id,
-                                    categoryName: category.name,
-                                  ),
-                                );
-                              },
-                            );
+                  return CustomScrollView(
+                    slivers: [
+                      if (data.ads.isNotEmpty)
+                        SliverToBoxAdapter(child: AdCarousel(ads: data.ads)),
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                        sliver: SliverGrid(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: crossAxisCount,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                // ارتفاع ثابت بالبكسل بدل aspectRatio —
+                                // يتّسع لسطرين من النص مهما طال، هذا هو
+                                // إصلاح الـ Overflow الفعلي (راجع تعليق
+                                // أعلى الملف).
+                                mainAxisExtent: 152,
+                              ),
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
+                            final tile = index == 0
+                                ? CategoryGridTile(
+                                    icon: Icons.apps_rounded,
+                                    color: theme.colorScheme.primary,
+                                    label: 'كل المحلات',
+                                    count: data.totalMerchants,
+                                    onTap: () => _openMerchants(),
+                                  )
+                                : Builder(
+                                    builder: (context) {
+                                      final category =
+                                          data.categories[index - 1];
+                                      return CategoryGridTile(
+                                        icon: MerchantCategoryIcon.iconFor(
+                                          category,
+                                        ),
+                                        color: MerchantCategoryIcon.colorFor(
+                                          category.id,
+                                        ),
+                                        label: category.name,
+                                        count: data.counts[category.id] ?? 0,
+                                        onTap: () => _openMerchants(
+                                          categoryId: category.id,
+                                          categoryName: category.name,
+                                        ),
+                                      );
+                                    },
+                                  );
 
-                      return _StaggeredEntrance(
-                        controller: _entranceController,
-                        index: index,
-                        itemCount: itemCount,
-                        child: tile,
-                      );
-                    },
+                            return _StaggeredEntrance(
+                              controller: _entranceController,
+                              index: index,
+                              itemCount: itemCount,
+                              child: tile,
+                            );
+                          }, childCount: itemCount),
+                        ),
+                      ),
+                    ],
                   );
                 },
               ),
@@ -242,11 +283,13 @@ class _CategoriesData {
   final List<MerchantCategory> categories;
   final Map<String, int> counts;
   final int totalMerchants;
+  final List<Advertisement> ads;
 
   const _CategoriesData({
     required this.categories,
     required this.counts,
     required this.totalMerchants,
+    required this.ads,
   });
 }
 

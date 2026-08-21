@@ -119,10 +119,30 @@ const TABLE_LABELS: Record<string, string> = {
   app_contact: "بيانات التواصل",
   categories: "تصنيف",
   merchant_categories: "تصنيف محلات",
+  advertisements: "إعلان",
 };
 
 export function tableLabel(tableName: string): string {
   return TABLE_LABELS[tableName] ?? tableName;
+}
+
+export interface Advertisement {
+  id: string;
+  title: string;
+  description: string | null;
+  advertiser_name: string;
+  video_url: string;
+  thumbnail_url: string | null;
+  link_url: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  sort_order: number;
+  is_active: boolean;
+  views_count: number;
+  video_starts_count: number;
+  video_completions_count: number;
+  clicks_count: number;
+  created_at: string;
 }
 
 export interface AppContact {

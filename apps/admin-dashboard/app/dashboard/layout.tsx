@@ -30,6 +30,10 @@ export default async function DashboardLayout({
             href="/dashboard/merchant-categories"
             label="تصنيفات المحلات"
           />
+          <NavLink
+            href="/dashboard/advertisements"
+            label="لوحة إعلانات الفيديو"
+          />
           <NavLink href="/dashboard/settings" label="إعدادات المنصة" />
           <NavLink href="/dashboard/branding" label="الهوية والشعار" />
           <NavLink href="/dashboard/app-settings" label="بيانات التواصل" />
