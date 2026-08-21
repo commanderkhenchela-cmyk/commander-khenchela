@@ -8,6 +8,7 @@ import 'screens/splash_screen.dart';
 import 'services/branding_service.dart';
 import 'services/cart_service.dart';
 import 'services/contact_service.dart';
+import 'services/favorites_controller.dart';
 import 'services/theme_controller.dart';
 import 'theme/app_theme.dart';
 
@@ -35,6 +36,7 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => CartService()),
         ChangeNotifierProvider<ThemeController>.value(value: themeController),
+        ChangeNotifierProvider(create: (_) => FavoritesController()),
       ],
       child: const CommanderKhenchelaApp(),
     ),

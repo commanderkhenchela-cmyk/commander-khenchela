@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/theme_controller.dart';
 import 'address_list_screen.dart';
+import 'favorites_screen.dart';
 import 'login_screen.dart';
 import 'my_orders_screen.dart';
 import 'notifications_screen.dart';
@@ -229,6 +230,11 @@ class _AccountScreenState extends State<AccountScreen> {
               icon: Icons.notifications_none_rounded,
               label: 'إشعاراتي',
               onTap: () => _push(const NotificationsScreen()),
+            ),
+            _MenuTile(
+              icon: Icons.favorite_border_rounded,
+              label: 'مفضّلتي',
+              onTap: () => _push(const FavoritesScreen()),
             ),
             _MenuTile(
               icon: Icons.location_on_outlined,

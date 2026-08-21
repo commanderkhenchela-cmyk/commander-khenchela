@@ -7,9 +7,7 @@ void main() {
   testWidgets('يعرض الأيقونة الاحتياطية عند غياب رابط الصورة', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: Scaffold(
-          body: MerchantLogo(url: null, size: 56, iconSize: 28),
-        ),
+        home: Scaffold(body: MerchantLogo(url: null, size: 56, iconSize: 28)),
       ),
     );
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/merchant.dart';
+import 'favorite_button.dart';
 import 'merchant_logo.dart';
 import 'open_status_badge.dart';
 
@@ -69,6 +70,7 @@ class MerchantCard extends StatelessWidget {
                   ],
                 ),
               ),
+              FavoriteButton(merchantId: merchant.id),
               Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 16,
