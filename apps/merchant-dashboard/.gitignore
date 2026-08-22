@@ -33,6 +33,11 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# إعدادات Firebase الحقيقية (تحتوي معرّفات مشروعك) — انسخ من
+# public/firebase-messaging-sw.js.example وضع القيم الحقيقية محليًا،
+# راجع README.md لتفاصيل الإشعارات الفورية (Web Push).
+/public/firebase-messaging-sw.js
+
 # vercel
 .vercel
 

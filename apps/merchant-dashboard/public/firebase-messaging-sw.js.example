@@ -1,0 +1,39 @@
+// Service Worker لإشعارات Web Push (Firebase Cloud Messaging).
+//
+// انسخ هذا الملف إلى "firebase-messaging-sw.js" (بدون .example) في نفس
+// المجلد، وضع فيه القيم الحقيقية لإعدادات مشروع Firebase (Firebase
+// Console → إعدادات المشروع → عام → "تطبيقاتك" → أضف تطبيق ويب إن لم
+// يكن موجودًا). هذه القيم عامة وليست سرًا (نفس مبدأ publishableKey في
+// Supabase) — Firebase نفسها توثّق أنها آمنة للتضمين في كود العميل،
+// لكن نتجنّب رفعها هنا لتفادي إعادة كتابة الملف بقيم placeholder لاحقًا
+// (الملف مُستثنى في .gitignore).
+//
+// يجب أن يبقى هذا الملف بالضبط داخل مجلد public/ (وليس أي مسار آخر) —
+// شرط تقني من Firebase لتسجيل الـ Service Worker بشكل صحيح.
+
+importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js');
+
+firebase.initializeApp({
+  apiKey: 'ضع-apiKey-الحقيقي-هنا',
+  authDomain: 'ضع-authDomain-الحقيقي-هنا',
+  projectId: 'ضع-projectId-الحقيقي-هنا',
+  storageBucket: 'ضع-storageBucket-الحقيقي-هنا',
+  messagingSenderId: 'ضع-messagingSenderId-الحقيقي-هنا',
+  appId: 'ضع-appId-الحقيقي-هنا',
+});
+
+const messaging = firebase.messaging();
+
+// إشعار وارد والتطبيق/التبويب مغلق أو في الخلفية — Firebase تعرض
+// الإشعار تلقائيًا من نفس الحقل notification الذي يرسله
+// send-order-notification (نفس شكل الحمولة المستخدَم للتطبيقات الأصلية
+// تمامًا، لا حاجة لتغيير أي شيء في تلك الدالة).
+messaging.onBackgroundMessage((payload) => {
+  const title = payload.notification?.title ?? 'إشعار جديد';
+  const options = {
+    body: payload.notification?.body ?? '',
+    icon: '/icons/icon-192.png',
+  };
+  self.registration.showNotification(title, options);
+});

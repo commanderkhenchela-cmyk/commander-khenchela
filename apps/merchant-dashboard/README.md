@@ -20,6 +20,33 @@ npm run dev
 
 افتح http://localhost:3000
 
+## إشعارات فورية (Web Push) — اختيارية
+
+بدونها، اللوحة تعمل بشكل طبيعي كامل — فقط بدون تنبيه فوري (يظهر فوق
+الشاشة حتى لو التبويب/الهاتف مقفول) عند وصول طلب جديد. إشعارات "🔔
+الإشعارات" داخل اللوحة نفسها تعمل دائمًا بغض النظر عن هذا الإعداد.
+
+### خطوات التفعيل (مرة واحدة، خارج الكود)
+
+1. **أضف تطبيق ويب لمشروع Firebase الموجود** (نفس المشروع المستخدَم
+   لتطبيقي الزبون والموصّل): Firebase Console → إعدادات المشروع → عام
+   → "تطبيقاتك" → أضف تطبيق → Web (`</>`). يعطيك كائن `firebaseConfig`
+   فيه `apiKey`/`authDomain`/`projectId`/إلخ.
+2. **انسخ هذه القيم** إلى `.env.local` (المتغيرات `NEXT_PUBLIC_FIREBASE_*`
+   في `.env.local.example`).
+3. **ولّد مفتاح Web Push**: Firebase Console → إعدادات المشروع → Cloud
+   Messaging → Web configuration → "Web Push certificates" → Generate
+   key pair. انسخ القيمة إلى `NEXT_PUBLIC_FIREBASE_VAPID_KEY`.
+4. **انسخ `public/firebase-messaging-sw.js.example`** إلى
+   `public/firebase-messaging-sw.js` (بدون `.example`، هذا الملف
+   مُستثنى من Git عمدًا) وضع فيه نفس قيم `firebaseConfig` من الخطوة 1.
+5. **أعد تشغيل** `npm run dev` (أو أعد النشر على Vercel بعد إضافة نفس
+   المتغيرات هناك أيضًا).
+
+بعدها، أول مرة يفتح تاجر لوحته سيُطلَب منه إذن الإشعارات — بعد الموافقة،
+send-order-notification (نفس الدالة المستخدَمة للتطبيقات الأصلية، بدون
+أي تعديل) ترسل له تنبيهًا فوريًا عند وصول أي طلب جديد.
+
 ## الأمان
 
 - لا يُستخدم أي مفتاح سري (`service_role`) في هذا التطبيق إطلاقًا — فقط

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getMerchantContext } from "@/lib/merchant-context";
 import LogoutButton from "@/components/logout-button";
+import PushNotificationsSetup from "@/components/push-notifications-setup";
 
 export default async function DashboardLayout({
   children,
@@ -16,6 +17,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex flex-1 flex-col md:flex-row">
+      <PushNotificationsSetup />
       <aside className="md:w-64 shrink-0 border-b md:border-b-0 md:border-l border-border bg-card">
         <div className="p-5 border-b border-border">
           <p className="font-bold text-lg">{context.merchant.store_name}</p>
