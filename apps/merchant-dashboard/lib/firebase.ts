@@ -8,13 +8,17 @@ import { getMessaging, isSupported, type Messaging } from "firebase/messaging";
  * Supabase) — الحماية الفعلية دائمًا من قواعد RLS في قاعدة البيانات،
  * وليس من إخفاء هذه القيم.
  */
+// .trim() دفاعي على كل قيمة: مسافة أو سطر جديد زائد من لصق يدوي في
+// .env.local يكسر بناء Headers داخل Firebase SDK لاحقًا (رسالة خطأ
+// غامضة: "String contains non ISO-8859-1 code point") — نمنعه من
+// المصدر بدل تشخيصه كل مرة.
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.trim(),
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN?.trim(),
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim(),
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET?.trim(),
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID?.trim(),
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID?.trim(),
 };
 
 let app: FirebaseApp | null = null;

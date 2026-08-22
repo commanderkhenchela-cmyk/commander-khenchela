@@ -63,9 +63,27 @@ export default function PushNotificationsSetup() {
       }
       if (!registration || ignore) return;
 
-      const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
-      console.log("[Push] VAPID key موجود:", Boolean(vapidKey));
-      if (!vapidKey) return;
+      const vapidKeyRaw = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+      console.log("[Push] VAPID key موجود:", Boolean(vapidKeyRaw));
+      if (!vapidKeyRaw) return;
+
+      // تشخيص: أي حرف خارج ISO-8859-1 (مثل علامات اتجاه نص مخفية قد
+      // تنضاف بالخطأ عند النسخ في بيئة عربية RTL) يكسر بناء Headers
+      // داخليًا في Firebase SDK. نطبعه بوضوح إن وُجد قبل المتابعة.
+      const vapidKey = vapidKeyRaw.trim();
+      const badChars = [...vapidKey]
+        .map((ch, i) => ({ ch, i, code: ch.codePointAt(0)! }))
+        .filter((x) => x.code > 255);
+      if (badChars.length > 0) {
+        console.error("[Push] أحرف غير صالحة داخل VAPID key:", badChars);
+      }
+      console.log(
+        "[Push] طول VAPID key بعد trim:",
+        vapidKey.length,
+        "(قبل trim:",
+        vapidKeyRaw.length,
+        ")",
+      );
 
       let token: string | null = null;
       try {
