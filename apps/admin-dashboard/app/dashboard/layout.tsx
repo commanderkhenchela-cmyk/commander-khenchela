@@ -37,6 +37,7 @@ export default async function DashboardLayout({
           {context.canManageStores && (
             <>
               <NavLink href="/dashboard/merchants" label="المحلات" />
+              <NavLink href="/dashboard/drivers" label="الموصّلون" />
               <NavLink href="/dashboard/categories" label="التصنيفات" />
               <NavLink
                 href="/dashboard/merchant-categories"

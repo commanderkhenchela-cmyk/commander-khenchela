@@ -89,6 +89,23 @@ export interface AdminOrder {
     communes?: { name: string } | null;
   } | null;
   order_items?: OrderItem[];
+  drivers?: { full_name: string; phone: string } | null;
+}
+
+/// موصّلو التوصيل (المرحلة 1 — دراجات فقط). راجع migration
+/// 20260822010000_drivers.sql للتفاصيل الكاملة (RLS، الحماية من التعديل
+/// المباشر، ربطها بجدول orders عبر driver_id).
+export type DriverStatus = "pending" | "approved" | "rejected";
+
+export interface Driver {
+  id: string;
+  user_id: string;
+  full_name: string;
+  phone: string;
+  vehicle_type: "bike";
+  status: DriverStatus;
+  is_online: boolean;
+  created_at: string;
 }
 
 export interface Setting {

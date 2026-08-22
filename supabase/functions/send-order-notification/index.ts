@@ -23,7 +23,7 @@
 // حتى لا يتكرّر منطق "اكتب في notifications ثم حاول Push"):
 //   - orders    (PHASE 11 الأصلية): تغيّر حالة → الزبون، طلب جديد → التاجر
 //   - merchants (شبكة الإشعارات): تسجيل جديد → كل الإدارة، موافقة/رفض → التاجر
-//   - drivers   يُضاف لاحقًا مع migration جدول drivers نفسه
+//   - drivers   (المرحلة 1): تسجيل جديد → كل الإدارة، موافقة/رفض → الموصّل نفسه
 //
 // حماية بديلة عن التحقق التلقائي من JWT (verify_jwt) — الدالة مَنشورة
 // بـ --no-verify-jwt (لأن مفتاح anon الحديث بصيغة sb_publishable_ ليس
@@ -85,6 +85,8 @@ Deno.serve(async (req) => {
       await handleOrders(supabase, payload);
     } else if (payload.table === "merchants") {
       await handleMerchants(supabase, payload);
+    } else if (payload.table === "drivers") {
+      await handleDrivers(supabase, payload);
     } else {
       return new Response(`ignored: unhandled table ${payload.table}`, { status: 200 });
     }
@@ -143,6 +145,29 @@ async function handleMerchants(supabase: SupabaseClient, payload: WebhookPayload
         await notifyUser(supabase, payload.record.owner_user_id, "تمّت الموافقة على محلك 🎉", "يمكنك الآن إضافة منتجاتك واستقبال الطلبات", "merchant_approved");
       } else if (newStatus === "rejected") {
         await notifyUser(supabase, payload.record.owner_user_id, "لم تتم الموافقة على محلك", "راجع بيانات محلك أو تواصل مع الإدارة لمزيد من التفاصيل", "merchant_rejected");
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------
+// drivers: تسجيل جديد → كل الإدارة (admin/manager)، موافقة/رفض → الموصّل نفسه
+// ---------------------------------------------------------------
+async function handleDrivers(supabase: SupabaseClient, payload: WebhookPayload) {
+  if (payload.type === "INSERT") {
+    await notifyAdmins(supabase, "موصّل جديد 🏍️", "سجّل موصّل جديد بانتظار الموافقة", "new_driver");
+    return;
+  }
+
+  if (payload.type === "UPDATE") {
+    const oldStatus = payload.old_record?.status;
+    const newStatus = payload.record.status;
+
+    if (oldStatus && oldStatus !== newStatus) {
+      if (newStatus === "approved") {
+        await notifyUser(supabase, payload.record.user_id, "تمّت الموافقة على حسابك 🎉", "يمكنك الآن الاتصال واستلام الطلبات", "driver_approved");
+      } else if (newStatus === "rejected") {
+        await notifyUser(supabase, payload.record.user_id, "لم تتم الموافقة على حسابك", "تواصل مع الإدارة لمزيد من التفاصيل", "driver_rejected");
       }
     }
   }

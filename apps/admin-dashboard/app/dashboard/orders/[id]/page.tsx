@@ -22,7 +22,8 @@ export default async function OrderDetailPage({
       `id, status, subtotal, delivery_fee, total_amount, merchant_amount, platform_commission_amount, created_at,
        merchants(store_name, phone),
        addresses(address_text, phone, communes(name)),
-       order_items(id, product_id, quantity, unit_price, subtotal, products(name))`,
+       order_items(id, product_id, quantity, unit_price, subtotal, products(name)),
+       drivers(full_name, phone)`,
     )
     .eq("id", id)
     .maybeSingle();
@@ -47,6 +48,15 @@ export default async function OrderDetailPage({
         <p className="font-semibold mb-1">المحل</p>
         <p className="text-black/70">
           {o.merchants?.store_name} — {o.merchants?.phone}
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-5 mb-4">
+        <p className="font-semibold mb-1">الموصّل</p>
+        <p className="text-black/70">
+          {o.drivers
+            ? `${o.drivers.full_name} — ${o.drivers.phone}`
+            : "لم يُعيَّن موصّل بعد"}
         </p>
       </div>
 
