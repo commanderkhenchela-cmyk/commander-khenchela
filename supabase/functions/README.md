@@ -4,12 +4,21 @@
 تحتاج نداء خدمة خارجية (وليس لعمل DB بحت — ذاك يُبنى كدالة Postgres
 `security definer`، مثل `create_order`، أنظر `docs/architecture-decisions.md`).
 
-## send-order-notification (PHASE 11)
+## send-order-notification (PHASE 11 + شبكة الإشعارات)
 
-ترسل إشعار Firebase Cloud Messaging + تسجّل إشعارًا داخل التطبيق (جدول
-`notifications`) عند:
-- إنشاء طلب جديد → إشعار للتاجر
-- تغيّر حالة طلب → إشعار للعميل
+تسجّل إشعارًا داخل التطبيق دائمًا (جدول `notifications`، يظهر فورًا بغضّ
+النظر عن نجاح Push الخارجي)، ثم تحاول أيضًا إرسال Firebase Cloud
+Messaging إن توفّر `fcm_token`. مغطّاة حاليًا:
+- `orders`: إنشاء طلب جديد → إشعار للتاجر، تغيّر حالة → إشعار للعميل
+- `merchants`: تسجيل تاجر جديد → إشعار لكل الإدارة (admin/manager)،
+  موافقة/رفض → إشعار للتاجر نفسه (راجع migration
+  `20260822000000_notifications_network.sql`)
+
+جدول `drivers` سيُضاف كفرع ثالث في نفس الدالة عند بناء تطبيق الموصّل.
+
+**تنبيه تشغيلي**: بما أن كود هذه الدالة تغيّر (إضافة فرع `merchants`)،
+يجب **إعادة نشرها** بنفس أمر الخطوة 3 أدناه حتى تصل التغييرات لمشروع
+Supabase الفعلي — تعديل الملف هنا وحده لا يكفي.
 
 ### خطوات التفعيل (تُنفَّذ مرة واحدة، خارج الكود)
 
@@ -33,16 +42,20 @@
      migration `20260821110000_order_notify_trigger.sql`)
    (`SUPABASE_URL` و`SUPABASE_SERVICE_ROLE_KEY` متوفّرتان تلقائيًا، لا
    حاجة لضبطهما)
-5. **ربط الدالة بجدول orders**: طُبِّق تلقائيًا عبر migration
-   `20260821110000_order_notify_trigger.sql` — Trigger على `orders`
-   يستدعي الدالة مباشرة عبر `pg_net` عند كل INSERT/UPDATE، **بديل** عن
-   ميزة "Database Webhooks" الجاهزة في الواجهة (بعض المشاريع تفتقد
-   schema داخليًا `supabase_functions` تعتمد عليه تلك الميزة، فتفشل
-   بخطأ "schema supabase_functions does not exist" — خلل منصّة، لا حاجة
-   لأي إعداد يدوي إضافي من الواجهة إن كنت تستخدم هذه الـ migration).
+5. **ربط الدالة بالجداول**: طُبِّق تلقائيًا عبر migrations
+   `20260821110000_order_notify_trigger.sql` (جدول `orders`) و
+   `20260822000000_notifications_network.sql` (جدول `merchants`،
+   يعيد استخدام نفس دالة الـ trigger) — Trigger عادي يستدعي الدالة
+   مباشرة عبر `pg_net` عند كل INSERT/UPDATE، **بديل** عن ميزة "Database
+   Webhooks" الجاهزة في الواجهة (بعض المشاريع تفتقد schema داخليًا
+   `supabase_functions` تعتمد عليه تلك الميزة، فتفشل بخطأ "schema
+   supabase_functions does not exist" — خلل منصّة، لا حاجة لأي إعداد
+   يدوي إضافي من الواجهة إن كنت تستخدم هذه الـ migrations).
 
-بعد هذه الخطوات، أي تغيير في جدول `orders` يستدعي الدالة تلقائيًا —
-لا حاجة لأي تعديل إضافي في التطبيقات (Flutter/Next.js).
+بعد هذه الخطوات، أي تغيير في `orders` أو `merchants` يستدعي الدالة
+تلقائيًا — لا حاجة لأي تعديل إضافي في التطبيقات (Flutter/Next.js)، فقط
+شاشة/صفحة تعرض جدول `notifications` (موجودة الآن في تطبيق الزبون، ولوحتي
+التاجر والإدارة).
 
 ### الجانب الآخر: تسجيل fcm_token من تطبيق Flutter
 

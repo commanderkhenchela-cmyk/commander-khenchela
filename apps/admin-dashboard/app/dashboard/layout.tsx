@@ -32,6 +32,7 @@ export default async function DashboardLayout({
         </div>
         <nav className="flex md:flex-col p-3 gap-1 overflow-x-auto">
           <NavLink href="/dashboard" label="نظرة عامة" />
+          <NavLink href="/dashboard/notifications" label="🔔 الإشعارات" />
 
           {context.canManageStores && (
             <>

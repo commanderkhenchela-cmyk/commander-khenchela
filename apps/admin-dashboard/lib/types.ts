@@ -206,3 +206,15 @@ export interface AppContact {
   instagram_url: string | null;
   updated_at: string;
 }
+
+/** إشعار واحد — نفس جدول notifications المستخدَم في تطبيق الزبون
+ * (راجع migration 20260819050823 وشبكة الإشعارات 20260822000000).
+ * تُنشأ فقط من طرف السيرفر، RLS تحصر القراءة على صاحبها. */
+export interface AppNotification {
+  id: string;
+  title: string;
+  body: string;
+  type: string | null;
+  is_read: boolean;
+  created_at: string;
+}
