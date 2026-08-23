@@ -33,7 +33,13 @@ npm run dev
    → "تطبيقاتك" → أضف تطبيق → Web (`</>`). يعطيك كائن `firebaseConfig`
    فيه `apiKey`/`authDomain`/`projectId`/إلخ.
 2. **انسخ هذه القيم** إلى `.env.local` (المتغيرات `NEXT_PUBLIC_FIREBASE_*`
-   في `.env.local.example`).
+   في `.env.local.example`). ملاحظة: `apiKey` تحديدًا (يبدأ بـ `AIza...`)
+   يُخزَّن كـ `NEXT_PUBLIC_FIREBASE_API_KEY_B64` (مُشفَّر بـ Base64، لا نص
+   واضح) — بعض برامج مكافحة الفيروسات على Windows (لوحظ مع 360 Total
+   Security) تستبدل أي نص يطابق شكل مفتاح Google API بنقاط "•" تلقائيًا
+   عند اللصق، حتى خارج المتصفح. حوّل القيمة بأمر: `printf '%s' "القيمة"
+   | base64` (أو استعمل `NEXT_PUBLIC_FIREBASE_API_KEY` بنص واضح إن لم
+   تواجه هذه المشكلة — الاثنان مدعومان).
 3. **ولّد مفتاح Web Push**: Firebase Console → إعدادات المشروع → Cloud
    Messaging → Web configuration → "Web Push certificates" → Generate
    key pair. انسخ القيمة إلى `NEXT_PUBLIC_FIREBASE_VAPID_KEY`.
