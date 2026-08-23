@@ -14,40 +14,29 @@ import { createClient } from "@/lib/supabase/client";
  * لا يفعل شيئًا إطلاقًا (بصمت) إن لم تُضبط إعدادات Firebase بعد في
  * .env.local، أو رفض المتصفح/المستخدم الإذن — نفس فلسفة
  * PushNotificationService في تطبيق الزبون: الميزة تتعطّل بهدوء، ولا
- * تكسر أي شيء آخر في اللوحة.
- *
- * ملاحظة مؤقتة (تشخيص): كل خطوة تطبع في Console بادئة "[Push]" — نفس
- * أسلوب تشخيص PHASE 11 في تطبيق الزبون، تُحذف بعد التأكد من نجاح
- * الميزة فعليًا على جهاز حقيقي.
+ * تكسر أي شيء آخر في اللوحة. الأخطاء الحقيقية (فشل تسجيل/حفظ) تُطبع في
+ * Console عبر console.error فقط، بدون ضجيج تشخيصي لكل خطوة ناجحة —
+ * مؤكَّد نجاح المسار الكامل على جهاز حقيقي (راجع commit history لتفاصيل
+ * التشخيص إن احتجتها مستقبلاً: تسابق React Strict Mode + برنامج مضاد
+ * فيروسات يعترض القيم الشبيهة بمفاتيح Google API، محلولان الآن).
  *
  * يُركَّب مرة واحدة في app/dashboard/layout.tsx (بعد التأكد من وجود
  * تاجر مسجَّل دخوله فعليًا).
  */
 
-// حارس على مستوى الوحدة (module-level)، لا على مستوى المكوّن: في وضع
-// التطوير، React Strict Mode يشغّل useEffect مرتين (mount → cleanup →
-// mount) عمدًا لكشف الأخطاء. علم "ignore" المحلي يمنع فقط نتائج
-// التشغيلة الأولى (setState) بعد كل await، لكنه لا يوقف نداءات
-// الشبكة/IndexedDB التي بدأت فعلاً (register/getToken) — فتتسابق
-// تشغيلتان حقيقيتان لـ getToken() في نفس اللحظة داخل Firebase SDK،
-// وتتصادمان على نفس بيانات Installations/heartbeats المخزَّنة في
-// IndexedDB. هذا هو السبب الحقيقي لخطأ "Headers: non ISO-8859-1 code
-// point" المتقطّع (وليس أي حرف مخفي في الإعدادات كما ظننّا أولاً —
-// تأكّدنا أن VAPID key وكل قيم firebaseConfig نظيفة). حارس مشترك على
-// مستوى الوحدة يضمن أن التسجيل الفعلي (SW + getToken + حفظ التوكن) لا
-// يُنفَّذ إلا مرة واحدة فعليًا مهما تكرّر mount للمكوّن.
+// حارس على مستوى الوحدة (module-level)، لا على مستوى المكوّن: React
+// Strict Mode في وضع التطوير يشغّل useEffect مرتين (mount → cleanup →
+// mount) عمدًا، وهذا يضمن أن التسجيل الفعلي عبر الشبكة (SW + getToken
+// + حفظ التوكن) لا يُنفَّذ إلا مرة واحدة فعليًا مهما تكرّر mount
+// للمكوّن — نداءان متزامنان لـ getToken() كانا يتصادمان على بيانات
+// Firebase Installations المخزَّنة محليًا (IndexedDB).
 let registerTokenPromise: Promise<void> | null = null;
 
 async function registerToken(messaging: Messaging) {
-  console.log("[Push] إذن الإشعارات الحالي:", Notification.permission);
   if (Notification.permission === "default") {
-    const result = await Notification.requestPermission();
-    console.log("[Push] نتيجة طلب الإذن:", result);
+    await Notification.requestPermission();
   }
-  if (Notification.permission !== "granted") {
-    console.log("[Push] توقّف: الإذن غير ممنوح");
-    return;
-  }
+  if (Notification.permission !== "granted") return;
 
   let registration: ServiceWorkerRegistration;
   try {
@@ -58,78 +47,33 @@ async function registerToken(messaging: Messaging) {
     // "no active Service Worker". navigator.serviceWorker.ready تنتظر
     // فعليًا حتى يصبح نشطًا.
     registration = await navigator.serviceWorker.ready;
-    console.log("[Push] Service Worker أصبح نشطًا (ready) ✅");
   } catch (e) {
     console.error("[Push] فشل تسجيل/تفعيل Service Worker:", e);
     return;
   }
 
   const vapidKeyRaw = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
-  console.log("[Push] VAPID key موجود:", Boolean(vapidKeyRaw));
   if (!vapidKeyRaw) return;
-
   const vapidKey = cleanEnvValue(vapidKeyRaw, "vapidKey")!;
-
-  // تشخيص مؤقت: نلبّس Headers الأصلية بنسخة تكشف بالضبط أي مفتاح/قيمة
-  // يفشل بناؤه — القيم يلي نتحكّم فيها (vapidKey وfirebaseConfig)
-  // مؤكَّد نظيفة، فالمصدر الحقيقي لا بد أنه شيء تبنيه مكتبة Firebase
-  // SDK داخليًا (مثل رؤوس Installations/heartbeats) — نحتاج نشوفه
-  // بالضبط بدل التخمين.
-  const OriginalHeaders = window.Headers;
-  class DebugHeaders extends OriginalHeaders {
-    constructor(init?: HeadersInit) {
-      try {
-        super(init);
-      } catch (e) {
-        console.error("[Push] فشل بناء Headers، المحتوى الكامل:", init);
-        if (init && typeof init === "object" && !Array.isArray(init)) {
-          for (const [k, v] of Object.entries(init as Record<string, string>)) {
-            const bad = [...String(v)]
-              .map((ch, i) => ({ ch, i, code: ch.codePointAt(0)! }))
-              .filter((x) => x.code > 255);
-            if (bad.length > 0) {
-              console.error(`[Push] 🎯 الحقل المسبب هو "${k}" =`, v, "— أحرف غير صالحة:", bad);
-            }
-          }
-        }
-        throw e;
-      }
-    }
-  }
-  window.Headers = DebugHeaders;
 
   let token: string | null = null;
   try {
-    token = await getToken(messaging, {
-      vapidKey,
-      serviceWorkerRegistration: registration,
-    });
-    console.log("[Push] getToken نجحت، طول التوكن:", token?.length);
+    token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: registration });
   } catch (e) {
     console.error("[Push] فشل getToken:", e);
     return;
-  } finally {
-    window.Headers = OriginalHeaders;
   }
   if (!token) return;
 
   const supabase = createClient();
   const {
     data: { user },
-    error: userError,
   } = await supabase.auth.getUser();
-  console.log("[Push] المستخدم الحالي:", user?.id, userError);
   if (!user) return;
 
-  const { error: updateError } = await supabase
-    .from("users")
-    .update({ fcm_token: token })
-    .eq("id", user.id);
-
+  const { error: updateError } = await supabase.from("users").update({ fcm_token: token }).eq("id", user.id);
   if (updateError) {
     console.error("[Push] فشل حفظ التوكن في قاعدة البيانات:", updateError);
-  } else {
-    console.log("[Push] تم حفظ التوكن في قاعدة البيانات بنجاح ✅");
   }
 }
 
@@ -139,18 +83,12 @@ export default function PushNotificationsSetup() {
     let cancelled = false;
 
     async function setup() {
-      console.log("[Push] بدء الإعداد");
-
       const messaging = await getMessagingInstance();
-      console.log(
-        "[Push] getMessagingInstance:",
-        messaging ? "متوفرة" : "null (إعدادات ناقصة أو غير مدعومة)",
-      );
       if (!messaging || cancelled) return;
 
       // اشتراك الإشعارات الأمامية (foreground): محلي وخفيف، آمن تمامًا
       // لإعادة تسجيله في كل mount — العنصر الوحيد الذي يحتاج حارسًا ضد
-      // التكرار هو التسجيل الفعلي عبر الشبكة أدناه.
+      // التكرار هو التسجيل الفعلي عبر الشبكة أعلاه.
       unsubscribeForeground = onMessage(messaging, (payload) => {
         const title = payload.notification?.title ?? "إشعار جديد";
         const body = payload.notification?.body ?? "";
