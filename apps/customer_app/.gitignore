@@ -51,3 +51,12 @@ app.*.map.json
 # لا يُرفع لـ GitHub (نفس منطق .env.local). ضعه محليًا في
 # android/app/google-services.json فقط.
 android/app/google-services.json
+
+# مفتاح توقيع نسخة Release + بياناته — سرّ خاص بك وحدك، لا يُرفع لـ
+# GitHub إطلاقًا (فقده يعني عدم القدرة على نشر أي تحديث مستقبلي لنفس
+# التطبيق). أنشئه محليًا فقط، راجع android/key.properties.example.
+android/key.properties
+android/*.jks
+android/*.keystore
+*.jks
+*.keystore

@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -5,6 +8,18 @@ plugins {
     // PHASE 11: يقرأ google-services.json في هذا المجلد (android/app/)
     // ويولّد إعدادات الاتصال بمشروع Firebase تلقائيًا.
     id("com.google.gms.google-services")
+}
+
+// نسخة Release حقيقية موزَّعة: لازم تُوقَّع بمفتاح خاص بك، لا بمفتاح
+// Debug العام (Google Play يرفضه أصلًا). القيم تُقرأ من android/key.properties
+// (مُستثنى من git — راجع android/key.properties.example) بدل كتابتها هنا
+// مباشرة. الملف غير موجود بعد؟ نتراجع بهدوء لتوقيع Debug (نفس السلوك
+// الافتراضي السابق) حتى لا ينكسر أي بناء تطويري قبل إنشاء المفتاح.
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+val hasReleaseSigning = keystorePropertiesFile.exists()
+if (hasReleaseSigning) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
@@ -32,11 +47,24 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (hasReleaseSigning) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }
