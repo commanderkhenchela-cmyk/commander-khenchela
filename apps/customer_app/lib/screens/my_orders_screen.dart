@@ -18,11 +18,45 @@ class MyOrdersScreen extends StatefulWidget {
 
 class _MyOrdersScreenState extends State<MyOrdersScreen> {
   late Future<List<CustomerOrder>> _ordersFuture;
+  RealtimeChannel? _channel;
 
   @override
   void initState() {
     super.initState();
     _ordersFuture = _fetchOrders();
+    _subscribeToChanges();
+  }
+
+  @override
+  void dispose() {
+    if (_channel != null) {
+      Supabase.instance.client.removeChannel(_channel!);
+    }
+    super.dispose();
+  }
+
+  /// أي تغيير حالة على طلبات هذا العميل (تأكيد التاجر، تسليم، إلخ) يحدّث
+  /// القائمة فورًا بدل انتظار فتح الشاشة يدويًا — نفس فلسفة شاشة الإشعارات.
+  void _subscribeToChanges() {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+
+    _channel = Supabase.instance.client
+        .channel('customer-orders')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'orders',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'customer_id',
+            value: userId,
+          ),
+          callback: (_) {
+            if (mounted) _refresh();
+          },
+        )
+        .subscribe();
   }
 
   Future<List<CustomerOrder>> _fetchOrders() async {
@@ -108,20 +142,29 @@ class _OrdersList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (orders.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(emptyMessage, textAlign: TextAlign.center),
+      return RefreshIndicator(
+        onRefresh: () async => onRefresh(),
+        child: ListView(
+          children: [
+            const SizedBox(height: 80),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(emptyMessage, textAlign: TextAlign.center),
+            ),
+          ],
         ),
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: orders.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 12),
-      itemBuilder: (context, index) =>
-          _OrderCard(order: orders[index], onReturned: onRefresh),
+    return RefreshIndicator(
+      onRefresh: () async => onRefresh(),
+      child: ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: orders.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) =>
+            _OrderCard(order: orders[index], onReturned: onRefresh),
+      ),
     );
   }
 }

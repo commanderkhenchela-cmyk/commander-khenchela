@@ -4,8 +4,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/notification_item.dart';
 
 /// شاشة "إشعاراتي" — تعرض إشعارات المستخدم الحالي فقط (RLS تحميها تلقائيًا).
-/// تُملأ هذه القائمة من طرف Edge Function عند تغيّر حالة الطلب (Phase 11)؛
-/// قبل تفعيل تلك الدالة، ستظهر الشاشة فارغة وهذا طبيعي.
+/// تُملأ هذه القائمة من طرف Edge Function عند تغيّر حالة الطلب (Phase 11).
+/// مشتركة في تحديثات Realtime (جدول notifications مُضاف لـ
+/// supabase_realtime، راجع migration 20260822000000) — إشعار جديد يظهر
+/// فورًا بدون حاجة لإعادة فتح الشاشة، بالإضافة لسحب-للتحديث اليدوي.
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
 
@@ -15,11 +17,49 @@ class NotificationsScreen extends StatefulWidget {
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
   late Future<List<NotificationItem>> _notificationsFuture;
+  RealtimeChannel? _channel;
 
   @override
   void initState() {
     super.initState();
     _notificationsFuture = _fetchNotifications();
+    _subscribeToChanges();
+  }
+
+  @override
+  void dispose() {
+    if (_channel != null) {
+      Supabase.instance.client.removeChannel(_channel!);
+    }
+    super.dispose();
+  }
+
+  /// إعادة الجلب الكامل عند أي تغيير بدل دمج الصف الوارد يدويًا — أبسط
+  /// وأقل عرضة للأخطاء من إعادة بناء الحالة يدويًا لعدد صغير من الصفوف.
+  void _subscribeToChanges() {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+
+    _channel = Supabase.instance.client
+        .channel('customer-notifications')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'notifications',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: userId,
+          ),
+          callback: (_) {
+            if (mounted) _refresh();
+          },
+        )
+        .subscribe();
+  }
+
+  void _refresh() {
+    setState(() => _notificationsFuture = _fetchNotifications());
   }
 
   Future<List<NotificationItem>> _fetchNotifications() async {
@@ -41,11 +81,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         .update({'is_read': true})
         .eq('id', notification.id);
 
-    if (mounted) {
-      setState(() {
-        _notificationsFuture = _fetchNotifications();
-      });
-    }
+    if (mounted) _refresh();
   }
 
   @override
@@ -80,11 +116,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _notificationsFuture = _fetchNotifications();
-                        });
-                      },
+                      onPressed: _refresh,
                       child: const Text('إعادة المحاولة'),
                     ),
                   ],
@@ -96,49 +128,64 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           final notifications = snapshot.data ?? [];
 
           if (notifications.isEmpty) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'لا توجد إشعارات بعد.',
-                  textAlign: TextAlign.center,
-                ),
+            return RefreshIndicator(
+              onRefresh: () async {
+                _refresh();
+                await _notificationsFuture;
+              },
+              child: ListView(
+                children: const [
+                  SizedBox(height: 80),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      'لا توجد إشعارات بعد.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
               ),
             );
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: notifications.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              final notification = notifications[index];
-              return Card(
-                color: notification.isRead
-                    ? null
-                    : theme.colorScheme.primary.withValues(alpha: 0.06),
-                child: ListTile(
-                  onTap: () => _markAsRead(notification),
-                  leading: Icon(
-                    notification.isRead
-                        ? Icons.notifications_none_rounded
-                        : Icons.notifications_active_rounded,
-                    color: notification.isRead
-                        ? Colors.black45
-                        : theme.colorScheme.primary,
-                  ),
-                  title: Text(
-                    notification.title,
-                    style: TextStyle(
-                      fontWeight: notification.isRead
-                          ? FontWeight.normal
-                          : FontWeight.bold,
-                    ),
-                  ),
-                  subtitle: Text(notification.body),
-                ),
-              );
+          return RefreshIndicator(
+            onRefresh: () async {
+              _refresh();
+              await _notificationsFuture;
             },
+            child: ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: notifications.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 8),
+              itemBuilder: (context, index) {
+                final notification = notifications[index];
+                return Card(
+                  color: notification.isRead
+                      ? null
+                      : theme.colorScheme.primary.withValues(alpha: 0.06),
+                  child: ListTile(
+                    onTap: () => _markAsRead(notification),
+                    leading: Icon(
+                      notification.isRead
+                          ? Icons.notifications_none_rounded
+                          : Icons.notifications_active_rounded,
+                      color: notification.isRead
+                          ? Colors.black45
+                          : theme.colorScheme.primary,
+                    ),
+                    title: Text(
+                      notification.title,
+                      style: TextStyle(
+                        fontWeight: notification.isRead
+                            ? FontWeight.normal
+                            : FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(notification.body),
+                  ),
+                );
+              },
+            ),
           );
         },
       ),

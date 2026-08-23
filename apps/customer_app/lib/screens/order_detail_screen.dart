@@ -20,11 +20,42 @@ class OrderDetailScreen extends StatefulWidget {
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
   late Future<_OrderPageData> _orderFuture;
   bool _isCancelling = false;
+  RealtimeChannel? _channel;
 
   @override
   void initState() {
     super.initState();
     _orderFuture = _fetchOrder();
+    _subscribeToChanges();
+  }
+
+  @override
+  void dispose() {
+    if (_channel != null) {
+      Supabase.instance.client.removeChannel(_channel!);
+    }
+    super.dispose();
+  }
+
+  /// تغيّر حالة هذا الطلب بالذات (تأكيد التاجر، تسليم، إلخ) يحدّث الشاشة
+  /// فورًا والعميل واقف فيها — بدل الاعتماد فقط على الرجوع لـ "طلباتي".
+  void _subscribeToChanges() {
+    _channel = Supabase.instance.client
+        .channel('customer-order-${widget.orderId}')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'orders',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'id',
+            value: widget.orderId,
+          ),
+          callback: (_) {
+            if (mounted) setState(() => _orderFuture = _fetchOrder());
+          },
+        )
+        .subscribe();
   }
 
   Future<_OrderPageData> _fetchOrder() async {
@@ -147,7 +178,32 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           }
 
           if (snapshot.hasError || !snapshot.hasData) {
-            return const Center(child: Text('تعذّر تحميل تفاصيل الطلب.'));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.wifi_off_rounded,
+                      size: 48,
+                      color: Colors.black45,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'تعذّر تحميل تفاصيل الطلب. تحقق من اتصالك بالإنترنت.',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () =>
+                          setState(() => _orderFuture = _fetchOrder()),
+                      child: const Text('إعادة المحاولة'),
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
 
           final order = snapshot.data!.order;
