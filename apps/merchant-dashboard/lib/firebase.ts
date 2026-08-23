@@ -27,8 +27,30 @@ export function cleanEnvValue(raw: string | undefined, label: string): string | 
   return cleaned;
 }
 
+// apiKey تحديدًا (يبدأ بـ "AIza...") يُخزَّن بصيغة Base64 لا بنص واضح:
+// شخّصنا (حرفًا بحرف، بأداة تفحص Headers() مباشرة) أن بعض برامج مكافحة
+// الفيروسات على أجهزة Windows (لاحظناها فعليًا مع "360 Total Security")
+// تراقب الحافظة/الملفات على مستوى النظام كامل — لا المتصفح فقط — وتستبدل
+// أي نص يطابق شكل "مفتاح Google API" (AIza + 35 محرفًا) بنقاط "•" فورًا
+// عند الكتابة أو اللصق، حتى داخل Notepad. القيمة المشفَّرة بـ Base64 لا
+// تشبه هذا الشكل إطلاقًا فتفلت من هذا الفحص، ونفكّها هنا وقت التشغيل.
+// القيمة القديمة (نص واضح) تبقى مدعومة كخيار احتياطي لأي بيئة أخرى
+// (كـ Vercel) لا تعاني من هذه المشكلة.
+function decodeApiKey(): string | undefined {
+  const b64 = process.env.NEXT_PUBLIC_FIREBASE_API_KEY_B64?.trim();
+  if (b64) {
+    try {
+      const decoded = typeof atob === "function" ? atob(b64) : Buffer.from(b64, "base64").toString("utf-8");
+      return cleanEnvValue(decoded, "apiKey");
+    } catch (e) {
+      console.error("[Push] فشل فكّ ترميز NEXT_PUBLIC_FIREBASE_API_KEY_B64:", e);
+    }
+  }
+  return cleanEnvValue(process.env.NEXT_PUBLIC_FIREBASE_API_KEY, "apiKey");
+}
+
 const firebaseConfig = {
-  apiKey: cleanEnvValue(process.env.NEXT_PUBLIC_FIREBASE_API_KEY, "apiKey"),
+  apiKey: decodeApiKey(),
   authDomain: cleanEnvValue(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN, "authDomain"),
   projectId: cleanEnvValue(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID, "projectId"),
   storageBucket: cleanEnvValue(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET, "storageBucket"),
