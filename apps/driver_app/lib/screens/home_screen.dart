@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../models/driver.dart';
 import '../models/job_order.dart';
 import '../services/driver_service.dart';
 import '../services/location_service.dart';
 import '../services/order_service.dart';
+import '../utils/distance.dart';
 import 'account_screen.dart';
 import 'job_detail_screen.dart';
 import 'notifications_screen.dart';
@@ -158,6 +160,7 @@ class _HomeScreenState extends State<HomeScreen>
                   emptyMessage: 'لا توجد طلبات متاحة حاليًا.',
                   onOpen: _openJob,
                   claimable: true,
+                  showDistance: true,
                 ),
                 _JobsList(
                   key: ValueKey('mine-${_driver?.isOnline}'),
@@ -165,6 +168,7 @@ class _HomeScreenState extends State<HomeScreen>
                   emptyMessage: 'لا توجد طلبات لديك حاليًا.',
                   onOpen: _openJob,
                   claimable: false,
+                  showDistance: false,
                 ),
               ],
             ),
@@ -230,6 +234,7 @@ class _JobsList extends StatefulWidget {
   final String emptyMessage;
   final void Function(String orderId) onOpen;
   final bool claimable;
+  final bool showDistance;
 
   const _JobsList({
     super.key,
@@ -237,6 +242,7 @@ class _JobsList extends StatefulWidget {
     required this.emptyMessage,
     required this.onOpen,
     required this.claimable,
+    required this.showDistance,
   });
 
   @override
@@ -245,17 +251,40 @@ class _JobsList extends StatefulWidget {
 
 class _JobsListState extends State<_JobsList> {
   late Future<List<JobOrder>> _future;
+  Position? _currentPosition;
 
   @override
   void initState() {
     super.initState();
     _future = widget.fetcher();
+    if (widget.showDistance) {
+      // بصمت: فشل تحديد الموقع هنا لا يمنع عرض القائمة، فقط لا تظهر
+      // المسافة — نفس فلسفة LocationService (لا يرمي استثناء أبدًا).
+      unawaited(
+        LocationService.getCurrentPosition().then((position) {
+          if (mounted) setState(() => _currentPosition = position);
+        }),
+      );
+    }
   }
 
   Future<void> _refresh() async {
     final future = widget.fetcher();
     setState(() => _future = future);
     await future;
+  }
+
+  /// null إن كان تحديد الموقع الحالي فشل، أو المحل بلا إحداثيات مسجَّلة
+  /// (بعض التجار لم يضبطوا موقعهم بعد) — الاعتماد الوحيد على
+  /// merchants.latitude/longitude، وليس عنوان العميل (addresses لا تملك
+  /// إحداثيات إطلاقًا).
+  String? _distanceLabelFor(JobOrder job) {
+    final position = _currentPosition;
+    final lat = job.merchantLat;
+    final lng = job.merchantLng;
+    if (position == null || lat == null || lng == null) return null;
+    final km = haversineKm(position.latitude, position.longitude, lat, lng);
+    return formatDistance(km);
   }
 
   Future<void> _claim(JobOrder job) async {
@@ -320,6 +349,7 @@ class _JobsListState extends State<_JobsList> {
             separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final job = jobs[index];
+              final distanceText = _distanceLabelFor(job);
               return Card(
                 child: ListTile(
                   onTap: () => widget.onOpen(job.id),
@@ -328,7 +358,11 @@ class _JobsListState extends State<_JobsList> {
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(
-                    '${JobOrder.statusLabel(job.status)} — ${job.totalAmount.toStringAsFixed(0)} دج',
+                    [
+                      JobOrder.statusLabel(job.status),
+                      '${job.totalAmount.toStringAsFixed(0)} دج',
+                      ?distanceText,
+                    ].join(' — '),
                   ),
                   trailing: widget.claimable
                       ? ElevatedButton(

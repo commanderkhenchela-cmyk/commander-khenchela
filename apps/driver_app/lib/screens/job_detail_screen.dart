@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/job_order.dart';
 import '../services/order_service.dart';
@@ -30,16 +31,31 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     setState(() => _future = OrderService.fetchJobDetail(widget.orderId));
   }
 
+  /// رسالة الخطأ الحقيقية عند توفّرها: RPC/trigger يرفضان بـ `raise
+  /// exception 'نص عربي واضح'` (مثلاً "هذا الطلب لم يعد متاحًا" أو
+  /// "انتقال حالة غير مسموح")، وتصل هنا كـ PostgrestException.message —
+  /// أدقّ بكثير من رسالة عامة تخلط بين تعارض حالة حقيقي وعطل شبكة عابر.
+  String _friendlyError(Object e, String fallback) {
+    if (e is PostgrestException && e.message.trim().isNotEmpty) {
+      return e.message;
+    }
+    return fallback;
+  }
+
   Future<void> _advance(String toStatus) async {
     setState(() => _isSubmitting = true);
     try {
       await OrderService.advanceStatus(widget.orderId, toStatus);
       await _refresh();
     } catch (e) {
+      // نحدّث دائمًا بعد فشل: قد يكون السبب أن الإدارة غيّرت الحالة أو
+      // أعادت تعيين الطلب لموصّل آخر في نفس اللحظة — التحديث يعكس
+      // الوضع الحقيقي بدل ترك الشاشة بحالة قديمة.
+      await _refresh();
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('تعذّر تحديث حالة الطلب.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_friendlyError(e, 'تعذّر تحديث حالة الطلب.'))),
+      );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -53,9 +69,11 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
       Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('تعذّر التراجع عن الطلب.')));
+      await _refresh();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_friendlyError(e, 'تعذّر التراجع عن الطلب.'))),
+      );
       setState(() => _isSubmitting = false);
     }
   }
