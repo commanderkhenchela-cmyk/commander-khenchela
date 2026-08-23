@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { getToken, onMessage } from "firebase/messaging";
+import { getToken, onMessage, type Messaging } from "firebase/messaging";
 import { cleanEnvValue, getMessagingInstance } from "@/lib/firebase";
 import { createClient } from "@/lib/supabase/client";
 
@@ -23,18 +23,104 @@ import { createClient } from "@/lib/supabase/client";
  * يُركَّب مرة واحدة في app/dashboard/layout.tsx (بعد التأكد من وجود
  * تاجر مسجَّل دخوله فعليًا).
  */
+
+// حارس على مستوى الوحدة (module-level)، لا على مستوى المكوّن: في وضع
+// التطوير، React Strict Mode يشغّل useEffect مرتين (mount → cleanup →
+// mount) عمدًا لكشف الأخطاء. علم "ignore" المحلي يمنع فقط نتائج
+// التشغيلة الأولى (setState) بعد كل await، لكنه لا يوقف نداءات
+// الشبكة/IndexedDB التي بدأت فعلاً (register/getToken) — فتتسابق
+// تشغيلتان حقيقيتان لـ getToken() في نفس اللحظة داخل Firebase SDK،
+// وتتصادمان على نفس بيانات Installations/heartbeats المخزَّنة في
+// IndexedDB. هذا هو السبب الحقيقي لخطأ "Headers: non ISO-8859-1 code
+// point" المتقطّع (وليس أي حرف مخفي في الإعدادات كما ظننّا أولاً —
+// تأكّدنا أن VAPID key وكل قيم firebaseConfig نظيفة). حارس مشترك على
+// مستوى الوحدة يضمن أن التسجيل الفعلي (SW + getToken + حفظ التوكن) لا
+// يُنفَّذ إلا مرة واحدة فعليًا مهما تكرّر mount للمكوّن.
+let registerTokenPromise: Promise<void> | null = null;
+
+async function registerToken(messaging: Messaging) {
+  console.log("[Push] إذن الإشعارات الحالي:", Notification.permission);
+  if (Notification.permission === "default") {
+    const result = await Notification.requestPermission();
+    console.log("[Push] نتيجة طلب الإذن:", result);
+  }
+  if (Notification.permission !== "granted") {
+    console.log("[Push] توقّف: الإذن غير ممنوح");
+    return;
+  }
+
+  let registration: ServiceWorkerRegistration;
+  try {
+    await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+    // register() يُرجع بمجرد إنشاء التسجيل، لكن الـ Service Worker قد
+    // يكون لا يزال "installing" وليس "active" بعد — واستدعاء
+    // getToken()/PushManager.subscribe() قبل التفعيل الكامل يفشل بخطأ
+    // "no active Service Worker". navigator.serviceWorker.ready تنتظر
+    // فعليًا حتى يصبح نشطًا.
+    registration = await navigator.serviceWorker.ready;
+    console.log("[Push] Service Worker أصبح نشطًا (ready) ✅");
+  } catch (e) {
+    console.error("[Push] فشل تسجيل/تفعيل Service Worker:", e);
+    return;
+  }
+
+  const vapidKeyRaw = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+  console.log("[Push] VAPID key موجود:", Boolean(vapidKeyRaw));
+  if (!vapidKeyRaw) return;
+
+  const vapidKey = cleanEnvValue(vapidKeyRaw, "vapidKey")!;
+
+  let token: string | null = null;
+  try {
+    token = await getToken(messaging, {
+      vapidKey,
+      serviceWorkerRegistration: registration,
+    });
+    console.log("[Push] getToken نجحت، طول التوكن:", token?.length);
+  } catch (e) {
+    console.error("[Push] فشل getToken:", e);
+    return;
+  }
+  if (!token) return;
+
+  const supabase = createClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  console.log("[Push] المستخدم الحالي:", user?.id, userError);
+  if (!user) return;
+
+  const { error: updateError } = await supabase
+    .from("users")
+    .update({ fcm_token: token })
+    .eq("id", user.id);
+
+  if (updateError) {
+    console.error("[Push] فشل حفظ التوكن في قاعدة البيانات:", updateError);
+  } else {
+    console.log("[Push] تم حفظ التوكن في قاعدة البيانات بنجاح ✅");
+  }
+}
+
 export default function PushNotificationsSetup() {
   useEffect(() => {
-    let ignore = false;
     let unsubscribeForeground: (() => void) | undefined;
+    let cancelled = false;
 
     async function setup() {
       console.log("[Push] بدء الإعداد");
 
       const messaging = await getMessagingInstance();
-      console.log("[Push] getMessagingInstance:", messaging ? "متوفرة" : "null (إعدادات ناقصة أو غير مدعومة)");
-      if (!messaging || ignore) return;
+      console.log(
+        "[Push] getMessagingInstance:",
+        messaging ? "متوفرة" : "null (إعدادات ناقصة أو غير مدعومة)",
+      );
+      if (!messaging || cancelled) return;
 
+      // اشتراك الإشعارات الأمامية (foreground): محلي وخفيف، آمن تمامًا
+      // لإعادة تسجيله في كل mount — العنصر الوحيد الذي يحتاج حارسًا ضد
+      // التكرار هو التسجيل الفعلي عبر الشبكة أدناه.
       unsubscribeForeground = onMessage(messaging, (payload) => {
         const title = payload.notification?.title ?? "إشعار جديد";
         const body = payload.notification?.body ?? "";
@@ -43,100 +129,16 @@ export default function PushNotificationsSetup() {
         }
       });
 
-      console.log("[Push] إذن الإشعارات الحالي:", Notification.permission);
-      if (Notification.permission === "default") {
-        const result = await Notification.requestPermission();
-        console.log("[Push] نتيجة طلب الإذن:", result);
+      if (!registerTokenPromise) {
+        registerTokenPromise = registerToken(messaging);
       }
-      if (Notification.permission !== "granted" || ignore) {
-        console.log("[Push] توقّف: الإذن غير ممنوح");
-        return;
-      }
-
-      let registration: ServiceWorkerRegistration | null = null;
-      try {
-        registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
-        console.log("[Push] تسجيل Service Worker نجح:", registration.scope);
-      } catch (e) {
-        console.error("[Push] فشل تسجيل Service Worker:", e);
-        return;
-      }
-      if (!registration || ignore) return;
-
-      // register() يُرجع بمجرد إنشاء التسجيل، لكن الـ Service Worker قد
-      // يكون لا يزال "installing" وليس "active" بعد — واستدعاء
-      // getToken()/PushManager.subscribe() قبل التفعيل الكامل يفشل بخطأ
-      // "no active Service Worker". navigator.serviceWorker.ready تنتظر
-      // فعليًا حتى يصبح نشطًا.
-      try {
-        registration = await navigator.serviceWorker.ready;
-        console.log("[Push] Service Worker أصبح نشطًا (ready) ✅");
-      } catch (e) {
-        console.error("[Push] فشل انتظار تفعيل Service Worker:", e);
-        return;
-      }
-      if (!registration || ignore) return;
-
-      const vapidKeyRaw = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
-      console.log("[Push] VAPID key موجود:", Boolean(vapidKeyRaw));
-      if (!vapidKeyRaw) return;
-
-      // نفس التنظيف المطبَّق على firebaseConfig (trim + إزالة أحرف
-      // Unicode "Format" غير المرئية) — هذا هو المُشتبه به الرئيسي
-      // لخطأ "Headers: non ISO-8859-1 code point" لأنه القيمة الوحيدة
-      // التي تُلصق يدويًا بشكل منفصل عن باقي الإعدادات.
-      const vapidKey = cleanEnvValue(vapidKeyRaw, "vapidKey")!;
-      const badChars = [...vapidKey]
-        .map((ch, i) => ({ ch, i, code: ch.codePointAt(0)! }))
-        .filter((x) => x.code > 255);
-      if (badChars.length > 0) {
-        console.error("[Push] أحرف غير صالحة ما زالت داخل VAPID key بعد التنظيف:", badChars);
-      }
-      console.log(
-        "[Push] طول VAPID key بعد التنظيف:",
-        vapidKey.length,
-        "(الأصلي:",
-        vapidKeyRaw.length,
-        ")",
-      );
-
-      let token: string | null = null;
-      try {
-        token = await getToken(messaging, {
-          vapidKey,
-          serviceWorkerRegistration: registration,
-        });
-        console.log("[Push] getToken نجحت، طول التوكن:", token?.length);
-      } catch (e) {
-        console.error("[Push] فشل getToken:", e);
-        return;
-      }
-      if (!token || ignore) return;
-
-      const supabase = createClient();
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      console.log("[Push] المستخدم الحالي:", user?.id, userError);
-      if (!user || ignore) return;
-
-      const { error: updateError } = await supabase
-        .from("users")
-        .update({ fcm_token: token })
-        .eq("id", user.id);
-
-      if (updateError) {
-        console.error("[Push] فشل حفظ التوكن في قاعدة البيانات:", updateError);
-      } else {
-        console.log("[Push] تم حفظ التوكن في قاعدة البيانات بنجاح ✅");
-      }
+      await registerTokenPromise;
     }
 
     setup();
 
     return () => {
-      ignore = true;
+      cancelled = true;
       unsubscribeForeground?.();
     };
   }, []);
