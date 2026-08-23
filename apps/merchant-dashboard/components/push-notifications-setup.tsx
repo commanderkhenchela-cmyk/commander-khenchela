@@ -70,6 +70,34 @@ async function registerToken(messaging: Messaging) {
 
   const vapidKey = cleanEnvValue(vapidKeyRaw, "vapidKey")!;
 
+  // تشخيص مؤقت: نلبّس Headers الأصلية بنسخة تكشف بالضبط أي مفتاح/قيمة
+  // يفشل بناؤه — القيم يلي نتحكّم فيها (vapidKey وfirebaseConfig)
+  // مؤكَّد نظيفة، فالمصدر الحقيقي لا بد أنه شيء تبنيه مكتبة Firebase
+  // SDK داخليًا (مثل رؤوس Installations/heartbeats) — نحتاج نشوفه
+  // بالضبط بدل التخمين.
+  const OriginalHeaders = window.Headers;
+  class DebugHeaders extends OriginalHeaders {
+    constructor(init?: HeadersInit) {
+      try {
+        super(init);
+      } catch (e) {
+        console.error("[Push] فشل بناء Headers، المحتوى الكامل:", init);
+        if (init && typeof init === "object" && !Array.isArray(init)) {
+          for (const [k, v] of Object.entries(init as Record<string, string>)) {
+            const bad = [...String(v)]
+              .map((ch, i) => ({ ch, i, code: ch.codePointAt(0)! }))
+              .filter((x) => x.code > 255);
+            if (bad.length > 0) {
+              console.error(`[Push] 🎯 الحقل المسبب هو "${k}" =`, v, "— أحرف غير صالحة:", bad);
+            }
+          }
+        }
+        throw e;
+      }
+    }
+  }
+  window.Headers = DebugHeaders;
+
   let token: string | null = null;
   try {
     token = await getToken(messaging, {
@@ -80,6 +108,8 @@ async function registerToken(messaging: Messaging) {
   } catch (e) {
     console.error("[Push] فشل getToken:", e);
     return;
+  } finally {
+    window.Headers = OriginalHeaders;
   }
   if (!token) return;
 
