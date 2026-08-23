@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAdminContext } from "@/lib/admin-context";
 import type { Driver } from "@/lib/types";
 import DriverActions from "./driver-actions";
 
@@ -8,6 +9,9 @@ export default async function DriverDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const context = await getAdminContext();
+  if (!context?.canManageStores) redirect("/dashboard");
+
   const { id } = await params;
   const supabase = await createClient();
 

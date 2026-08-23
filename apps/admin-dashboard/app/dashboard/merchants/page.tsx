@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAdminContext } from "@/lib/admin-context";
 import type { Merchant, MerchantStatus } from "@/lib/types";
 
 const FILTERS: { value: MerchantStatus | "all"; label: string }[] = [
@@ -21,6 +23,9 @@ export default async function MerchantsPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  const context = await getAdminContext();
+  if (!context?.canManageStores) redirect("/dashboard");
+
   const { status } = await searchParams;
   const activeFilter = status ?? "pending";
 

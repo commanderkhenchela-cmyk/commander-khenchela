@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAdminContext } from "@/lib/admin-context";
 import type { Merchant, MerchantCategory } from "@/lib/types";
 import MerchantActions from "./merchant-actions";
 import MerchantCategorySelect from "./merchant-category-select";
@@ -10,6 +11,9 @@ export default async function MerchantDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const context = await getAdminContext();
+  if (!context?.canManageStores) redirect("/dashboard");
+
   const { id } = await params;
   const supabase = await createClient();
 

@@ -1,9 +1,14 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAdminContext } from "@/lib/admin-context";
 import type { Category } from "@/lib/types";
 import CategoryForm from "./category-form";
 import CategoryActions from "./category-actions";
 
 export default async function CategoriesPage() {
+  const context = await getAdminContext();
+  if (!context?.canManageStores) redirect("/dashboard");
+
   const supabase = await createClient();
   const { data: categories } = await supabase
     .from("categories")

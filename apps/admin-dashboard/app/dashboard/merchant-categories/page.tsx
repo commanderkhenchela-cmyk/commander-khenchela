@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAdminContext } from "@/lib/admin-context";
 import type { MerchantCategory } from "@/lib/types";
 import MerchantCategoryForm from "./merchant-category-form";
 import MerchantCategoryActions from "./merchant-category-actions";
@@ -8,6 +10,9 @@ import MerchantCategoryActions from "./merchant-category-actions";
 // هذه الصفحة تتحكّم بالتصنيف الذي يظهر للعميل كشبكة أيقونات في أول
 // شاشة يفتحها بعد تأكيد الولاية، قبل أي قائمة محلات.
 export default async function MerchantCategoriesPage() {
+  const context = await getAdminContext();
+  if (!context?.canManageStores) redirect("/dashboard");
+
   const supabase = await createClient();
   const { data: categories } = await supabase
     .from("merchant_categories")

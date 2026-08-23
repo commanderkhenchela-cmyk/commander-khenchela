@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAdminContext } from "@/lib/admin-context";
 import type { Driver, DriverStatus } from "@/lib/types";
 
 const FILTERS: { value: DriverStatus | "all"; label: string }[] = [
@@ -20,6 +22,9 @@ export default async function DriversPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  const context = await getAdminContext();
+  if (!context?.canManageStores) redirect("/dashboard");
+
   const { status } = await searchParams;
   const activeFilter = status ?? "pending";
 
