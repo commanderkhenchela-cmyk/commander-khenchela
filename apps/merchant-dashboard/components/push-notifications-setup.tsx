@@ -63,6 +63,20 @@ export default function PushNotificationsSetup() {
       }
       if (!registration || ignore) return;
 
+      // register() يُرجع بمجرد إنشاء التسجيل، لكن الـ Service Worker قد
+      // يكون لا يزال "installing" وليس "active" بعد — واستدعاء
+      // getToken()/PushManager.subscribe() قبل التفعيل الكامل يفشل بخطأ
+      // "no active Service Worker". navigator.serviceWorker.ready تنتظر
+      // فعليًا حتى يصبح نشطًا.
+      try {
+        registration = await navigator.serviceWorker.ready;
+        console.log("[Push] Service Worker أصبح نشطًا (ready) ✅");
+      } catch (e) {
+        console.error("[Push] فشل انتظار تفعيل Service Worker:", e);
+        return;
+      }
+      if (!registration || ignore) return;
+
       const vapidKeyRaw = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
       console.log("[Push] VAPID key موجود:", Boolean(vapidKeyRaw));
       if (!vapidKeyRaw) return;
