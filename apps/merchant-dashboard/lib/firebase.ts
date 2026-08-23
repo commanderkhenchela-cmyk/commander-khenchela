@@ -8,17 +8,35 @@ import { getMessaging, isSupported, type Messaging } from "firebase/messaging";
  * Supabase) — الحماية الفعلية دائمًا من قواعد RLS في قاعدة البيانات،
  * وليس من إخفاء هذه القيم.
  */
-// .trim() دفاعي على كل قيمة: مسافة أو سطر جديد زائد من لصق يدوي في
-// .env.local يكسر بناء Headers داخل Firebase SDK لاحقًا (رسالة خطأ
-// غامضة: "String contains non ISO-8859-1 code point") — نمنعه من
-// المصدر بدل تشخيصه كل مرة.
+// .trim() وحده غير كافٍ: لا يزيل أحرف "التنسيق" غير المرئية (Unicode
+// category Cf — مثل علامات اتجاه النص RLM/LRM، أو BOM، أو Zero-Width
+// Space) التي قد تنضاف بالخطأ عند اللصق اليدوي في بيئة عربية RTL على
+// Windows، ولا تظهر بصريًا في أي محرر نصوص. أي حرف من هذه الفئة داخل
+// قيمة تُستخدم لاحقًا في بناء HTTP Header يكسر Headers() في المتصفح
+// برسالة غامضة: "String contains non ISO-8859-1 code point". ننظّفها
+// من المصدر هنا بدل تشخيصها كل مرة.
+export function cleanEnvValue(raw: string | undefined, label: string): string | undefined {
+  if (!raw) return raw;
+  const trimmed = raw.trim();
+  const cleaned = trimmed.replace(/\p{Cf}/gu, "");
+  if (cleaned !== trimmed && typeof window !== "undefined") {
+    console.warn(
+      `[Push] تنبيه: تمت إزالة أحرف غير مرئية من القيمة "${label}" (الطول قبل: ${trimmed.length}, بعد: ${cleaned.length})`,
+    );
+  }
+  return cleaned;
+}
+
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.trim(),
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN?.trim(),
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim(),
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET?.trim(),
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID?.trim(),
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID?.trim(),
+  apiKey: cleanEnvValue(process.env.NEXT_PUBLIC_FIREBASE_API_KEY, "apiKey"),
+  authDomain: cleanEnvValue(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN, "authDomain"),
+  projectId: cleanEnvValue(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID, "projectId"),
+  storageBucket: cleanEnvValue(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET, "storageBucket"),
+  messagingSenderId: cleanEnvValue(
+    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    "messagingSenderId",
+  ),
+  appId: cleanEnvValue(process.env.NEXT_PUBLIC_FIREBASE_APP_ID, "appId"),
 };
 
 let app: FirebaseApp | null = null;

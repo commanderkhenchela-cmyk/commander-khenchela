@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { getToken, onMessage } from "firebase/messaging";
-import { getMessagingInstance } from "@/lib/firebase";
+import { cleanEnvValue, getMessagingInstance } from "@/lib/firebase";
 import { createClient } from "@/lib/supabase/client";
 
 /**
@@ -67,20 +67,21 @@ export default function PushNotificationsSetup() {
       console.log("[Push] VAPID key موجود:", Boolean(vapidKeyRaw));
       if (!vapidKeyRaw) return;
 
-      // تشخيص: أي حرف خارج ISO-8859-1 (مثل علامات اتجاه نص مخفية قد
-      // تنضاف بالخطأ عند النسخ في بيئة عربية RTL) يكسر بناء Headers
-      // داخليًا في Firebase SDK. نطبعه بوضوح إن وُجد قبل المتابعة.
-      const vapidKey = vapidKeyRaw.trim();
+      // نفس التنظيف المطبَّق على firebaseConfig (trim + إزالة أحرف
+      // Unicode "Format" غير المرئية) — هذا هو المُشتبه به الرئيسي
+      // لخطأ "Headers: non ISO-8859-1 code point" لأنه القيمة الوحيدة
+      // التي تُلصق يدويًا بشكل منفصل عن باقي الإعدادات.
+      const vapidKey = cleanEnvValue(vapidKeyRaw, "vapidKey")!;
       const badChars = [...vapidKey]
         .map((ch, i) => ({ ch, i, code: ch.codePointAt(0)! }))
         .filter((x) => x.code > 255);
       if (badChars.length > 0) {
-        console.error("[Push] أحرف غير صالحة داخل VAPID key:", badChars);
+        console.error("[Push] أحرف غير صالحة ما زالت داخل VAPID key بعد التنظيف:", badChars);
       }
       console.log(
-        "[Push] طول VAPID key بعد trim:",
+        "[Push] طول VAPID key بعد التنظيف:",
         vapidKey.length,
-        "(قبل trim:",
+        "(الأصلي:",
         vapidKeyRaw.length,
         ")",
       );
