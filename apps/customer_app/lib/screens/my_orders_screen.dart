@@ -96,7 +96,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             }
 
             if (snapshot.hasError) {
-              return _ErrorState(onRetry: _refresh, error: snapshot.error);
+              return _ErrorState(onRetry: _refresh);
             }
 
             final orders = snapshot.data ?? [];
@@ -312,9 +312,8 @@ class _OrderCard extends StatelessWidget {
 
 class _ErrorState extends StatelessWidget {
   final VoidCallback onRetry;
-  final Object? error;
 
-  const _ErrorState({required this.onRetry, this.error});
+  const _ErrorState({required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -330,16 +329,6 @@ class _ErrorState extends StatelessWidget {
               'تعذّر تحميل طلباتك. تحقق من اتصالك بالإنترنت.',
               textAlign: TextAlign.center,
             ),
-            // تشخيص مؤقت: يُحذف بعد إيجاد السبب الحقيقي — نفس أسلوب
-            // تشخيص Web Push الذي أثبت فائدته سابقًا هذه الجلسة.
-            if (error != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                error.toString(),
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 11, color: Colors.redAccent),
-              ),
-            ],
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: onRetry,
