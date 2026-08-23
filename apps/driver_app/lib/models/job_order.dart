@@ -31,7 +31,10 @@ class JobOrder {
   });
 
   factory JobOrder.fromMap(Map<String, dynamic> map) {
-    final merchant = map['merchants'] as Map<String, dynamic>;
+    // merchants قد تُرجَع null من RLS في حالات نادرة (راجع migration
+    // 20260823030000) — لا نكسر شاشة "الطلبات المتاحة" كاملة لأجل اسم
+    // محل واحد غير متاح، نعرض بديلًا محايدًا بدلًا من ذلك.
+    final merchant = map['merchants'] as Map<String, dynamic>?;
     return JobOrder(
       id: map['id'] as String,
       status: map['status'] as String,
@@ -40,11 +43,11 @@ class JobOrder {
       totalAmount: (map['total_amount'] as num).toDouble(),
       paymentStatus: map['payment_status'] as String,
       createdAt: DateTime.parse(map['created_at'] as String),
-      merchantName: merchant['store_name'] as String,
-      merchantPhone: merchant['phone'] as String?,
-      merchantAddressText: merchant['address_text'] as String?,
-      merchantLat: (merchant['latitude'] as num?)?.toDouble(),
-      merchantLng: (merchant['longitude'] as num?)?.toDouble(),
+      merchantName: merchant?['store_name'] as String? ?? 'محل غير معروف',
+      merchantPhone: merchant?['phone'] as String?,
+      merchantAddressText: merchant?['address_text'] as String?,
+      merchantLat: (merchant?['latitude'] as num?)?.toDouble(),
+      merchantLng: (merchant?['longitude'] as num?)?.toDouble(),
     );
   }
 

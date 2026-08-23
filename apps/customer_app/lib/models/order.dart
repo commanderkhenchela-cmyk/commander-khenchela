@@ -19,6 +19,10 @@ class CustomerOrder {
   });
 
   factory CustomerOrder.fromMap(Map<String, dynamic> map) {
+    // merchants قد تُرجَع null من RLS في حالات نادرة (راجع migration
+    // 20260823030000) — لا نكسر الشاشة كاملة لأجل اسم محل واحد غير
+    // متاح، نعرض بديلًا محايدًا بدلًا من ذلك.
+    final merchant = map['merchants'] as Map<String, dynamic>?;
     return CustomerOrder(
       id: map['id'] as String,
       status: map['status'] as String,
@@ -26,8 +30,7 @@ class CustomerOrder {
       deliveryFee: (map['delivery_fee'] as num).toDouble(),
       totalAmount: (map['total_amount'] as num).toDouble(),
       createdAt: DateTime.parse(map['created_at'] as String),
-      merchantName:
-          (map['merchants'] as Map<String, dynamic>)['store_name'] as String,
+      merchantName: merchant?['store_name'] as String? ?? 'محل غير معروف',
     );
   }
 

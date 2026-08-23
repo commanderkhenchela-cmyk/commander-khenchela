@@ -52,7 +52,10 @@ class CustomerOrderDetail {
   });
 
   factory CustomerOrderDetail.fromMap(Map<String, dynamic> map) {
-    final merchant = map['merchants'] as Map<String, dynamic>;
+    // merchants قد تُرجَع null من RLS في حالات نادرة (راجع migration
+    // 20260823030000) — لا نكسر الشاشة كاملة لأجل اسم محل واحد غير
+    // متاح، نعرض بديلًا محايدًا بدلًا من ذلك.
+    final merchant = map['merchants'] as Map<String, dynamic>?;
     final address = map['addresses'] as Map<String, dynamic>;
     final commune = address['communes'] as Map<String, dynamic>;
     final itemRows = map['order_items'] as List;
@@ -64,9 +67,9 @@ class CustomerOrderDetail {
       deliveryFee: (map['delivery_fee'] as num).toDouble(),
       totalAmount: (map['total_amount'] as num).toDouble(),
       createdAt: DateTime.parse(map['created_at'] as String),
-      merchantId: merchant['id'] as String,
-      merchantName: merchant['store_name'] as String,
-      merchantPhone: merchant['phone'] as String?,
+      merchantId: merchant?['id'] as String? ?? '',
+      merchantName: merchant?['store_name'] as String? ?? 'محل غير معروف',
+      merchantPhone: merchant?['phone'] as String?,
       communeName: commune['name'] as String,
       addressText: address['address_text'] as String,
       items: itemRows
