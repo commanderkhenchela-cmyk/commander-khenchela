@@ -62,6 +62,11 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  # يفعّل توليد AppLocalizations تلقائيًا من ملفات lib/l10n/*.arb عند كل
+  # `flutter pub get` — راجع l10n.yaml للإعدادات، ولا تكتب أي كود توليد
+  # يدويًا (يُنشأ في .dart_tool/، غير مُتتبَّع في git، نفس نمط أي كود
+  # مولَّد آخر في المشروع).
+  generate: true
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

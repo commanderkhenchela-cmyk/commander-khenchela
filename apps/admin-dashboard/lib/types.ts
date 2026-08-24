@@ -195,6 +195,25 @@ export interface HomeSection {
   created_at: string;
 }
 
+export type ServiceSlug =
+  | "marketplace"
+  | "restaurants"
+  | "taxi"
+  | "delivery"
+  | "craftsmen";
+
+export interface Service {
+  id: string;
+  slug: ServiceSlug;
+  name: string;
+  icon: string;
+  description: string | null;
+  enabled: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Advertisement {
   id: string;
   title: string;

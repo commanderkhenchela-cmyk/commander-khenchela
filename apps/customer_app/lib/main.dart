@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app_navigation.dart';
 import 'config/supabase_config.dart';
+import 'l10n/app_localizations.dart';
 import 'screens/splash_screen.dart';
 import 'services/branding_service.dart';
 import 'services/cart_service.dart';
@@ -73,10 +74,14 @@ class CommanderKhenchelaApp extends StatelessWidget {
       ),
       themeMode: themeController.mode,
 
-      // دعم اللغة العربية واتجاه RTL منذ البداية (Arabic-first)
+      // دعم اللغة العربية واتجاه RTL منذ البداية (Arabic-first). بنية
+      // Localization حقيقية الآن (راجع l10n.yaml + lib/l10n/app_ar.arb)
+      // — إضافة الفرنسية لاحقًا تعني فقط إنشاء app_fr.arb بنفس المفاتيح
+      // وإضافة Locale('fr') هنا، بدون أي تعديل على شاشات أخرى.
       locale: const Locale('ar'),
-      supportedLocales: const [Locale('ar')],
+      supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

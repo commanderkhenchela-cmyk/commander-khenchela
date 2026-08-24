@@ -47,6 +47,7 @@ export default async function DashboardLayout({
                 href="/dashboard/home-sections"
                 label="أقسام الصفحة الرئيسية"
               />
+              <NavLink href="/dashboard/services" label="الخدمات" />
             </>
           )}
 

@@ -33,6 +33,11 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# مولَّدة تلقائيًا من lib/l10n/*.arb عند كل `flutter pub get` (راجع
+# l10n.yaml وflutter.generate: true في pubspec.yaml) — ليست مصدرًا
+# يُكتَب يدويًا، نفس مبدأ أي كود مولَّد آخر في المشروع.
+lib/l10n/app_localizations*.dart
+
 # Symbolication related
 app.*.symbols
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/branding_service.dart';
 import '../widgets/app_logo.dart';
 import 'confirm_wilaya_screen.dart';
@@ -30,7 +31,7 @@ class WelcomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'اطلب من محلات خنشلة، ووصّلها لباب دارك',
+                AppLocalizations.of(context).welcomeSubtitle,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: Colors.black54,
                 ),
@@ -47,7 +48,7 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  child: const Text('ابدأ'),
+                  child: Text(AppLocalizations.of(context).start),
                 ),
               ),
               const SizedBox(height: 16),

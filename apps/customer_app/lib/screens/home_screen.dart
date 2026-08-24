@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/advertisement.dart';
 import '../models/home_section.dart';
 import '../models/merchant.dart';
 import '../models/merchant_category.dart';
+import '../models/service.dart';
 import '../services/branding_service.dart';
 import '../services/location_service.dart';
 import '../utils/merchant_category_icon.dart';
@@ -14,6 +16,7 @@ import '../widgets/ad_carousel.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/category_chip.dart';
 import '../widgets/merchant_smart_section.dart';
+import '../widgets/pressable_scale.dart';
 import 'account_screen.dart';
 import 'all_categories_screen.dart';
 import 'merchant_products_screen.dart';
@@ -76,6 +79,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final sectionsFuture = client
         .from('home_sections')
         .select('id, section_key, title, sort_order')
+        .order('sort_order', ascending: true);
+
+    // "الخدمات" ليست قسمًا من home_sections (منطقها مختلف: شبكة تنقّل
+    // ثابتة أعلى الصفحة، مو محتوى ديناميكي قابل لإعادة الترتيب مع بقية
+    // الأقسام) — راجع migration 20260824000000_services للسياق الكامل.
+    final servicesFuture = client
+        .from('services')
+        .select('id, slug, name, icon, description')
         .order('sort_order', ascending: true);
 
     final categoriesFuture = client
@@ -144,6 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final results = await Future.wait([
       sectionsFuture,
+      servicesFuture,
       categoriesFuture,
       categoryCountsFuture,
       adsFuture,
@@ -159,30 +171,35 @@ class _HomeScreenState extends State<HomeScreen> {
         .where((section) => section.key != HomeSectionKey.unknown)
         .toList();
 
+    final services = (results[1] as List)
+        .map((row) => AppService.fromMap(row as Map<String, dynamic>))
+        .toList();
+
     final counts = <String, int>{};
-    for (final row in results[2] as List) {
+    for (final row in results[3] as List) {
       final categoryId = row['category_id'] as String?;
       if (categoryId == null) continue;
       counts[categoryId] = (counts[categoryId] ?? 0) + 1;
     }
 
-    final ads = (results[3] as List)
+    final ads = (results[4] as List)
         .map((row) => Advertisement.fromMap(row as Map<String, dynamic>))
         .where((ad) => ad.isCurrentlyActive)
         .toList();
 
     return _HomeData(
       sections: sections,
+      services: services,
       ads: ads,
-      categories: (results[1] as List)
+      categories: (results[2] as List)
           .map((row) => MerchantCategory.fromMap(row as Map<String, dynamic>))
           .toList(),
       categoryCounts: counts,
-      featured: _toMerchants(results[4]),
-      newest: _toMerchants(results[5]),
-      topOrdered: _toMerchants(results[6]),
-      mostViewed: _toMerchants(results[7]),
-      nearbyPool: _toMerchants(results[8]),
+      featured: _toMerchants(results[5]),
+      newest: _toMerchants(results[6]),
+      topOrdered: _toMerchants(results[7]),
+      mostViewed: _toMerchants(results[8]),
+      nearbyPool: _toMerchants(results[9]),
     );
   }
 
@@ -230,6 +247,86 @@ class _HomeScreenState extends State<HomeScreen> {
   void _openSearch() {
     Navigator.of(context)
         .push(MaterialPageRoute(builder: (_) => const SearchScreen()));
+  }
+
+  /// خدمات مبنية فعليًا في التطبيق — منفصل تمامًا عن AppService.slug من
+  /// قاعدة البيانات (الذي يضبطه الأدمن كـ enabled/disabled). خدمة يفعّلها
+  /// الأدمن قبل اكتمال بنائها فعليًا لا يجب أن تفتح شاشة غير موجودة —
+  /// راجع تعليق migration 20260824000000_services للسياق الكامل.
+  static const _builtServiceSlugs = {'marketplace', 'restaurants'};
+
+  void _openService(AppService service, List<MerchantCategory> categories) {
+    if (!_builtServiceSlugs.contains(service.slug)) {
+      _showComingSoon(service);
+      return;
+    }
+
+    if (service.slug == 'restaurants') {
+      MerchantCategory? restaurants;
+      for (final category in categories) {
+        if (category.name == 'مطاعم') {
+          restaurants = category;
+          break;
+        }
+      }
+      if (restaurants == null) {
+        // لا يوجد تصنيف "مطاعم" (حُذف أو أُعيدت تسميته من لوحة الإدارة) —
+        // نتراجع لعرض كل التصنيفات بدل شاشة فارغة أو خطأ مربك.
+        _openAllCategories();
+        return;
+      }
+      _openCategory(restaurants);
+      return;
+    }
+
+    // marketplace: تصفّح كل التصنيفات، نفس زر "عرض الكل" الحالي تمامًا.
+    _openAllCategories();
+  }
+
+  void _showComingSoon(AppService service) {
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        final theme = Theme.of(sheetContext);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(service.icon, style: const TextStyle(fontSize: 40)),
+                const SizedBox(height: 12),
+                Text(
+                  service.name,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  AppLocalizations.of(context).comingSoonMessage,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(sheetContext).pop(),
+                    child: Text(AppLocalizations.of(context).ok),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -325,6 +422,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: _HomeSearchBar(onTap: _openSearch),
                     ),
                   ),
+                  if (data.services.isNotEmpty)
+                    SliverToBoxAdapter(
+                      child: _ServicesSection(
+                        services: data.services,
+                        onTap: (service) =>
+                            _openService(service, data.categories),
+                      ),
+                    ),
                   SliverList.list(children: sectionWidgets),
                   const SliverPadding(padding: EdgeInsets.only(bottom: 12)),
                 ],
@@ -416,6 +521,7 @@ class _HomeScreenState extends State<HomeScreen> {
 /// (لا نعرض قسمًا بلا بيانات حقيقية، راجع _buildSection).
 class _HomeData {
   final List<HomeSection> sections;
+  final List<AppService> services;
   final List<Advertisement> ads;
   final List<MerchantCategory> categories;
   final Map<String, int> categoryCounts;
@@ -427,6 +533,7 @@ class _HomeData {
 
   const _HomeData({
     required this.sections,
+    required this.services,
     required this.ads,
     required this.categories,
     required this.categoryCounts,
@@ -467,12 +574,112 @@ class _HomeSearchBar extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                'ابحث عن محل أو تصنيف...',
+                AppLocalizations.of(context).searchHint,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// شبكة الخدمات الأعلى مستوى (تسوّق/مطاعم/طاكسي...) — ثابتة أعلى
+/// الصفحة (قبل الأقسام الديناميكية القابلة لإعادة الترتيب)، تمامًا مثل
+/// شبكات الخدمات في تطبيقات الـSuper Apps العالمية. راجع تعليق
+/// _openService لسبب عدم فتح شاشة فعلية لكل خدمة enabled بالضرورة.
+class _ServicesSection extends StatelessWidget {
+  static const _builtSlugs = {'marketplace', 'restaurants'};
+
+  final List<AppService> services;
+  final ValueChanged<AppService> onTap;
+
+  const _ServicesSection({required this.services, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: SizedBox(
+        height: 104,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          itemCount: services.length,
+          separatorBuilder: (context, index) => const SizedBox(width: 14),
+          itemBuilder: (context, index) {
+            final service = services[index];
+            return _ServiceTile(
+              service: service,
+              isBuilt: _builtSlugs.contains(service.slug),
+              onTap: () => onTap(service),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _ServiceTile extends StatelessWidget {
+  final AppService service;
+  final bool isBuilt;
+  final VoidCallback onTap;
+
+  const _ServiceTile({
+    required this.service,
+    required this.isBuilt,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final opacity = isBuilt ? 1.0 : 0.55;
+
+    return SizedBox(
+      width: 72,
+      child: PressableScale(
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(18),
+          child: Opacity(
+            opacity: opacity,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    service.icon,
+                    style: const TextStyle(fontSize: 28),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                SizedBox(
+                  height: 32,
+                  child: Text(
+                    service.name,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      height: 1.15,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

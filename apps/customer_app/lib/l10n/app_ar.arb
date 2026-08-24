@@ -1,0 +1,38 @@
+{
+  "@@locale": "ar",
+
+  "appTagline": "كل خنشلة بين يديك",
+  "@appTagline": {
+    "description": "جملة ترحيبية قصيرة تحت اسم التطبيق في شاشة البداية"
+  },
+
+  "loading": "جاري التحميل...",
+  "@loading": {
+    "description": "نص مؤشر التحميل في شاشة البداية"
+  },
+
+  "welcomeSubtitle": "اطلب من محلات خنشلة، ووصّلها لباب دارك",
+  "@welcomeSubtitle": {
+    "description": "الجملة الفرعية في شاشة الترحيب الأولى"
+  },
+
+  "start": "ابدأ",
+  "@start": {
+    "description": "زر بدء الاستخدام في شاشة الترحيب"
+  },
+
+  "searchHint": "ابحث عن محل أو تصنيف...",
+  "@searchHint": {
+    "description": "نص placeholder لشريط البحث في الصفحة الرئيسية"
+  },
+
+  "comingSoonMessage": "هذه الخدمة ستكون متاحة قريبًا في Commander Khenchela.",
+  "@comingSoonMessage": {
+    "description": "رسالة تظهر عند الضغط على خدمة مفعَّلة من الإدارة لكن لم تُبنَ شاشتها بعد"
+  },
+
+  "ok": "حسنًا",
+  "@ok": {
+    "description": "زر إغلاق عام (تأكيد/فهمت)"
+  }
+}
