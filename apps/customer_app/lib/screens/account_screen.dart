@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../services/auth_service.dart';
-import '../services/push_notification_service.dart';
 import '../services/theme_controller.dart';
 import 'address_list_screen.dart';
 import 'favorites_screen.dart';
@@ -52,46 +51,6 @@ class _AccountScreenState extends State<AccountScreen> {
 
   void _push(Widget screen) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
-  }
-
-  /// زر تشخيص مؤقت (PHASE 11) — يعرض بالضبط أين تتوقّف عملية تسجيل توكن
-  /// الإشعارات، مباشرة على الشاشة بدل الاعتماد على سجلّات الطرفية. يُحذف
-  /// بعد إيجاد السبب الحقيقي وحلّه.
-  Future<void> _runPushDiagnostics() async {
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const AlertDialog(
-        content: Row(
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 16),
-            Expanded(child: Text('جارٍ التشخيص...')),
-          ],
-        ),
-      ),
-    );
-
-    final report = await PushNotificationService.diagnoseAndReport();
-
-    if (!mounted) return;
-    Navigator.of(context).pop();
-
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('تشخيص إشعارات Push'),
-        content: SingleChildScrollView(
-          child: SelectableText(report, textAlign: TextAlign.right),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('إغلاق'),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _showThemeSheet() async {
@@ -291,18 +250,6 @@ class _AccountScreenState extends State<AccountScreen> {
               icon: Icons.help_outline_rounded,
               label: 'المساعدة',
               onTap: () => _push(const SupportScreen()),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        // زر تشخيص مؤقت (PHASE 11) — يُحذف بعد إيجاد سبب عدم تسجيل
-        // توكن الإشعارات.
-        _MenuGroup(
-          children: [
-            _MenuTile(
-              icon: Icons.bug_report_outlined,
-              label: 'تشخيص إشعارات Push (مؤقت)',
-              onTap: _runPushDiagnostics,
             ),
           ],
         ),

@@ -91,67 +91,6 @@ class PushNotificationService {
     }
   }
 
-  /// تشخيص يدوي مؤقت (PHASE 11): يعيد تنفيذ نفس خطوات تسجيل التوكن
-  /// خطوة بخطوة، ويُرجع نصًا يلخّص أين توقّفت العملية بالضبط — لعرضه
-  /// مباشرة في الواجهة (SnackBar/Dialog) بدل الاعتماد على سجلّات
-  /// الطرفية التي قد تُغرقها سجلّات أندرويد الأخرى. يُستدعى من زر تشخيص
-  /// مؤقت في شاشة "حسابي" — يُحذف الزر وهذه الدالة بعد إيجاد السبب.
-  static Future<String> diagnoseAndReport() async {
-    final lines = <String>[];
-
-    try {
-      if (!_initialized) {
-        await Firebase.initializeApp();
-        _initialized = true;
-      }
-      lines.add('✅ Firebase.initializeApp نجحت');
-    } catch (e) {
-      lines.add('❌ فشلت Firebase.initializeApp: $e');
-      return lines.join('\n');
-    }
-
-    try {
-      final settings = await FirebaseMessaging.instance.requestPermission();
-      lines.add('✅ إذن الإشعارات: ${settings.authorizationStatus}');
-    } catch (e) {
-      lines.add('❌ فشل طلب الإذن: $e');
-    }
-
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) {
-      lines.add('⚠️ لا يوجد مستخدم مسجَّل دخوله حاليًا');
-      return lines.join('\n');
-    }
-    lines.add('✅ مستخدم مسجَّل الدخول: $userId');
-
-    String? token;
-    try {
-      token = await FirebaseMessaging.instance.getToken();
-      lines.add(
-        token == null
-            ? '❌ getToken() أرجعت null (لا توكن)'
-            : '✅ توكن: ${token.substring(0, 20)}...',
-      );
-    } catch (e) {
-      lines.add('❌ فشل getToken(): $e');
-      return lines.join('\n');
-    }
-
-    if (token == null) return lines.join('\n');
-
-    try {
-      await Supabase.instance.client
-          .from('users')
-          .update({'fcm_token': token})
-          .eq('id', userId);
-      lines.add('✅ تم حفظ التوكن في قاعدة البيانات');
-    } catch (e) {
-      lines.add('❌ فشل حفظ التوكن في قاعدة البيانات: $e');
-    }
-
-    return lines.join('\n');
-  }
-
   static void _showForegroundBanner(RemoteMessage message) {
     final title = message.notification?.title;
     final body = message.notification?.body;
