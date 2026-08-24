@@ -1,0 +1,17 @@
+{
+  "@@locale": "en",
+
+  "appTagline": "All of Khenchela in your hands",
+
+  "loading": "Loading...",
+
+  "welcomeSubtitle": "Order from Khenchela's shops, delivered to your door",
+
+  "start": "Get started",
+
+  "searchHint": "Search for a shop or category...",
+
+  "comingSoonMessage": "This service will be available soon on Commander Khenchela.",
+
+  "ok": "OK"
+}

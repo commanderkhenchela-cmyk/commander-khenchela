@@ -1,0 +1,17 @@
+{
+  "@@locale": "fr",
+
+  "appTagline": "Toute Khenchela entre vos mains",
+
+  "loading": "Chargement...",
+
+  "welcomeSubtitle": "Commandez auprès des commerces de Khenchela, livrés à votre porte",
+
+  "start": "Commencer",
+
+  "searchHint": "Rechercher un commerce ou une catégorie...",
+
+  "comingSoonMessage": "Ce service sera bientôt disponible sur Commander Khenchela.",
+
+  "ok": "OK"
+}

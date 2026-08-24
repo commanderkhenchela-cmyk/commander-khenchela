@@ -13,6 +13,7 @@ import 'services/branding_service.dart';
 import 'services/cart_service.dart';
 import 'services/contact_service.dart';
 import 'services/favorites_controller.dart';
+import 'services/locale_controller.dart';
 import 'services/push_notification_service.dart';
 import 'services/theme_controller.dart';
 import 'theme/app_theme.dart';
@@ -26,14 +27,16 @@ Future<void> main() async {
   );
 
   final themeController = ThemeController();
+  final localeController = LocaleController();
 
   // تُحمَّل هوية التطبيق (الاسم/الشعار/الألوان، قابلة للتعديل من لوحة
-  // الإدارة) وتفضيل الوضع الداكن المحفوظ قبل أول رسم للواجهة، حتى لا
-  // "تقفز" الألوان أو الثيم لاحقًا.
+  // الإدارة) وتفضيلَي الوضع الداكن واللغة المحفوظَين قبل أول رسم
+  // للواجهة، حتى لا "تقفز" الألوان أو اللغة لاحقًا.
   await Future.wait([
     BrandingService.load(),
     ContactService.load(),
     themeController.load(),
+    localeController.load(),
   ]);
 
   // إشعارات Push (PHASE 11) — لا تُنتظَر أبدًا قبل أول رسم للواجهة (قد
@@ -46,6 +49,7 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => CartService()),
         ChangeNotifierProvider<ThemeController>.value(value: themeController),
+        ChangeNotifierProvider<LocaleController>.value(value: localeController),
         ChangeNotifierProvider(create: (_) => FavoritesController()),
       ],
       child: const CommanderKhenchelaApp(),
@@ -59,6 +63,7 @@ class CommanderKhenchelaApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeController = context.watch<ThemeController>();
+    final localeController = context.watch<LocaleController>();
 
     return MaterialApp(
       navigatorKey: appNavigatorKey,
@@ -74,11 +79,13 @@ class CommanderKhenchelaApp extends StatelessWidget {
       ),
       themeMode: themeController.mode,
 
-      // دعم اللغة العربية واتجاه RTL منذ البداية (Arabic-first). بنية
-      // Localization حقيقية الآن (راجع l10n.yaml + lib/l10n/app_ar.arb)
-      // — إضافة الفرنسية لاحقًا تعني فقط إنشاء app_fr.arb بنفس المفاتيح
-      // وإضافة Locale('fr') هنا، بدون أي تعديل على شاشات أخرى.
-      locale: const Locale('ar'),
+      // العربية افتراضيًا وقابلة للتبديل الآن (شاشة الإعدادات) — راجع
+      // LocaleController. الفرنسية/الإنجليزية مفعَّلتان فعليًا (ملفا
+      // app_fr.arb/app_en.arb موجودان بنفس المفاتيح)، لكن بعدد نصوص
+      // محدود حاليًا مقارنة بالعربية — راجع تقرير الفحص لتفاصيل النطاق
+      // المتبقي. RTL/LTR يتبعان الـLocale تلقائيًا من Flutter نفسه، بلا
+      // أي كود إضافي مطلوب هنا.
+      locale: localeController.locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
         AppLocalizations.delegate,

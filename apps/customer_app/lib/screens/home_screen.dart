@@ -12,6 +12,7 @@ import '../services/branding_service.dart';
 import '../services/location_service.dart';
 import '../utils/merchant_category_icon.dart';
 import '../utils/nearest_merchants.dart';
+import '../utils/service_icon.dart';
 import '../widgets/ad_carousel.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/category_chip.dart';
@@ -255,32 +256,28 @@ class _HomeScreenState extends State<HomeScreen> {
   /// راجع تعليق migration 20260824000000_services للسياق الكامل.
   static const _builtServiceSlugs = {'marketplace', 'restaurants'};
 
-  void _openService(AppService service, List<MerchantCategory> categories) {
+  void _openService(AppService service) {
     if (!_builtServiceSlugs.contains(service.slug)) {
       _showComingSoon(service);
       return;
     }
 
-    if (service.slug == 'restaurants') {
-      MerchantCategory? restaurants;
-      for (final category in categories) {
-        if (category.name == 'مطاعم') {
-          restaurants = category;
-          break;
-        }
-      }
-      if (restaurants == null) {
-        // لا يوجد تصنيف "مطاعم" (حُذف أو أُعيدت تسميته من لوحة الإدارة) —
-        // نتراجع لعرض كل التصنيفات بدل شاشة فارغة أو خطأ مربك.
-        _openAllCategories();
-        return;
-      }
-      _openCategory(restaurants);
-      return;
-    }
-
-    // marketplace: تصفّح كل التصنيفات، نفس زر "عرض الكل" الحالي تمامًا.
-    _openAllCategories();
+    // كل خدمة مبنية تفتح "تصفّح حسب التصنيف" الخاص بها فقط — Service !=
+    // Category (راجع migration 20260824010000_service_categories):
+    // Shopping يعرض تصنيفات جذر (بقالة/ملابس/إلكترونيات...)، Restaurants
+    // يعرض التصنيفات الفرعية تحت "مطاعم" تحديدًا (بيتزا/مشاوي...) —
+    // القرار مبني على service_id بقاعدة البيانات، لا اسم مطابَق بالكود.
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AllCategoriesScreen(
+          locationName: widget.locationName,
+          serviceId: service.id,
+          topLevelOnly: service.slug != 'restaurants',
+          title: service.name,
+          showAllMerchantsTile: service.slug != 'restaurants',
+        ),
+      ),
+    );
   }
 
   void _showComingSoon(AppService service) {
@@ -297,7 +294,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(service.icon, style: const TextStyle(fontSize: 40)),
+                Icon(
+                  ServiceIcon.iconFor(service.slug),
+                  size: 40,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   service.name,
@@ -393,16 +394,31 @@ class _HomeScreenState extends State<HomeScreen> {
             final data = snapshot.data!;
             final nearby = nearestMerchants(data.nearbyPool, _devicePosition);
 
-            final sectionWidgets = <Widget>[];
+            // ترتيب الرئيسية المعتمَد: بحث ← إعلان (hero) ← خدمات ← بقية
+            // الأقسام الديناميكية — الإعلان يُفصَل عن بقية sectionWidgets
+            // عمدًا هنا ليُعرض *قبل* شبكة الخدمات دائمًا، بغضّ النظر عن
+            // sort_order النسبي بين hero وبقية الأقسام في home_sections
+            // (ترتيب بقية الأقسام فيما بينها يبقى بيد الإدارة كالمعتاد).
+            Widget? heroWidget;
+            final restWidgets = <Widget>[];
             for (final section in data.sections) {
-              final widget = _buildSection(section, data, nearby);
-              if (widget != null) sectionWidgets.add(widget);
+              final built = _buildSection(section, data, nearby);
+              if (built == null) continue;
+              if (section.key == HomeSectionKey.hero) {
+                heroWidget = built;
+              } else {
+                restWidgets.add(built);
+              }
             }
 
+            final hasAnyContent =
+                heroWidget != null ||
+                restWidgets.isNotEmpty ||
+                data.services.isNotEmpty;
+
             // حالة فارغة حقيقية واحدة ومميَّزة (لا "قريبًا" مكرَّرة على كل
-            // قسم) — تظهر فقط إذا لم يوجد أي محتوى حقيقي إطلاقًا في كل
-            // أقسام الصفحة معًا.
-            if (sectionWidgets.isEmpty) {
+            // قسم) — تظهر فقط إذا لم يوجد أي محتوى حقيقي إطلاقًا بالصفحة.
+            if (!hasAnyContent) {
               return _StateMessage(
                 icon: Icons.storefront_outlined,
                 message:
@@ -422,15 +438,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: _HomeSearchBar(onTap: _openSearch),
                     ),
                   ),
+                  if (heroWidget != null) SliverToBoxAdapter(child: heroWidget),
                   if (data.services.isNotEmpty)
                     SliverToBoxAdapter(
                       child: _ServicesSection(
                         services: data.services,
-                        onTap: (service) =>
-                            _openService(service, data.categories),
+                        onTap: _openService,
                       ),
                     ),
-                  SliverList.list(children: sectionWidgets),
+                  SliverList.list(children: restWidgets),
                   const SliverPadding(padding: EdgeInsets.only(bottom: 12)),
                 ],
               ),
@@ -659,9 +675,10 @@ class _ServiceTile extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
-                  child: Text(
-                    service.icon,
-                    style: const TextStyle(fontSize: 28),
+                  child: Icon(
+                    ServiceIcon.iconFor(service.slug),
+                    color: theme.colorScheme.primary,
+                    size: 28,
                   ),
                 ),
                 const SizedBox(height: 6),

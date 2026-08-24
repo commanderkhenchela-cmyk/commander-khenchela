@@ -65,6 +65,37 @@ class PushNotificationService {
     }
   }
 
+  /// تُستدعى من شاشة الإعدادات عند تفعيل مفتاح "استلام إشعارات الطلبات"
+  /// — تطلب الإذن (إن لم يكن مُمنوحًا) وتسجّل توكن الجهاز من جديد. لا
+  /// تفعل شيئًا بصمت إن كان Firebase غير مربوط (نفس فلسفة الملف كاملة).
+  static Future<void> enablePush() async {
+    if (!_initialized) return;
+    try {
+      await FirebaseMessaging.instance.requestPermission();
+      await _saveTokenIfSignedIn();
+    } catch (_) {
+      // فشل هادئ — نفس فلسفة بقية الملف، لا نزعج المستخدم بخطأ تقني.
+    }
+  }
+
+  /// تُستدعى عند تعطيل نفس المفتاح — تمسح توكن الجهاز من قاعدة البيانات
+  /// فقط (لا تقدر تسحب إذن نظام التشغيل نفسه برمجيًا، هذا قيد نظام
+  /// التشغيل، مو قيد هنا): الخادم لن يجد توكنًا فيرسل إليه، فتتوقف
+  /// إشعارات Push الفعلية لهذا الجهاز، مع بقاء الإشعارات داخل التطبيق
+  /// (شاشة "إشعاراتي") تعمل كالمعتاد دائمًا.
+  static Future<void> disablePush() async {
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) return;
+      await Supabase.instance.client
+          .from('users')
+          .update({'fcm_token': null})
+          .eq('id', userId);
+    } catch (_) {
+      // فشل هادئ — نفس فلسفة بقية الملف.
+    }
+  }
+
   static Future<void> _saveTokenIfSignedIn() async {
     try {
       final userId = Supabase.instance.client.auth.currentUser?.id;

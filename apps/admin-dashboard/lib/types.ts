@@ -38,6 +38,7 @@ export interface MerchantCategory {
   sort_order: number;
   is_active: boolean;
   parent_id: string | null;
+  service_id: string;
   created_at: string;
 }
 

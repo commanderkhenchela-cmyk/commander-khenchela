@@ -7,6 +7,7 @@ import '../services/cart_service.dart';
 import '../services/merchant_views_service.dart';
 import '../widgets/merchant_logo.dart';
 import 'cart_screen.dart';
+import 'product_detail_screen.dart';
 
 /// شاشة منتجات محل واحد، مرتّبة، بسيطة، بدون تعقيد.
 ///
@@ -260,71 +261,85 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              product.imageUrl != null
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: Image.network(
-                                        product.imageUrl!,
-                                        width: 48,
-                                        height: 48,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) =>
-                                                _ProductIcon(
-                                                  color:
-                                                      theme.colorScheme.primary,
-                                                ),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ProductDetailScreen(
+                                product: product,
+                                merchantId: widget.merchantId,
+                                merchantName: widget.storeName,
+                              ),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                product.imageUrl != null
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Image.network(
+                                          product.imageUrl!,
+                                          width: 48,
+                                          height: 48,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (context, error, stackTrace) =>
+                                                  _ProductIcon(
+                                                    color: theme
+                                                        .colorScheme
+                                                        .primary,
+                                                  ),
+                                        ),
+                                      )
+                                    : _ProductIcon(
+                                        color: theme.colorScheme.primary,
                                       ),
-                                    )
-                                  : _ProductIcon(
-                                      color: theme.colorScheme.primary,
-                                    ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      product.name,
-                                      style: theme.textTheme.titleLarge,
-                                    ),
-                                    if (product.description != null) ...[
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        product.name,
+                                        style: theme.textTheme.titleLarge,
+                                      ),
+                                      if (product.description != null) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          product.description!,
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(color: Colors.black54),
+                                        ),
+                                      ],
                                       const SizedBox(height: 4),
                                       Text(
-                                        product.description!,
+                                        '${product.price.toStringAsFixed(0)} دج',
                                         style: theme.textTheme.bodyMedium
-                                            ?.copyWith(color: Colors.black54),
+                                            ?.copyWith(
+                                              color: theme.colorScheme.primary,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                       ),
                                     ],
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${product.price.toStringAsFixed(0)} دج',
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            color: theme.colorScheme.primary,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                icon: Icon(
-                                  Icons.add_circle,
-                                  color: theme.colorScheme.primary,
-                                  size: 32,
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.add_circle,
+                                    color: theme.colorScheme.primary,
+                                    size: 32,
+                                  ),
+                                  onPressed: () => _addToCart(product),
+                                  tooltip: 'أضف للسلة',
                                 ),
-                                onPressed: () => _addToCart(product),
-                                tooltip: 'أضف للسلة',
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),

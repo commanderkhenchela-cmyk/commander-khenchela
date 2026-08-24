@@ -31,7 +31,32 @@ import 'merchants_screen.dart';
 class AllCategoriesScreen extends StatefulWidget {
   final String locationName;
 
-  const AllCategoriesScreen({super.key, required this.locationName});
+  /// عند تمريره، تُعرض تصنيفات هذه الخدمة فقط (Shopping أو Restaurants
+  /// حاليًا) بدل كل التصنيفات — راجع migration 20260824010000
+  /// (service_id الجديد على merchant_categories). null = السلوك القديم
+  /// (كل التصنيفات، بلا فلترة) — لا يزال مستخدَمًا في مسارات أخرى.
+  final String? serviceId;
+
+  /// true (افتراضي): تصنيفات جذر فقط (parent_id فارغ) — سلوك Shopping.
+  /// false: تصنيفات فرعية فقط (parent_id غير فارغ) — سلوك Restaurants
+  /// (بيتزا/وجبات سريعة... تحت تصنيف "مطاعم" الأب).
+  final bool topLevelOnly;
+
+  final String? title;
+
+  /// بلاطة "كل المحلات" الأولى تعني حرفيًا *كل* محلات المنصّة بلا فلترة
+  /// خدمة — تُخفى تلقائيًا عند تصفّح خدمة محدَّدة (serviceId != null)
+  /// حتى لا تُظهر لعميل يتصفّح "المطاعم" مثلاً محلات تسوّق لا علاقة لها.
+  final bool showAllMerchantsTile;
+
+  const AllCategoriesScreen({
+    super.key,
+    required this.locationName,
+    this.serviceId,
+    this.topLevelOnly = true,
+    this.title,
+    this.showAllMerchantsTile = true,
+  });
 
   @override
   State<AllCategoriesScreen> createState() => _AllCategoriesScreenState();
@@ -68,11 +93,22 @@ class _AllCategoriesScreenState extends State<AllCategoriesScreen>
   Future<_CategoriesData> _fetchData() async {
     final client = Supabase.instance.client;
 
-    final categoriesFuture = client
+    var categoriesQuery = client
         .from('merchant_categories')
         .select('id, name, icon')
-        .eq('is_active', true)
-        .order('sort_order', ascending: true);
+        .eq('is_active', true);
+
+    if (widget.serviceId != null) {
+      categoriesQuery = categoriesQuery.eq('service_id', widget.serviceId!);
+    }
+    categoriesQuery = widget.topLevelOnly
+        ? categoriesQuery.isFilter('parent_id', null)
+        : categoriesQuery.not('parent_id', 'is', null);
+
+    final categoriesFuture = categoriesQuery.order(
+      'sort_order',
+      ascending: true,
+    );
 
     // عدد المحلات لكل تصنيف يُحسب هنا محليًا من قائمة المحلات الموافَق
     // عليها فقط — لا حاجة لدالة group by في قاعدة البيانات عند هذا الحجم
@@ -123,9 +159,9 @@ class _AllCategoriesScreenState extends State<AllCategoriesScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'كل التصنيفات',
-          style: TextStyle(fontWeight: FontWeight.w700),
+        title: Text(
+          widget.title ?? 'كل التصنيفات',
+          style: const TextStyle(fontWeight: FontWeight.w700),
         ),
         centerTitle: false,
         actions: [
@@ -175,7 +211,9 @@ class _AllCategoriesScreenState extends State<AllCategoriesScreen>
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final crossAxisCount = _columnsFor(constraints.maxWidth);
-                  final itemCount = data.categories.length + 1;
+                  final showAllTile = widget.showAllMerchantsTile;
+                  final itemCount =
+                      data.categories.length + (showAllTile ? 1 : 0);
 
                   return CustomScrollView(
                     slivers: [
@@ -197,7 +235,7 @@ class _AllCategoriesScreenState extends State<AllCategoriesScreen>
                             context,
                             index,
                           ) {
-                            final tile = index == 0
+                            final tile = (showAllTile && index == 0)
                                 ? CategoryGridTile(
                                     icon: Icons.apps_rounded,
                                     color: theme.colorScheme.primary,
@@ -208,7 +246,8 @@ class _AllCategoriesScreenState extends State<AllCategoriesScreen>
                                 : Builder(
                                     builder: (context) {
                                       final category =
-                                          data.categories[index - 1];
+                                          data.categories[index -
+                                              (showAllTile ? 1 : 0)];
                                       return CategoryGridTile(
                                         icon: MerchantCategoryIcon.iconFor(
                                           category,
