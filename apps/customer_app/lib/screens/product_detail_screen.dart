@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -122,11 +123,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             expandedHeight: 260,
             flexibleSpace: FlexibleSpaceBar(
               background: product.imageUrl != null
-                  ? Image.network(
-                      product.imageUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          _ImagePlaceholder(color: theme.colorScheme.primary),
+                  ? Hero(
+                      tag: 'product-image-${product.id}',
+                      child: CachedNetworkImage(
+                        imageUrl: product.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorWidget: (context, url, error) =>
+                            _ImagePlaceholder(color: theme.colorScheme.primary),
+                      ),
                     )
                   : _ImagePlaceholder(color: theme.colorScheme.primary),
             ),

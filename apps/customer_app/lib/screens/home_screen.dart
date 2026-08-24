@@ -10,14 +10,16 @@ import '../models/merchant_category.dart';
 import '../models/service.dart';
 import '../services/branding_service.dart';
 import '../services/location_service.dart';
-import '../utils/merchant_category_icon.dart';
 import '../utils/nearest_merchants.dart';
 import '../utils/service_icon.dart';
 import '../widgets/ad_carousel.dart';
 import '../widgets/app_logo.dart';
-import '../widgets/category_chip.dart';
+import '../widgets/home/home_categories_section.dart';
+import '../widgets/home/home_loading_skeleton.dart';
+import '../widgets/home/home_search_bar.dart';
+import '../widgets/home/home_services_section.dart';
+import '../widgets/home/home_state_message.dart';
 import '../widgets/merchant_smart_section.dart';
-import '../widgets/pressable_scale.dart';
 import 'account_screen.dart';
 import 'all_categories_screen.dart';
 import 'merchant_products_screen.dart';
@@ -378,11 +380,11 @@ class _HomeScreenState extends State<HomeScreen> {
           future: _dataFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const _HomeLoadingSkeleton();
+              return const HomeLoadingSkeleton();
             }
 
             if (snapshot.hasError) {
-              return _StateMessage(
+              return HomeStateMessage(
                 icon: Icons.wifi_off_rounded,
                 message:
                     'تعذّر تحميل الصفحة الرئيسية. تحقق من اتصالك بالإنترنت.',
@@ -419,7 +421,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // حالة فارغة حقيقية واحدة ومميَّزة (لا "قريبًا" مكرَّرة على كل
             // قسم) — تظهر فقط إذا لم يوجد أي محتوى حقيقي إطلاقًا بالصفحة.
             if (!hasAnyContent) {
-              return _StateMessage(
+              return HomeStateMessage(
                 icon: Icons.storefront_outlined,
                 message:
                     'المحتوى قيد الإعداد حاليًا في ${widget.locationName}.\nعد قريبًا!',
@@ -435,14 +437,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                     sliver: SliverToBoxAdapter(
-                      child: _HomeSearchBar(onTap: _openSearch),
+                      child: HomeSearchBar(onTap: _openSearch),
                     ),
                   ),
                   if (heroWidget != null) SliverToBoxAdapter(child: heroWidget),
                   if (data.services.isNotEmpty)
                     SliverToBoxAdapter(
-                      child: _ServicesSection(
+                      child: HomeServicesSection(
                         services: data.services,
+                        builtSlugs: _builtServiceSlugs,
                         onTap: _openService,
                       ),
                     ),
@@ -474,7 +477,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       case HomeSectionKey.categories:
         if (data.categories.isEmpty) return null;
-        return _CategoriesSection(
+        return HomeCategoriesSection(
           title: section.title,
           categories: data.categories,
           counts: data.categoryCounts,
@@ -559,332 +562,4 @@ class _HomeData {
     required this.mostViewed,
     required this.nearbyPool,
   });
-}
-
-/// شريط بحث "زخرفي" أعلى الصفحة الرئيسية — لا يحرّر النص هنا مباشرة، بل
-/// ينقل فورًا إلى SearchScreen (نفس نمط تطبيقات التجارة الكبرى: شريط
-/// البحث الرئيسي واجهة تنقّل لا حقل تحرير مستقل). RTL كامل تلقائيًا من
-/// اتجاه التطبيق العام (Locale('ar'))، فلا حاجة لأي عكس يدوي هنا.
-class _HomeSearchBar extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _HomeSearchBar({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Material(
-      color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          child: Row(
-            children: [
-              Icon(
-                Icons.search_rounded,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                AppLocalizations.of(context).searchHint,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// شبكة الخدمات الأعلى مستوى (تسوّق/مطاعم/طاكسي...) — ثابتة أعلى
-/// الصفحة (قبل الأقسام الديناميكية القابلة لإعادة الترتيب)، تمامًا مثل
-/// شبكات الخدمات في تطبيقات الـSuper Apps العالمية. راجع تعليق
-/// _openService لسبب عدم فتح شاشة فعلية لكل خدمة enabled بالضرورة.
-class _ServicesSection extends StatelessWidget {
-  static const _builtSlugs = {'marketplace', 'restaurants'};
-
-  final List<AppService> services;
-  final ValueChanged<AppService> onTap;
-
-  const _ServicesSection({required this.services, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: SizedBox(
-        height: 104,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          itemCount: services.length,
-          separatorBuilder: (context, index) => const SizedBox(width: 14),
-          itemBuilder: (context, index) {
-            final service = services[index];
-            return _ServiceTile(
-              service: service,
-              isBuilt: _builtSlugs.contains(service.slug),
-              onTap: () => onTap(service),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _ServiceTile extends StatelessWidget {
-  final AppService service;
-  final bool isBuilt;
-  final VoidCallback onTap;
-
-  const _ServiceTile({
-    required this.service,
-    required this.isBuilt,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final opacity = isBuilt ? 1.0 : 0.55;
-
-    return SizedBox(
-      width: 72,
-      child: PressableScale(
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
-          child: Opacity(
-            opacity: opacity,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    ServiceIcon.iconFor(service.slug),
-                    color: theme.colorScheme.primary,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                SizedBox(
-                  height: 32,
-                  child: Text(
-                    service.name,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      height: 1.15,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// قسم التصنيفات المختصر في الصفحة الرئيسية: شرائح أفقية محدودة العدد
-/// (بدل شبكة كبيرة ثابتة كما كانت الصفحة الرئيسية القديمة) + شريحة
-/// "عرض الكل" تفتح AllCategoriesScreen لعرض كل التصنيفات في شبكة كاملة.
-class _CategoriesSection extends StatelessWidget {
-  static const int _visibleCount = 8;
-
-  final String title;
-  final List<MerchantCategory> categories;
-  final Map<String, int> counts;
-  final ValueChanged<MerchantCategory> onTapCategory;
-  final VoidCallback onSeeAll;
-
-  const _CategoriesSection({
-    required this.title,
-    required this.categories,
-    required this.counts,
-    required this.onTapCategory,
-    required this.onSeeAll,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final visible = categories.take(_visibleCount).toList();
-    final hasMore = categories.length > _visibleCount;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                TextButton(onPressed: onSeeAll, child: const Text('عرض الكل')),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 100,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: visible.length + (hasMore ? 1 : 0),
-              separatorBuilder: (context, index) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                if (index == visible.length) {
-                  return SeeAllCategoriesChip(onTap: onSeeAll);
-                }
-                final category = visible[index];
-                return CategoryChip(
-                  icon: MerchantCategoryIcon.iconFor(category),
-                  color: MerchantCategoryIcon.colorFor(category.id),
-                  label: category.name,
-                  onTap: () => onTapCategory(category),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// حالة موحَّدة لعرض رسالة في منتصف الشاشة: فارغة أو خطأ.
-class _StateMessage extends StatelessWidget {
-  final IconData icon;
-  final String message;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  const _StateMessage({
-    required this.icon,
-    required this.message,
-    this.actionLabel,
-    this.onAction,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 56,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-            if (actionLabel != null) ...[
-              const SizedBox(height: 16),
-              ElevatedButton(onPressed: onAction, child: Text(actionLabel!)),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// عرض Skeleton بسيط أثناء أول تحميل — يعكس شكل الصفحة القادمة تقريبًا
-/// (شريط بحث + بانر + صف شرائح + بطاقات أفقية) بدل مؤشر تحميل وحيد.
-class _HomeLoadingSkeleton extends StatelessWidget {
-  const _HomeLoadingSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final base = theme.colorScheme.onSurface.withValues(alpha: 0.06);
-
-    Widget block({required double height, EdgeInsets? margin}) => Container(
-      height: height,
-      margin: margin ?? const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: base,
-        borderRadius: BorderRadius.circular(16),
-      ),
-    );
-
-    return ListView(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      children: [
-        block(height: 52),
-        const SizedBox(height: 16),
-        block(height: 180),
-        const SizedBox(height: 20),
-        SizedBox(
-          height: 88,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: 6,
-            separatorBuilder: (context, index) => const SizedBox(width: 12),
-            itemBuilder: (context, index) => Container(
-              width: 76,
-              decoration: BoxDecoration(color: base, shape: BoxShape.circle),
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
-        SizedBox(
-          height: 118,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: 4,
-            separatorBuilder: (context, index) => const SizedBox(width: 10),
-            itemBuilder: (context, index) => Container(
-              width: 128,
-              decoration: BoxDecoration(
-                color: base,
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }

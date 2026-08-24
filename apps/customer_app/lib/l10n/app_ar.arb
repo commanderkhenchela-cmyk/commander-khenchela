@@ -34,5 +34,83 @@
   "ok": "حسنًا",
   "@ok": {
     "description": "زر إغلاق عام (تأكيد/فهمت)"
+  },
+
+  "recentSearches": "عمليات البحث الأخيرة",
+  "@recentSearches": {
+    "description": "عنوان قسم آخر عمليات البحث في شاشة البحث"
+  },
+
+  "popularSearches": "الأكثر بحثًا",
+  "@popularSearches": {
+    "description": "عنوان قسم عمليات البحث الشائعة في شاشة البحث"
+  },
+
+  "clearAll": "مسح الكل",
+  "@clearAll": {
+    "description": "زر مسح كل عمليات البحث الأخيرة"
+  },
+
+  "searchEmptyPrompt": "ابحث عن محل أو منتج أو تصنيف",
+  "@searchEmptyPrompt": {
+    "description": "رسالة توجيهية في شاشة البحث قبل كتابة أي نص"
+  },
+
+  "noResultsFor": "لا توجد نتائج لـ \"{query}\"",
+  "@noResultsFor": {
+    "description": "رسالة عدم وجود نتائج بحث",
+    "placeholders": {
+      "query": {"type": "String"}
+    }
+  },
+
+  "allLabel": "الكل",
+  "@allLabel": {
+    "description": "خيار فلتر: عرض كل أنواع النتائج في شاشة البحث"
+  },
+
+  "categoriesLabel": "التصنيفات",
+  "@categoriesLabel": {
+    "description": "عنوان قسم نتائج التصنيفات في البحث"
+  },
+
+  "merchantsLabel": "المحلات",
+  "@merchantsLabel": {
+    "description": "عنوان قسم نتائج المحلات في البحث"
+  },
+
+  "productsLabel": "المنتجات",
+  "@productsLabel": {
+    "description": "عنوان قسم نتائج المنتجات في البحث"
+  },
+
+  "sortLabel": "الترتيب",
+  "@sortLabel": {
+    "description": "عنوان خيار ترتيب نتائج البحث"
+  },
+
+  "sortRelevance": "الأنسب",
+  "@sortRelevance": {
+    "description": "خيار ترتيب: الأنسب (افتراضي)"
+  },
+
+  "sortPriceLowToHigh": "السعر: من الأقل",
+  "@sortPriceLowToHigh": {
+    "description": "خيار ترتيب: السعر تصاعديًا"
+  },
+
+  "sortPriceHighToLow": "السعر: من الأعلى",
+  "@sortPriceHighToLow": {
+    "description": "خيار ترتيب: السعر تنازليًا"
+  },
+
+  "retry": "إعادة المحاولة",
+  "@retry": {
+    "description": "زر إعادة المحاولة عند فشل التحميل"
+  },
+
+  "connectionErrorMessage": "يبدو أن الاتصال بالإنترنت غير متاح.",
+  "@connectionErrorMessage": {
+    "description": "رسالة خطأ عامة عند فشل الاتصال بالشبكة"
   }
 }

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -278,20 +279,25 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 product.imageUrl != null
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Image.network(
-                                          product.imageUrl!,
-                                          width: 48,
-                                          height: 48,
-                                          fit: BoxFit.cover,
-                                          errorBuilder:
-                                              (context, error, stackTrace) =>
-                                                  _ProductIcon(
-                                                    color: theme
-                                                        .colorScheme
-                                                        .primary,
-                                                  ),
+                                    ? Hero(
+                                        tag: 'product-image-${product.id}',
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          child: CachedNetworkImage(
+                                            imageUrl: product.imageUrl!,
+                                            width: 48,
+                                            height: 48,
+                                            fit: BoxFit.cover,
+                                            errorWidget:
+                                                (context, url, error) =>
+                                                    _ProductIcon(
+                                                      color: theme
+                                                          .colorScheme
+                                                          .primary,
+                                                    ),
+                                          ),
                                         ),
                                       )
                                     : _ProductIcon(
@@ -382,10 +388,10 @@ class _StoreCoverBanner extends StatelessWidget {
                     color: Theme.of(context).colorScheme.primary
                         .withValues(alpha: 0.08),
                   )
-                : Image.network(
-                    cover,
+                : CachedNetworkImage(
+                    imageUrl: cover,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
+                    errorWidget: (context, url, error) => Container(
                       color: Theme.of(context).colorScheme.primary
                           .withValues(alpha: 0.08),
                     ),

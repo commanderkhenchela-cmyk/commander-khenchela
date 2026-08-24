@@ -13,5 +13,40 @@
 
   "comingSoonMessage": "Ce service sera bientôt disponible sur Commander Khenchela.",
 
-  "ok": "OK"
+  "ok": "OK",
+
+  "recentSearches": "Recherches récentes",
+
+  "popularSearches": "Recherches populaires",
+
+  "clearAll": "Tout effacer",
+
+  "searchEmptyPrompt": "Recherchez un commerce, un produit ou une catégorie",
+
+  "noResultsFor": "Aucun résultat pour \"{query}\"",
+  "@noResultsFor": {
+    "placeholders": {
+      "query": {"type": "String"}
+    }
+  },
+
+  "allLabel": "Tout",
+
+  "categoriesLabel": "Catégories",
+
+  "merchantsLabel": "Commerces",
+
+  "productsLabel": "Produits",
+
+  "sortLabel": "Trier",
+
+  "sortRelevance": "Pertinence",
+
+  "sortPriceLowToHigh": "Prix croissant",
+
+  "sortPriceHighToLow": "Prix décroissant",
+
+  "retry": "Réessayer",
+
+  "connectionErrorMessage": "La connexion Internet semble indisponible."
 }

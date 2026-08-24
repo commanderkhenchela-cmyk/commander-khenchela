@@ -13,5 +13,40 @@
 
   "comingSoonMessage": "This service will be available soon on Commander Khenchela.",
 
-  "ok": "OK"
+  "ok": "OK",
+
+  "recentSearches": "Recent searches",
+
+  "popularSearches": "Popular searches",
+
+  "clearAll": "Clear all",
+
+  "searchEmptyPrompt": "Search for a shop, product, or category",
+
+  "noResultsFor": "No results for \"{query}\"",
+  "@noResultsFor": {
+    "placeholders": {
+      "query": {"type": "String"}
+    }
+  },
+
+  "allLabel": "All",
+
+  "categoriesLabel": "Categories",
+
+  "merchantsLabel": "Shops",
+
+  "productsLabel": "Products",
+
+  "sortLabel": "Sort",
+
+  "sortRelevance": "Relevance",
+
+  "sortPriceLowToHigh": "Price: low to high",
+
+  "sortPriceHighToLow": "Price: high to low",
+
+  "retry": "Retry",
+
+  "connectionErrorMessage": "Internet connection seems unavailable."
 }

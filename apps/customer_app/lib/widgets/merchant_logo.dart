@@ -1,9 +1,13 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 /// شعار محل داخل بطاقة (عمودية أو أفقية مصغّرة) — يعرض الصورة الحقيقية
 /// المرفوعة من التاجر إن وُجدت (merchant.logoUrl)، وإلا الأيقونة الرمزية
 /// الاحتياطية الحالية. نفس السلوك أيضًا إن فشل تحميل الصورة (رابط معطوب،
-/// لا إنترنت) — لا تُترك الخانة فارغة أو مكسورة أبدًا.
+/// لا إنترنت) — لا تُترك الخانة فارغة أو مكسورة أبدًا. يستخدم
+/// CachedNetworkImage (لا Image.network) لأن نفس شعار المحل يتكرر عبر
+/// شاشات كثيرة (الرئيسية/البحث/قائمة المحلات) — تخزين مؤقت على القرص
+/// يمنع إعادة تنزيله في كل مرة يظهر بها.
 class MerchantLogo extends StatelessWidget {
   final String? url;
   final double size;
@@ -37,10 +41,10 @@ class MerchantLogo extends StatelessWidget {
               color: theme.colorScheme.primary,
               size: iconSize,
             )
-          : Image.network(
-              logoUrl,
+          : CachedNetworkImage(
+              imageUrl: logoUrl,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Icon(
+              errorWidget: (context, url, error) => Icon(
                 Icons.storefront_rounded,
                 color: theme.colorScheme.primary,
                 size: iconSize,
