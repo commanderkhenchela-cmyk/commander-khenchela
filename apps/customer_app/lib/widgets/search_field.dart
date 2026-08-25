@@ -21,13 +21,14 @@ class SearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return TextField(
       controller: controller,
       autofocus: autofocus,
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
-        hintText: hintText ?? AppLocalizations.of(context).searchHint,
+        hintText: hintText ?? l10n.searchHint,
         prefixIcon: const Icon(Icons.search_rounded),
         suffixIcon: ValueListenableBuilder<TextEditingValue>(
           valueListenable: controller,
@@ -35,6 +36,7 @@ class SearchField extends StatelessWidget {
               ? const SizedBox.shrink()
               : IconButton(
                   icon: const Icon(Icons.close_rounded, size: 18),
+                  tooltip: l10n.clearSearchTooltip,
                   onPressed: controller.clear,
                 ),
         ),

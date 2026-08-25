@@ -107,16 +107,20 @@ class _QuantityStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
           icon: const Icon(Icons.remove_circle_outline),
+          tooltip: l10n.decreaseQuantityTooltip,
           onPressed: onDecrease,
         ),
         Text('$quantity', style: const TextStyle(fontSize: 18)),
         IconButton(
           icon: const Icon(Icons.add_circle_outline),
+          tooltip: l10n.increaseQuantityTooltip,
           onPressed: onIncrease,
         ),
       ],

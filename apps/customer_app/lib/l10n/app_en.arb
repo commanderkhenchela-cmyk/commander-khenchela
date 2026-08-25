@@ -10,6 +10,7 @@
   "start": "Get started",
 
   "searchHint": "Search for a shop or category...",
+  "clearSearchTooltip": "Clear search",
 
   "comingSoonMessage": "This service will be available soon on Commander Khenchela.",
 
@@ -133,6 +134,9 @@
   "merchantProductsLoadError": "Couldn't load this store's products.",
   "noProductsMessage": "No products available at this store right now.",
   "addToCartTooltip": "Add to cart",
+  "viewCartTooltip": "View cart",
+  "decreaseQuantityTooltip": "Decrease quantity",
+  "increaseQuantityTooltip": "Increase quantity",
   "otherCategoryLabel": "Other",
 
   "accountTitle": "My account",

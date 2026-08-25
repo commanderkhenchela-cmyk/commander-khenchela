@@ -25,6 +25,8 @@
   "@searchHint": {
     "description": "نص placeholder لشريط البحث في الصفحة الرئيسية"
   },
+  "clearSearchTooltip": "مسح البحث",
+  "@clearSearchTooltip": {"description": "تلميح زر مسح نص البحث"},
 
   "comingSoonMessage": "هذه الخدمة ستكون متاحة قريبًا في Commander Khenchela.",
   "@comingSoonMessage": {
@@ -366,6 +368,12 @@
   "@noProductsMessage": {"description": "رسالة فراغ منتجات محل"},
   "addToCartTooltip": "أضف للسلة",
   "@addToCartTooltip": {"description": "تلميح زر الإضافة السريعة للسلة"},
+  "viewCartTooltip": "عرض السلة",
+  "@viewCartTooltip": {"description": "تلميح أيقونة السلة في أعلى شاشة منتجات المحل"},
+  "decreaseQuantityTooltip": "إنقاص الكمية",
+  "@decreaseQuantityTooltip": {"description": "تلميح زر إنقاص الكمية"},
+  "increaseQuantityTooltip": "زيادة الكمية",
+  "@increaseQuantityTooltip": {"description": "تلميح زر زيادة الكمية"},
   "otherCategoryLabel": "أخرى",
   "@otherCategoryLabel": {"description": "اسم تصنيف احتياطي للمنتجات بلا تصنيف محدَّد"},
 

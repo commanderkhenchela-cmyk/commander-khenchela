@@ -10,6 +10,7 @@
   "start": "Commencer",
 
   "searchHint": "Rechercher un commerce ou une catégorie...",
+  "clearSearchTooltip": "Effacer la recherche",
 
   "comingSoonMessage": "Ce service sera bientôt disponible sur Commander Khenchela.",
 
@@ -133,6 +134,9 @@
   "merchantProductsLoadError": "Impossible de charger les produits de ce commerce.",
   "noProductsMessage": "Aucun produit disponible dans ce commerce pour le moment.",
   "addToCartTooltip": "Ajouter au panier",
+  "viewCartTooltip": "Voir le panier",
+  "decreaseQuantityTooltip": "Diminuer la quantité",
+  "increaseQuantityTooltip": "Augmenter la quantité",
   "otherCategoryLabel": "Autre",
 
   "accountTitle": "Mon compte",

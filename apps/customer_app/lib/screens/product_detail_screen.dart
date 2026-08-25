@@ -223,6 +223,7 @@ class _QuantityStepper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -237,6 +238,7 @@ class _QuantityStepper extends StatelessWidget {
           IconButton(
             onPressed: onDecrement,
             icon: const Icon(Icons.remove_rounded),
+            tooltip: l10n.decreaseQuantityTooltip,
           ),
           SizedBox(
             width: 24,
@@ -249,6 +251,7 @@ class _QuantityStepper extends StatelessWidget {
           IconButton(
             onPressed: onIncrement,
             icon: const Icon(Icons.add_rounded),
+            tooltip: l10n.increaseQuantityTooltip,
           ),
         ],
       ),

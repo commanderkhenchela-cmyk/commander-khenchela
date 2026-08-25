@@ -153,6 +153,7 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
             children: [
               IconButton(
                 icon: const Icon(Icons.shopping_cart_outlined),
+                tooltip: l10n.viewCartTooltip,
                 onPressed: () {
                   Navigator.of(
                     context,
