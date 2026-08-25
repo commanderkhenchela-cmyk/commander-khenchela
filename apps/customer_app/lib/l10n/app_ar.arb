@@ -522,5 +522,91 @@
   "faqCoverageQuestion": "هل تخدمون خارج ولاية خنشلة؟",
   "@faqCoverageQuestion": {"description": "سؤال شائع: نطاق التغطية"},
   "faqCoverageAnswer": "حاليًا خدمتنا متاحة فقط داخل ولاية خنشلة، وسنتوسع قريبًا.",
-  "@faqCoverageAnswer": {"description": "جواب سؤال نطاق التغطية"}
+  "@faqCoverageAnswer": {"description": "جواب سؤال نطاق التغطية"},
+
+  "wilayaName": "خنشلة",
+  "@wilayaName": {"description": "اسم الولاية المخدومة حاليًا (V1: خنشلة فقط)"},
+  "inWilayaMessage": "أنت في ولاية {wilaya} ✅",
+  "@inWilayaMessage": {
+    "description": "رسالة تأكيد الولاية",
+    "placeholders": {
+      "wilaya": {"type": "String"}
+    }
+  },
+  "wilayaCoverageMessage": "خدمتنا متوفرة حاليًا في ولاية {wilaya}، وقريبًا في ولايات أخرى",
+  "@wilayaCoverageMessage": {
+    "description": "توضيح نطاق التغطية الحالي",
+    "placeholders": {
+      "wilaya": {"type": "String"}
+    }
+  },
+  "continueAction": "متابعة",
+  "@continueAction": {"description": "زر متابعة عام"},
+
+  "categoryInLocationTitle": "{category} في {location}",
+  "@categoryInLocationTitle": {
+    "description": "عنوان شاشة المحلات عند فتحها لتصنيف محدَّد",
+    "placeholders": {
+      "category": {"type": "String"},
+      "location": {"type": "String"}
+    }
+  },
+  "allMerchantsInLocationTitle": "كل المحلات في {location}",
+  "@allMerchantsInLocationTitle": {
+    "description": "عنوان شاشة المحلات عند فتحها بدون تصنيف محدَّد",
+    "placeholders": {
+      "location": {"type": "String"}
+    }
+  },
+  "merchantsLoadError": "تعذّر تحميل قائمة المحلات. تحقق من اتصالك بالإنترنت.",
+  "@merchantsLoadError": {"description": "رسالة خطأ تحميل قائمة المحلات"},
+  "noMerchantsMessage": "لا توجد محلات متاحة حاليًا. عد قريبًا!",
+  "@noMerchantsMessage": {"description": "رسالة فراغ قائمة المحلات"},
+  "featuredSectionTitle": "مميزة",
+  "@featuredSectionTitle": {"description": "عنوان قسم المحلات المميزة"},
+  "topOrderedSectionTitle": "الأكثر طلبًا",
+  "@topOrderedSectionTitle": {"description": "عنوان قسم المحلات الأكثر طلبًا"},
+  "openNowSectionTitle": "مفتوح الآن",
+  "@openNowSectionTitle": {"description": "عنوان قسم المحلات المفتوحة الآن"},
+  "nearestSectionTitle": "الأقرب إليك",
+  "@nearestSectionTitle": {"description": "عنوان قسم المحلات الأقرب"},
+  "newestSectionTitle": "أُضيفت حديثًا",
+  "@newestSectionTitle": {"description": "عنوان قسم المحلات المضافة حديثًا"},
+  "allMerchantsSectionLabel": "كل المحلات",
+  "@allMerchantsSectionLabel": {"description": "عنوان قسم كل المحلات أسفل الأقسام الذكية"},
+
+  "favoritesLoadError": "تعذّر تحميل المفضّلة. تحقق من اتصالك بالإنترنت.",
+  "@favoritesLoadError": {"description": "رسالة خطأ تحميل شاشة المفضّلة"},
+  "noFavoritesMessage": "لا توجد محلات في المفضّلة بعد.\nاضغط أيقونة القلب بجانب أي محل لإضافته هنا.",
+  "@noFavoritesMessage": {"description": "رسالة فراغ شاشة المفضّلة"},
+
+  "communesLoadError": "تعذّر تحميل قائمة البلديات.",
+  "@communesLoadError": {"description": "رسالة خطأ تحميل قائمة البلديات"},
+  "selectCommuneError": "اختر البلدية",
+  "@selectCommuneError": {"description": "خطأ تحقق: لم تُختَر بلدية"},
+  "saveAddressError": "تعذّر حفظ العنوان. حاول مرة أخرى.",
+  "@saveAddressError": {"description": "رسالة خطأ حفظ عنوان"},
+  "editAddressTitle": "تعديل العنوان",
+  "@editAddressTitle": {"description": "عنوان شاشة تعديل عنوان"},
+  "newAddressTitle": "إضافة عنوان جديد",
+  "@newAddressTitle": {"description": "عنوان شاشة إضافة عنوان جديد"},
+  "communeLabel": "البلدية",
+  "@communeLabel": {"description": "تسمية حقل اختيار البلدية"},
+  "addressDetailLabel": "العنوان بالتفصيل",
+  "@addressDetailLabel": {"description": "تسمية حقل تفاصيل العنوان"},
+  "addressDetailHint": "الحي، الشارع، رقم المنزل...",
+  "@addressDetailHint": {"description": "نص placeholder لحقل تفاصيل العنوان"},
+  "addressRequiredError": "أدخل عنوانك",
+  "@addressRequiredError": {"description": "خطأ تحقق: العنوان مطلوب"},
+  "deliveryContactPhoneLabel": "رقم هاتف التواصل عند التوصيل",
+  "@deliveryContactPhoneLabel": {"description": "تسمية حقل هاتف التواصل عند التوصيل"},
+  "invalidPhoneError": "أدخل رقم هاتف جزائري صحيح",
+  "@invalidPhoneError": {"description": "خطأ تحقق: صيغة هاتف غير صحيحة (نموذج العنوان)"},
+  "saveAddressAction": "حفظ العنوان",
+  "@saveAddressAction": {"description": "زر حفظ العنوان"},
+
+  "visitAction": "زيارة",
+  "@visitAction": {"description": "زر زيارة إعلان أو رابط خارجي"},
+  "seeAllAction": "عرض الكل",
+  "@seeAllAction": {"description": "زر/شريحة عرض كل التصنيفات"}
 }

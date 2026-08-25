@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/commune.dart';
 import '../models/address.dart';
 
@@ -65,7 +66,9 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
             .toList();
       });
     } catch (e) {
-      setState(() => _errorMessage = 'تعذّر تحميل قائمة البلديات.');
+      setState(
+        () => _errorMessage = AppLocalizations.of(context).communesLoadError,
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -74,7 +77,9 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCommuneId == null) {
-      setState(() => _errorMessage = 'اختر البلدية');
+      setState(
+        () => _errorMessage = AppLocalizations.of(context).selectCommuneError,
+      );
       return;
     }
 
@@ -120,7 +125,9 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       if (!mounted) return;
       Navigator.of(context).pop(addressId);
     } catch (e) {
-      setState(() => _errorMessage = 'تعذّر حفظ العنوان. حاول مرة أخرى.');
+      setState(
+        () => _errorMessage = AppLocalizations.of(context).saveAddressError,
+      );
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -128,9 +135,11 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEdit ? 'تعديل العنوان' : 'إضافة عنوان جديد'),
+        title: Text(_isEdit ? l10n.editAddressTitle : l10n.newAddressTitle),
       ),
       body: SafeArea(
         child: _isLoading
@@ -144,7 +153,9 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                     children: [
                       DropdownButtonFormField<int>(
                         initialValue: _selectedCommuneId,
-                        decoration: const InputDecoration(labelText: 'البلدية'),
+                        decoration: InputDecoration(
+                          labelText: l10n.communeLabel,
+                        ),
                         items: _communes
                             .map(
                               (commune) => DropdownMenuItem(
@@ -160,14 +171,14 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _addressTextController,
-                        decoration: const InputDecoration(
-                          labelText: 'العنوان بالتفصيل',
-                          hintText: 'الحي، الشارع، رقم المنزل...',
+                        decoration: InputDecoration(
+                          labelText: l10n.addressDetailLabel,
+                          hintText: l10n.addressDetailHint,
                         ),
                         maxLines: 3,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'أدخل عنوانك';
+                            return l10n.addressRequiredError;
                           }
                           return null;
                         },
@@ -175,16 +186,16 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _phoneController,
-                        decoration: const InputDecoration(
-                          labelText: 'رقم هاتف التواصل عند التوصيل',
-                          hintText: '0555xxxxxx',
+                        decoration: InputDecoration(
+                          labelText: l10n.deliveryContactPhoneLabel,
+                          hintText: l10n.phoneHint,
                         ),
                         keyboardType: TextInputType.phone,
                         validator: (value) {
                           final phone = value?.trim() ?? '';
                           final pattern = RegExp(r'^(\+213|0)(5|6|7)[0-9]{8}$');
                           if (!pattern.hasMatch(phone)) {
-                            return 'أدخل رقم هاتف جزائري صحيح';
+                            return l10n.invalidPhoneError;
                           }
                           return null;
                         },
@@ -211,7 +222,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text('حفظ العنوان'),
+                            : Text(l10n.saveAddressAction),
                       ),
                     ],
                   ),

@@ -8,7 +8,6 @@ import 'home_screen.dart';
 import 'welcome_screen.dart';
 
 const String _prefsWilayaConfirmedKey = 'wilaya_confirmed';
-const String _wilayaName = 'خنشلة';
 
 /// شاشة البداية — تُعرض لحظة فتح التطبيق، وتقرّر أين يذهب المستخدم:
 /// - أول مرة يفتح فيها التطبيق → شاشة الترحيب (Welcome)
@@ -90,8 +89,10 @@ class _SplashScreenState extends State<SplashScreen>
 
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) => wilayaConfirmed
-            ? const HomeScreen(locationName: _wilayaName)
+        builder: (routeContext) => wilayaConfirmed
+            ? HomeScreen(
+                locationName: AppLocalizations.of(routeContext).wilayaName,
+              )
             : const WelcomeScreen(),
       ),
     );

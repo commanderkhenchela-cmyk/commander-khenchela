@@ -209,5 +209,40 @@
   "faqPaymentQuestion": "How do I pay for my order?",
   "faqPaymentAnswer": "Cash on delivery only (paid to the courier when the order arrives).",
   "faqCoverageQuestion": "Do you deliver outside Khenchela province?",
-  "faqCoverageAnswer": "Our service is currently available only within Khenchela province, and we'll expand soon."
+  "faqCoverageAnswer": "Our service is currently available only within Khenchela province, and we'll expand soon.",
+
+  "wilayaName": "Khenchela",
+  "inWilayaMessage": "You're in {wilaya} province ✅",
+  "wilayaCoverageMessage": "Our service is currently available in {wilaya} province, and soon in other provinces",
+  "continueAction": "Continue",
+
+  "categoryInLocationTitle": "{category} in {location}",
+  "allMerchantsInLocationTitle": "All stores in {location}",
+  "merchantsLoadError": "Couldn't load the store list. Check your internet connection.",
+  "noMerchantsMessage": "No stores available right now. Check back soon!",
+  "featuredSectionTitle": "Featured",
+  "topOrderedSectionTitle": "Most ordered",
+  "openNowSectionTitle": "Open now",
+  "nearestSectionTitle": "Nearest to you",
+  "newestSectionTitle": "Newly added",
+  "allMerchantsSectionLabel": "All stores",
+
+  "favoritesLoadError": "Couldn't load favorites. Check your internet connection.",
+  "noFavoritesMessage": "No favorite stores yet.\nTap the heart icon next to any store to add it here.",
+
+  "communesLoadError": "Couldn't load the commune list.",
+  "selectCommuneError": "Choose the commune",
+  "saveAddressError": "Couldn't save the address. Try again.",
+  "editAddressTitle": "Edit address",
+  "newAddressTitle": "Add a new address",
+  "communeLabel": "Commune",
+  "addressDetailLabel": "Detailed address",
+  "addressDetailHint": "Neighborhood, street, house number...",
+  "addressRequiredError": "Enter your address",
+  "deliveryContactPhoneLabel": "Contact phone number for delivery",
+  "invalidPhoneError": "Enter a valid Algerian phone number",
+  "saveAddressAction": "Save address",
+
+  "visitAction": "Visit",
+  "seeAllAction": "See all"
 }

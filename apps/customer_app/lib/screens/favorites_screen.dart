@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/merchant.dart';
 import '../services/favorites_controller.dart';
 import '../widgets/merchant_card.dart';
@@ -65,8 +66,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       _future = _fetch(ids);
     }
 
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('مفضّلتي')),
+      appBar: AppBar(title: Text(l10n.favoritesMenuLabel)),
       body: MediaQuery.withClampedTextScaling(
         maxScaleFactor: 1.25,
         child: FutureBuilder<List<Merchant>>(
@@ -77,20 +80,18 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             }
 
             if (snapshot.hasError) {
-              return const _CenterMessage(
+              return _CenterMessage(
                 icon: Icons.wifi_off_rounded,
-                message: 'تعذّر تحميل المفضّلة. تحقق من اتصالك بالإنترنت.',
+                message: l10n.favoritesLoadError,
               );
             }
 
             final merchants = snapshot.data ?? [];
 
             if (merchants.isEmpty) {
-              return const _CenterMessage(
+              return _CenterMessage(
                 icon: Icons.favorite_border_rounded,
-                message:
-                    'لا توجد محلات في المفضّلة بعد.\n'
-                    'اضغط أيقونة القلب بجانب أي محل لإضافته هنا.',
+                message: l10n.noFavoritesMessage,
               );
             }
 

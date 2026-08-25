@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/merchant.dart';
 import '../services/location_service.dart';
 import '../utils/nearest_merchants.dart';
@@ -166,17 +167,22 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
           widget.categoryName != null
-              ? '${widget.categoryName} في ${widget.locationName}'
-              : 'كل المحلات في ${widget.locationName}',
+              ? l10n.categoryInLocationTitle(
+                  widget.categoryName!,
+                  widget.locationName,
+                )
+              : l10n.allMerchantsInLocationTitle(widget.locationName),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.person_outline_rounded),
-            tooltip: 'حسابي',
+            tooltip: l10n.accountTitle,
             onPressed: () {
               Navigator.of(
                 context,
@@ -200,8 +206,8 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
             if (snapshot.hasError) {
               return _StateMessage(
                 icon: Icons.wifi_off_rounded,
-                message: 'تعذّر تحميل قائمة المحلات. تحقق من اتصالك بالإنترنت.',
-                actionLabel: 'إعادة المحاولة',
+                message: l10n.merchantsLoadError,
+                actionLabel: l10n.retry,
                 onAction: () {
                   setState(() {
                     _pageFuture = _fetchPageData();
@@ -213,9 +219,9 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
             final page = snapshot.data!;
 
             if (page.all.isEmpty) {
-              return const _StateMessage(
+              return _StateMessage(
                 icon: Icons.storefront_outlined,
-                message: 'لا توجد محلات متاحة حاليًا. عد قريبًا!',
+                message: l10n.noMerchantsMessage,
               );
             }
 
@@ -256,35 +262,35 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
                       children: [
                         if (page.featured.isNotEmpty)
                           MerchantSmartSection(
-                            title: 'مميزة',
+                            title: l10n.featuredSectionTitle,
                             icon: Icons.star_rounded,
                             merchants: page.featured,
                             onTapMerchant: openMerchant,
                           ),
                         if (page.topOrdered.isNotEmpty)
                           MerchantSmartSection(
-                            title: 'الأكثر طلبًا',
+                            title: l10n.topOrderedSectionTitle,
                             icon: Icons.local_fire_department_rounded,
                             merchants: page.topOrdered,
                             onTapMerchant: openMerchant,
                           ),
                         if (page.openNow.isNotEmpty)
                           MerchantSmartSection(
-                            title: 'مفتوح الآن',
+                            title: l10n.openNowSectionTitle,
                             icon: Icons.access_time_filled_rounded,
                             merchants: page.openNow,
                             onTapMerchant: openMerchant,
                           ),
                         if (nearest.isNotEmpty)
                           MerchantSmartSection(
-                            title: 'الأقرب إليك',
+                            title: l10n.nearestSectionTitle,
                             icon: Icons.near_me_rounded,
                             merchants: nearest,
                             onTapMerchant: openMerchant,
                           ),
                         if (page.newest.isNotEmpty)
                           MerchantSmartSection(
-                            title: 'أُضيفت حديثًا',
+                            title: l10n.newestSectionTitle,
                             icon: Icons.fiber_new_rounded,
                             merchants: page.newest,
                             onTapMerchant: openMerchant,
@@ -294,7 +300,7 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
                           child: Row(
                             children: [
                               Text(
-                                'كل المحلات',
+                                l10n.allMerchantsSectionLabel,
                                 style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(fontWeight: FontWeight.w700),
                               ),
@@ -309,7 +315,7 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
                     hasScrollBody: false,
                     child: _StateMessage(
                       icon: Icons.search_off_rounded,
-                      message: 'لا توجد نتائج لـ "$_query"',
+                      message: l10n.noResultsFor(_query),
                     ),
                   )
                 else

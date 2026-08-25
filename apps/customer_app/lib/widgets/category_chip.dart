@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import 'pressable_scale.dart';
 
 /// "شريحة" تصنيف صغيرة لقسم أفقي قابل للتمرير في الصفحة الرئيسية — بديل
@@ -103,7 +104,7 @@ class SeeAllCategoriesChip extends StatelessWidget {
               SizedBox(
                 height: 32,
                 child: Text(
-                  'عرض الكل',
+                  AppLocalizations.of(context).seeAllAction,
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   style: theme.textTheme.labelSmall?.copyWith(

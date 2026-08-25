@@ -37,7 +37,6 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  static const _locationName = 'خنشلة';
   static const _minQueryLength = 2;
   static const _debounceDuration = Duration(milliseconds: 400);
 
@@ -179,10 +178,11 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _openCategory(MerchantCategory category) {
+    final locationName = AppLocalizations.of(context).wilayaName;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => MerchantsScreen(
-          locationName: _locationName,
+          locationName: locationName,
           categoryId: category.id,
           categoryName: category.name,
         ),

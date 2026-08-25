@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/merchant_category.dart';
 import '../../utils/merchant_category_icon.dart';
 import '../category_chip.dart';
@@ -50,7 +51,10 @@ class HomeCategoriesSection extends StatelessWidget {
                     ),
                   ),
                 ),
-                TextButton(onPressed: onSeeAll, child: const Text('عرض الكل')),
+                TextButton(
+                  onPressed: onSeeAll,
+                  child: Text(AppLocalizations.of(context).seeAllAction),
+                ),
               ],
             ),
           ),

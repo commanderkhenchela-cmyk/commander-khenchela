@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../l10n/app_localizations.dart';
 import 'home_screen.dart';
 
 /// V1 يعمل في ولاية خنشلة فقط. بدل قائمة بلديات طويلة (21 بلدية) منذ أول
 /// خطوة، نكتفي بشاشة تأكيد بسيطة — نضيف اختيار البلدية تدريجيًا لاحقًا
 /// عند الحاجة الفعلية (مثلاً عند إدخال عنوان التوصيل في الـ Checkout).
-const String _wilayaName = 'خنشلة';
 const String _prefsWilayaConfirmedKey = 'wilaya_confirmed';
 
 /// شاشة تأكيد الولاية — الخطوة الثانية في رحلة العميل بعد الترحيب.
@@ -18,9 +18,10 @@ class ConfirmWilayaScreen extends StatelessWidget {
     await prefs.setBool(_prefsWilayaConfirmedKey, true);
 
     if (!context.mounted) return;
+    final wilayaName = AppLocalizations.of(context).wilayaName;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) => const HomeScreen(locationName: _wilayaName),
+        builder: (_) => HomeScreen(locationName: wilayaName),
       ),
     );
   }
@@ -28,6 +29,7 @@ class ConfirmWilayaScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       body: SafeArea(
@@ -44,13 +46,13 @@ class ConfirmWilayaScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               Text(
-                'أنت في ولاية خنشلة ✅',
+                l10n.inWilayaMessage(l10n.wilayaName),
                 style: theme.textTheme.headlineMedium,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               Text(
-                'خدمتنا متوفرة حاليًا في ولاية خنشلة، وقريبًا في ولايات أخرى',
+                l10n.wilayaCoverageMessage(l10n.wilayaName),
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: Colors.black54,
                 ),
@@ -61,7 +63,7 @@ class ConfirmWilayaScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () => _onContinue(context),
-                  child: const Text('متابعة'),
+                  child: Text(l10n.continueAction),
                 ),
               ),
               const SizedBox(height: 16),

@@ -209,5 +209,40 @@
   "faqPaymentQuestion": "Comment payer ma commande ?",
   "faqPaymentAnswer": "Paiement à la livraison uniquement (en espèces au livreur à l'arrivée de la commande).",
   "faqCoverageQuestion": "Livrez-vous en dehors de la wilaya de Khenchela ?",
-  "faqCoverageAnswer": "Notre service est actuellement disponible uniquement dans la wilaya de Khenchela, et nous allons bientôt nous étendre."
+  "faqCoverageAnswer": "Notre service est actuellement disponible uniquement dans la wilaya de Khenchela, et nous allons bientôt nous étendre.",
+
+  "wilayaName": "Khenchela",
+  "inWilayaMessage": "Vous êtes dans la wilaya de {wilaya} ✅",
+  "wilayaCoverageMessage": "Notre service est actuellement disponible dans la wilaya de {wilaya}, et bientôt dans d'autres wilayas",
+  "continueAction": "Continuer",
+
+  "categoryInLocationTitle": "{category} à {location}",
+  "allMerchantsInLocationTitle": "Tous les commerces à {location}",
+  "merchantsLoadError": "Impossible de charger la liste des commerces. Vérifiez votre connexion Internet.",
+  "noMerchantsMessage": "Aucun commerce disponible pour le moment. Revenez bientôt !",
+  "featuredSectionTitle": "En vedette",
+  "topOrderedSectionTitle": "Les plus commandés",
+  "openNowSectionTitle": "Ouvert maintenant",
+  "nearestSectionTitle": "Les plus proches",
+  "newestSectionTitle": "Ajoutés récemment",
+  "allMerchantsSectionLabel": "Tous les commerces",
+
+  "favoritesLoadError": "Impossible de charger les favoris. Vérifiez votre connexion Internet.",
+  "noFavoritesMessage": "Aucun commerce en favori pour le moment.\nAppuyez sur l'icône cœur à côté d'un commerce pour l'ajouter ici.",
+
+  "communesLoadError": "Impossible de charger la liste des communes.",
+  "selectCommuneError": "Choisissez la commune",
+  "saveAddressError": "Impossible d'enregistrer l'adresse. Réessayez.",
+  "editAddressTitle": "Modifier l'adresse",
+  "newAddressTitle": "Ajouter une nouvelle adresse",
+  "communeLabel": "Commune",
+  "addressDetailLabel": "Adresse détaillée",
+  "addressDetailHint": "Quartier, rue, numéro...",
+  "addressRequiredError": "Entrez votre adresse",
+  "deliveryContactPhoneLabel": "Numéro de téléphone de contact pour la livraison",
+  "invalidPhoneError": "Entrez un numéro de téléphone algérien valide",
+  "saveAddressAction": "Enregistrer l'adresse",
+
+  "visitAction": "Visiter",
+  "seeAllAction": "Tout voir"
 }
