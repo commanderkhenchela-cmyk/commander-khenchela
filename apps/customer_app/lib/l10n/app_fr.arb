@@ -133,5 +133,36 @@
   "merchantProductsLoadError": "Impossible de charger les produits de ce commerce.",
   "noProductsMessage": "Aucun produit disponible dans ce commerce pour le moment.",
   "addToCartTooltip": "Ajouter au panier",
-  "otherCategoryLabel": "Autre"
+  "otherCategoryLabel": "Autre",
+
+  "accountTitle": "Mon compte",
+  "logoutTitle": "Déconnexion",
+  "logoutConfirmMessage": "Voulez-vous vous déconnecter de votre compte ?",
+  "favoritesMenuLabel": "Mes favoris",
+  "notificationsMenuLabel": "Mes notifications",
+  "helpMenuLabel": "Aide",
+  "settingsMenuLabel": "Paramètres",
+  "welcomeDefaultName": "Bienvenue",
+  "signInToContinueMessage": "Connectez-vous pour suivre vos commandes",
+  "saveAddressesMessage": "et enregistrer vos adresses et notifications",
+
+  "descriptionLabel": "Description",
+  "addToCartAction": "Ajouter au panier",
+
+  "languageLabel": "Langue",
+  "appearanceGroupTitle": "Apparence",
+  "themeSystemLabel": "Automatique (selon l'appareil)",
+  "themeLightLabel": "Clair",
+  "themeDarkLabel": "Sombre",
+  "appLanguageLabel": "Langue de l'application",
+  "notificationsGroupTitle": "Notifications",
+  "orderNotificationsLabel": "Recevoir les notifications de commande",
+  "orderNotificationsSubtitle": "Les notifications dans l'application restent toujours actives, quel que soit ce réglage",
+  "privacyPolicyLabel": "Politique de confidentialité",
+  "privacyPolicyPlaceholderBody": "Le texte de la politique de confidentialité sera ajouté ici prochainement.",
+  "termsLabel": "Conditions d'utilisation",
+  "termsPlaceholderBody": "Le texte des conditions d'utilisation sera ajouté ici prochainement.",
+  "aboutAppLabel": "À propos de l'application",
+  "versionLabel": "Version {version}",
+  "appDescriptionAbout": "Plateforme Commander Khenchela — les services de la wilaya de Khenchela et de ses communes en un seul endroit."
 }

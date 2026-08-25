@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import 'address_list_screen.dart';
 import 'favorites_screen.dart';
@@ -25,19 +26,20 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _logout() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('تسجيل الخروج'),
-        content: const Text('هل تريد تسجيل الخروج من حسابك؟'),
+        title: Text(l10n.logoutTitle),
+        content: Text(l10n.logoutConfirmMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('تراجع'),
+            child: Text(l10n.goBackAction),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('تسجيل الخروج'),
+            child: Text(l10n.logoutTitle),
           ),
         ],
       ),
@@ -55,18 +57,21 @@ class _AccountScreenState extends State<AccountScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final isSignedIn = AuthService.isSignedIn;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(title: const Text('حسابي')),
+      appBar: AppBar(title: Text(l10n.accountTitle)),
       body: SafeArea(
-        child: isSignedIn ? _buildSignedIn(theme) : _buildSignedOut(theme),
+        child: isSignedIn
+            ? _buildSignedIn(theme, l10n)
+            : _buildSignedOut(theme, l10n),
       ),
     );
   }
 
-  Widget _buildSignedIn(ThemeData theme) {
+  Widget _buildSignedIn(ThemeData theme, AppLocalizations l10n) {
     final fullName =
         AuthService.currentUser?.userMetadata?['full_name'] as String? ?? '';
     final phone =
@@ -110,7 +115,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      fullName.isEmpty ? 'مرحبًا بك' : fullName,
+                      fullName.isEmpty ? l10n.welcomeDefaultName : fullName,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 19,
@@ -142,22 +147,22 @@ class _AccountScreenState extends State<AccountScreen> {
           children: [
             _MenuTile(
               icon: Icons.receipt_long_outlined,
-              label: 'طلباتي',
+              label: l10n.myOrdersTitle,
               onTap: () => _push(const MyOrdersScreen()),
             ),
             _MenuTile(
               icon: Icons.favorite_border_rounded,
-              label: 'مفضّلتي',
+              label: l10n.favoritesMenuLabel,
               onTap: () => _push(const FavoritesScreen()),
             ),
             _MenuTile(
               icon: Icons.location_on_outlined,
-              label: 'عناويني',
+              label: l10n.addressesTitle,
               onTap: () => _push(const AddressListScreen()),
             ),
             _MenuTile(
               icon: Icons.notifications_none_rounded,
-              label: 'إشعاراتي',
+              label: l10n.notificationsMenuLabel,
               onTap: () => _push(const NotificationsScreen()),
             ),
           ],
@@ -167,12 +172,12 @@ class _AccountScreenState extends State<AccountScreen> {
           children: [
             _MenuTile(
               icon: Icons.help_outline_rounded,
-              label: 'المساعدة',
+              label: l10n.helpMenuLabel,
               onTap: () => _push(const SupportScreen()),
             ),
             _MenuTile(
               icon: Icons.settings_outlined,
-              label: 'الإعدادات',
+              label: l10n.settingsMenuLabel,
               onTap: () => _push(const SettingsScreen()),
             ),
           ],
@@ -182,7 +187,7 @@ class _AccountScreenState extends State<AccountScreen> {
           children: [
             _MenuTile(
               icon: Icons.logout_rounded,
-              label: 'تسجيل الخروج',
+              label: l10n.logoutTitle,
               color: theme.colorScheme.error,
               onTap: _logout,
               showChevron: false,
@@ -193,7 +198,7 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  Widget _buildSignedOut(ThemeData theme) {
+  Widget _buildSignedOut(ThemeData theme, AppLocalizations l10n) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -215,13 +220,13 @@ class _AccountScreenState extends State<AccountScreen> {
             ),
             const SizedBox(height: 20),
             Text(
-              'سجّل الدخول لمتابعة طلباتك',
+              l10n.signInToContinueMessage,
               style: theme.textTheme.titleLarge,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'وحفظ عناوينك ومتابعة إشعاراتك',
+              l10n.saveAddressesMessage,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
@@ -232,13 +237,13 @@ class _AccountScreenState extends State<AccountScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _login,
-                child: const Text('تسجيل الدخول / إنشاء حساب'),
+                child: Text(l10n.loginOrSignupAction),
               ),
             ),
             const SizedBox(height: 12),
             TextButton(
               onPressed: () => _push(const SupportScreen()),
-              child: const Text('المساعدة'),
+              child: Text(l10n.helpMenuLabel),
             ),
           ],
         ),

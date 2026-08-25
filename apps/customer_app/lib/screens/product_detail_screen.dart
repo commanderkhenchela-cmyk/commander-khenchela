@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
 
@@ -62,9 +63,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       cart.increaseQuantity(widget.product.id);
     }
 
+    final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('أُضيف "${widget.product.name}" إلى السلة'),
+        content: Text(l10n.addedToCartMessage(widget.product.name)),
         duration: const Duration(seconds: 1),
       ),
     );
@@ -73,19 +75,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   void _showDifferentMerchantDialog(CartService cart) {
     final product = widget.product;
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('سلتك من محل آخر'),
+        title: Text(l10n.differentMerchantCartTitle),
         content: Text(
-          'سلتك تحتوي منتجات من "${cart.merchantName}". '
-          'لا يمكن الطلب من محلّين في نفس الوقت. '
-          'هل تريد إفراغ السلة وإضافة هذا المنتج من "${widget.merchantName}" بدلاً منها؟',
+          l10n.differentMerchantCartMessage(
+            cart.merchantName ?? '',
+            widget.merchantName,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('إلغاء'),
+            child: Text(l10n.cancelAction),
           ),
           ElevatedButton(
             onPressed: () {
@@ -100,10 +104,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               Navigator.of(dialogContext).pop();
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('أُضيف "${product.name}" إلى السلة')),
+                SnackBar(content: Text(l10n.addedToCartMessage(product.name))),
               );
             },
-            child: const Text('نعم، إفراغ السلة'),
+            child: Text(l10n.clearCartAndAddAction),
           ),
         ],
       ),
@@ -113,6 +117,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final product = widget.product;
 
     return Scaffold(
@@ -144,7 +149,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   Text(product.name, style: theme.textTheme.headlineMedium),
                   const SizedBox(height: 8),
                   Text(
-                    '${product.price.toStringAsFixed(0)} دج',
+                    l10n.currencyAmount(product.price.toStringAsFixed(0)),
                     style: theme.textTheme.titleLarge?.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,
@@ -153,7 +158,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   if (product.description != null) ...[
                     const SizedBox(height: 20),
                     Text(
-                      'الوصف',
+                      l10n.descriptionLabel,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -190,7 +195,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               Expanded(
                 child: ElevatedButton(
                   onPressed: _addToCart,
-                  child: const Text('أضف إلى السلة'),
+                  child: Text(l10n.addToCartAction),
                 ),
               ),
             ],

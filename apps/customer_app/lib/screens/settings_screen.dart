@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/branding_service.dart';
 import '../services/locale_controller.dart';
 import '../services/push_notification_service.dart';
@@ -59,6 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _showLanguageSheet() async {
     final controller = context.read<LocaleController>();
+    final languageLabel = AppLocalizations.of(context).languageLabel;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -72,13 +74,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Align(
                     alignment: AlignmentDirectional.centerStart,
                     child: Text(
-                      'اللغة',
-                      style: TextStyle(
+                      languageLabel,
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                       ),
@@ -132,27 +134,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final themeController = context.watch<ThemeController>();
     final localeController = context.watch<LocaleController>();
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('الإعدادات')),
+      appBar: AppBar(title: Text(l10n.settingsMenuLabel)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           _SettingsGroup(
-            title: 'المظهر',
+            title: l10n.appearanceGroupTitle,
             children: [
               _RadioTile(
-                label: 'تلقائي (حسب إعداد الجهاز)',
+                label: l10n.themeSystemLabel,
                 selected: themeController.mode == ThemeMode.system,
                 onTap: () => themeController.setMode(ThemeMode.system),
               ),
               _RadioTile(
-                label: 'فاتح',
+                label: l10n.themeLightLabel,
                 selected: themeController.mode == ThemeMode.light,
                 onTap: () => themeController.setMode(ThemeMode.light),
               ),
               _RadioTile(
-                label: 'داكن',
+                label: l10n.themeDarkLabel,
                 selected: themeController.mode == ThemeMode.dark,
                 onTap: () => themeController.setMode(ThemeMode.dark),
               ),
@@ -160,11 +163,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 16),
           _SettingsGroup(
-            title: 'اللغة',
+            title: l10n.languageLabel,
             children: [
               _SettingsTile(
                 icon: Icons.language_rounded,
-                label: 'لغة التطبيق',
+                label: l10n.appLanguageLabel,
                 trailing: _languageNames[localeController.locale.languageCode],
                 onTap: _showLanguageSheet,
               ),
@@ -172,15 +175,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 16),
           _SettingsGroup(
-            title: 'الإشعارات',
+            title: l10n.notificationsGroupTitle,
             children: [
               SwitchListTile(
                 value: _pushEnabled,
                 onChanged: _loadingPushPref ? null : _togglePush,
-                title: const Text('استلام إشعارات الطلبات'),
-                subtitle: const Text(
-                  'إشعارات داخل التطبيق تبقى تعمل دائمًا بغضّ النظر عن هذا الخيار',
-                ),
+                title: Text(l10n.orderNotificationsLabel),
+                subtitle: Text(l10n.orderNotificationsSubtitle),
               ),
             ],
           ),
@@ -189,32 +190,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               _SettingsTile(
                 icon: Icons.privacy_tip_outlined,
-                label: 'سياسة الخصوصية',
+                label: l10n.privacyPolicyLabel,
                 onTap: () => _push(
-                  const _StaticInfoScreen(
-                    title: 'سياسة الخصوصية',
-                    body: 'سيُضاف نص سياسة الخصوصية هنا قريبًا.',
+                  _StaticInfoScreen(
+                    title: l10n.privacyPolicyLabel,
+                    body: l10n.privacyPolicyPlaceholderBody,
                   ),
                 ),
               ),
               _SettingsTile(
                 icon: Icons.description_outlined,
-                label: 'الشروط والأحكام',
+                label: l10n.termsLabel,
                 onTap: () => _push(
-                  const _StaticInfoScreen(
-                    title: 'الشروط والأحكام',
-                    body: 'سيُضاف نص الشروط والأحكام هنا قريبًا.',
+                  _StaticInfoScreen(
+                    title: l10n.termsLabel,
+                    body: l10n.termsPlaceholderBody,
                   ),
                 ),
               ),
               _SettingsTile(
                 icon: Icons.help_outline_rounded,
-                label: 'المساعدة',
+                label: l10n.helpMenuLabel,
                 onTap: () => _push(const SupportScreen()),
               ),
               _SettingsTile(
                 icon: Icons.info_outline_rounded,
-                label: 'عن التطبيق',
+                label: l10n.aboutAppLabel,
                 onTap: () => _push(const _AboutScreen()),
               ),
             ],
@@ -382,8 +383,9 @@ class _AboutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('عن التطبيق')),
+      appBar: AppBar(title: Text(l10n.aboutAppLabel)),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -396,10 +398,10 @@ class _AboutScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-              const Text('الإصدار 1.0.0'),
+              Text(l10n.versionLabel('1.0.0')),
               const SizedBox(height: 20),
               Text(
-                'منصّة Commander Khenchela — خدمات ولاية خنشلة وبلدياتها في مكان واحد.',
+                l10n.appDescriptionAbout,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.7),

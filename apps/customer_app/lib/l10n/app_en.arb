@@ -133,5 +133,36 @@
   "merchantProductsLoadError": "Couldn't load this store's products.",
   "noProductsMessage": "No products available at this store right now.",
   "addToCartTooltip": "Add to cart",
-  "otherCategoryLabel": "Other"
+  "otherCategoryLabel": "Other",
+
+  "accountTitle": "My account",
+  "logoutTitle": "Log out",
+  "logoutConfirmMessage": "Do you want to log out of your account?",
+  "favoritesMenuLabel": "My favorites",
+  "notificationsMenuLabel": "My notifications",
+  "helpMenuLabel": "Help",
+  "settingsMenuLabel": "Settings",
+  "welcomeDefaultName": "Welcome",
+  "signInToContinueMessage": "Sign in to track your orders",
+  "saveAddressesMessage": "and save your addresses and notifications",
+
+  "descriptionLabel": "Description",
+  "addToCartAction": "Add to cart",
+
+  "languageLabel": "Language",
+  "appearanceGroupTitle": "Appearance",
+  "themeSystemLabel": "Automatic (follow device setting)",
+  "themeLightLabel": "Light",
+  "themeDarkLabel": "Dark",
+  "appLanguageLabel": "App language",
+  "notificationsGroupTitle": "Notifications",
+  "orderNotificationsLabel": "Receive order notifications",
+  "orderNotificationsSubtitle": "In-app notifications always stay on regardless of this setting",
+  "privacyPolicyLabel": "Privacy policy",
+  "privacyPolicyPlaceholderBody": "The privacy policy text will be added here soon.",
+  "termsLabel": "Terms and conditions",
+  "termsPlaceholderBody": "The terms and conditions text will be added here soon.",
+  "aboutAppLabel": "About the app",
+  "versionLabel": "Version {version}",
+  "appDescriptionAbout": "Commander Khenchela platform — Khenchela province's services in one place."
 }
