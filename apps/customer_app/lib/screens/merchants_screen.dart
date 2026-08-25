@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -5,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../l10n/app_localizations.dart';
 import '../models/merchant.dart';
 import '../services/location_service.dart';
+import '../theme/design_tokens.dart';
 import '../utils/nearest_merchants.dart';
 import '../widgets/merchant_card.dart';
 import '../widgets/merchant_smart_section.dart';
@@ -12,20 +15,21 @@ import '../widgets/search_field.dart';
 import 'account_screen.dart';
 import 'merchant_products_screen.dart';
 
+const _merchantColumns =
+    'id, store_name, phone, communes(name), latitude, longitude, '
+    'logo_url, cover_url, rating_avg, rating_count, '
+    'merchant_business_hours(day_of_week, open_time, close_time, is_closed)';
+
 /// شاشة قائمة المحلات — تُفتح من HomeScreen أو AllCategoriesScreen، إما
 /// لتصنيف محدَّد (categoryId) أو لكل المحلات (categoryId = null، بطاقة
 /// "كل المحلات"). تجلب فقط المحلات الموافَق عليها من طرف Admin
 /// (status = approved)، نفس القاعدة المطبَّقة في RLS على جدول merchants.
 ///
-/// عند فتحها لتصنيف محدَّد، تُضاف فوق القائمة الكاملة أقسام ذكية أفقية
-/// (مميزة / الأكثر طلبًا / مفتوح الآن / الأقرب إليك / المضافة حديثًا)
-/// — كل قسم يظهر فقط إن كانت له بيانات حقيقية (لا نعرض قسمًا فارغًا أو
-/// وهميًا). "مفتوح الآن" و"الأقرب إليك" يُحسبان محليًا في الجهاز (لا
-/// استعلام إضافي للخادم) — الأول من ساعات العمل (MerchantOpenStatus)،
-/// والثاني من موقع الجهاز الحالي (LocationService) مقابل إحداثيات كل
-/// محل (haversineKm، عبر nearest_merchants.dart المشترك مع HomeScreen).
-/// طلب إذن الموقع لا يُعطّل تحميل بقية الشاشة أبدًا — يجري بالتوازي،
-/// وقسم "الأقرب إليك" يظهر لاحقًا فور توفّره فقط.
+/// القائمة الرئيسية (كل المحلات / نتائج البحث) مُرقَّمة صفحيًا حقيقيًا
+/// عبر .range() — راجع _loadPage. عند فتحها لتصنيف محدَّد، تُضاف فوق
+/// القائمة أقسام ذكية أفقية (مميزة/الأكثر طلبًا/مفتوح الآن/الأقرب
+/// إليك/المضافة حديثًا)، تُجلَب مرة واحدة فقط ولا تتأثر بالترقيم — كل
+/// قسم يظهر فقط إن كانت له بيانات حقيقية.
 class MerchantsScreen extends StatefulWidget {
   final String locationName;
   final String? categoryId;
@@ -43,18 +47,33 @@ class MerchantsScreen extends StatefulWidget {
 }
 
 class _MerchantsScreenState extends State<MerchantsScreen> {
-  late Future<_MerchantsPageData> _pageFuture;
+  static const _pageSize = 20;
+  static const _debounceDuration = Duration(milliseconds: 400);
+
+  late Future<_MerchantsSections> _sectionsFuture;
   final _searchController = TextEditingController();
+  Timer? _debounce;
+
   String _query = '';
   Position? _devicePosition;
+
+  // القائمة الرئيسية المعروضة حاليًا (تصفّح أو نتائج بحث — وضع واحد في
+  // كل لحظة يحدّده _query). غير final فعليًا بمعنى القيمة، لكن الكائن
+  // نفسه ثابت ويُعدَّل بمكانه (clear/addAll) بدل استبداله في كل صفحة،
+  // حتى لا تُعاد الصفحات السابقة عند طلب صفحة جديدة.
+  final List<Merchant> _visible = [];
+  bool _hasMore = true;
+  bool _isInitialLoading = true;
+  bool _isLoadingMore = false;
+  bool _loadMoreError = false;
+  Object? _initialError;
 
   @override
   void initState() {
     super.initState();
-    _pageFuture = _fetchPageData();
-    _searchController.addListener(() {
-      setState(() => _query = _searchController.text.trim());
-    });
+    _sectionsFuture = _loadSections();
+    _loadPage();
+    _searchController.addListener(_onQueryChanged);
 
     // مستقل تمامًا عن تحميل قائمة المحلات — لا ننتظره، ولا يظهر أي
     // مؤشر تحميل أو خطأ خاص به. إن تأخّر أو رفض المستخدم الإذن، تبقى
@@ -70,84 +89,156 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
-  Future<_MerchantsPageData> _fetchPageData() async {
-    final client = Supabase.instance.client;
-    const columns =
-        'id, store_name, phone, communes(name), latitude, longitude, '
-        'logo_url, cover_url, rating_avg, rating_count, '
-        'merchant_business_hours(day_of_week, open_time, close_time, is_closed)';
+  void _onQueryChanged() {
+    final text = _searchController.text.trim();
+    _debounce?.cancel();
+    if (text == _query) return;
+    _debounce = Timer(_debounceDuration, () => _restart(text));
+  }
 
-    var allQuery = client
-        .from('merchants')
-        .select(columns)
-        .eq('status', 'approved');
-    if (widget.categoryId != null) {
-      allQuery = allQuery.eq('category_id', widget.categoryId!);
+  /// يبدأ من الصفحة الأولى من جديد — عند تغيّر نص البحث فقط (أو زر
+  /// إعادة المحاولة على الصفحة الأولى). لا يمسّ الأقسام الذكية (مستقلة
+  /// تمامًا عن حالة البحث/الترقيم).
+  void _restart(String query) {
+    setState(() {
+      _query = query;
+      _visible.clear();
+      _hasMore = true;
+      _isInitialLoading = true;
+      _loadMoreError = false;
+      _initialError = null;
+    });
+    _loadPage();
+  }
+
+  /// يجلب صفحة واحدة (الأولى أو التالية) من القائمة الرئيسية — Pagination
+  /// حقيقية عبر .range()، بترتيب ثابت (اسم المحل ثم id كترتيب ثانوي
+  /// deterministic يمنع أي تكرار أو فقدان عنصر لو تساوى اسمان). الصفحات
+  /// السابقة لا تُعاد جلبها أبدًا — فقط تُلحَق صفحة جديدة بـ_visible.
+  Future<void> _loadPage() async {
+    if (_isLoadingMore || !_hasMore) return;
+
+    setState(() {
+      _isLoadingMore = true;
+      _loadMoreError = false;
+    });
+
+    try {
+      final client = Supabase.instance.client;
+      var query = client
+          .from('merchants')
+          .select(_merchantColumns)
+          .eq('status', 'approved');
+      if (widget.categoryId != null) {
+        query = query.eq('category_id', widget.categoryId!);
+      }
+      if (_query.isNotEmpty) {
+        query = query.ilike('store_name', '%$_query%');
+      }
+
+      final from = _visible.length;
+      final rows = await query
+          .order('store_name', ascending: true)
+          .order('id', ascending: true)
+          .range(from, from + _pageSize - 1);
+
+      final items = (rows as List)
+          .map((row) => Merchant.fromMap(row as Map<String, dynamic>))
+          .toList();
+
+      if (!mounted) return;
+      setState(() {
+        _visible.addAll(items);
+        _hasMore = items.length == _pageSize;
+        _isInitialLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        if (_visible.isEmpty) {
+          _initialError = e;
+          _isInitialLoading = false;
+        } else {
+          _loadMoreError = true;
+        }
+      });
+    } finally {
+      if (mounted) setState(() => _isLoadingMore = false);
     }
-    final allFuture = allQuery.order('store_name');
+  }
 
-    // الأقسام الذكية معنى لها فقط داخل تصنيف محدَّد — عرضها فوق "كل
-    // المحلات" (بدون فلتر) سيكرّر نفس المحتوى بلا فائدة إضافية.
+  /// الأقسام الذكية (فوق القائمة الرئيسية) — تُجلَب مرة واحدة فقط عند
+  /// فتح الشاشة، مستقلة تمامًا عن ترقيم/تصفية القائمة الرئيسية. لها
+  /// معنى فقط داخل تصنيف محدَّد.
+  Future<_MerchantsSections> _loadSections() async {
     if (widget.categoryId == null) {
-      final all = _toMerchants(await allFuture);
-      return _MerchantsPageData(
-        all: all,
+      return const _MerchantsSections(
         featured: [],
         topOrdered: [],
         newest: [],
-        openNow: [],
+        pool: [],
       );
     }
 
+    final client = Supabase.instance.client;
+    final categoryId = widget.categoryId!;
+
     final featuredFuture = client
         .from('merchants')
-        .select(columns)
+        .select(_merchantColumns)
         .eq('status', 'approved')
-        .eq('category_id', widget.categoryId!)
+        .eq('category_id', categoryId)
         .eq('is_featured', true)
         .order('store_name')
         .limit(8);
 
     final topOrderedFuture = client
         .from('merchants')
-        .select(columns)
+        .select(_merchantColumns)
         .eq('status', 'approved')
-        .eq('category_id', widget.categoryId!)
+        .eq('category_id', categoryId)
         .gt('orders_count', 0)
         .order('orders_count', ascending: false)
         .limit(8);
 
     final newestFuture = client
         .from('merchants')
-        .select(columns)
+        .select(_merchantColumns)
         .eq('status', 'approved')
-        .eq('category_id', widget.categoryId!)
+        .eq('category_id', categoryId)
         .order('created_at', ascending: false)
         .limit(8);
 
+    // عيّنة محدودة (لا التصنيف كاملًا) لاشتقاق "مفتوح الآن" و"الأقرب
+    // إليك" محليًا — نفس نمط nearbyPool في home_screen.dart بالضبط:
+    // الحسابان غير قابلين للفلترة في SQL مباشرة (يعتمدان على ساعات
+    // العمل الحالية/موقع الجهاز محليًا)، وعيّنة معقولة تكفي تمامًا لحجم
+    // بيانات خنشلة الحالي بدل تحميل التصنيف كاملًا لأجل هذين القسمين.
+    final poolFuture = client
+        .from('merchants')
+        .select(_merchantColumns)
+        .eq('status', 'approved')
+        .eq('category_id', categoryId)
+        .order('store_name')
+        .limit(60);
+
     final results = await Future.wait([
-      allFuture,
       featuredFuture,
       topOrderedFuture,
       newestFuture,
+      poolFuture,
     ]);
 
-    final all = _toMerchants(results[0]);
-
-    return _MerchantsPageData(
-      all: all,
-      featured: _toMerchants(results[1]),
-      topOrdered: _toMerchants(results[2]),
-      // "المضافة حديثًا" لا تُظهر شيئًا مميّزًا في تصنيف صغير (كل المحلات
-      // فيه أصلًا حديثة) — نعرضها فقط إن كان في التصنيف أكثر من 4 محلات.
-      newest: all.length > 4 ? _toMerchants(results[3]) : [],
-      // يُحسب محليًا من نفس القائمة الكاملة (لا استعلام إضافي) — راجع
-      // تعليق الشاشة أعلاه.
-      openNow: all.where((m) => m.isOpenNow == true).take(8).toList(),
+    return _MerchantsSections(
+      featured: _toMerchants(results[0]),
+      topOrdered: _toMerchants(results[1]),
+      newest: _toMerchants(results[2]),
+      pool: _toMerchants(results[3]),
     );
   }
 
@@ -157,12 +248,17 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
         .toList();
   }
 
-  List<Merchant> _filter(List<Merchant> merchants) {
-    if (_query.isEmpty) return merchants;
-    final q = _query.toLowerCase();
-    return merchants
-        .where((m) => m.storeName.toLowerCase().contains(q))
-        .toList();
+  void _openMerchant(Merchant merchant) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => MerchantProductsScreen(
+          merchantId: merchant.id,
+          storeName: merchant.storeName,
+          logoUrl: merchant.logoUrl,
+          coverUrl: merchant.coverUrl,
+        ),
+      ),
+    );
   }
 
   @override
@@ -196,174 +292,168 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
       // والعمودية) لها ارتفاعات محسوبة مسبقًا أيضًا.
       body: MediaQuery.withClampedTextScaling(
         maxScaleFactor: 1.25,
-        child: FutureBuilder<_MerchantsPageData>(
-          future: _pageFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const _MerchantsLoadingSkeleton();
-            }
-
-            if (snapshot.hasError) {
-              return _StateMessage(
-                icon: Icons.wifi_off_rounded,
-                message: l10n.merchantsLoadError,
-                actionLabel: l10n.retry,
-                onAction: () {
-                  setState(() {
-                    _pageFuture = _fetchPageData();
-                  });
-                },
-              );
-            }
-
-            final page = snapshot.data!;
-
-            if (page.all.isEmpty) {
-              return _StateMessage(
-                icon: Icons.storefront_outlined,
-                message: l10n.noMerchantsMessage,
-              );
-            }
-
-            final merchants = _filter(page.all);
-            final nearest = nearestMerchants(page.all, _devicePosition);
-            final showSections =
-                _query.isEmpty &&
-                (page.featured.isNotEmpty ||
-                    page.topOrdered.isNotEmpty ||
-                    page.openNow.isNotEmpty ||
-                    nearest.isNotEmpty ||
-                    page.newest.isNotEmpty);
-
-            void openMerchant(Merchant merchant) {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => MerchantProductsScreen(
-                    merchantId: merchant.id,
-                    storeName: merchant.storeName,
-                    logoUrl: merchant.logoUrl,
-                    coverUrl: merchant.coverUrl,
-                  ),
-                ),
-              );
-            }
-
-            return CustomScrollView(
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                  sliver: SliverToBoxAdapter(
-                    child: SearchField(controller: _searchController),
-                  ),
-                ),
-                if (showSections)
-                  SliverToBoxAdapter(
-                    child: Column(
-                      children: [
-                        if (page.featured.isNotEmpty)
-                          MerchantSmartSection(
-                            title: l10n.featuredSectionTitle,
-                            icon: Icons.star_rounded,
-                            merchants: page.featured,
-                            onTapMerchant: openMerchant,
-                          ),
-                        if (page.topOrdered.isNotEmpty)
-                          MerchantSmartSection(
-                            title: l10n.topOrderedSectionTitle,
-                            icon: Icons.local_fire_department_rounded,
-                            merchants: page.topOrdered,
-                            onTapMerchant: openMerchant,
-                          ),
-                        if (page.openNow.isNotEmpty)
-                          MerchantSmartSection(
-                            title: l10n.openNowSectionTitle,
-                            icon: Icons.access_time_filled_rounded,
-                            merchants: page.openNow,
-                            onTapMerchant: openMerchant,
-                          ),
-                        if (nearest.isNotEmpty)
-                          MerchantSmartSection(
-                            title: l10n.nearestSectionTitle,
-                            icon: Icons.near_me_rounded,
-                            merchants: nearest,
-                            onTapMerchant: openMerchant,
-                          ),
-                        if (page.newest.isNotEmpty)
-                          MerchantSmartSection(
-                            title: l10n.newestSectionTitle,
-                            icon: Icons.fiber_new_rounded,
-                            merchants: page.newest,
-                            onTapMerchant: openMerchant,
-                          ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                          child: Row(
-                            children: [
-                              Text(
-                                l10n.allMerchantsSectionLabel,
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w700),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                if (merchants.isEmpty)
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: _StateMessage(
-                      icon: Icons.search_off_rounded,
-                      message: l10n.noResultsFor(_query),
-                    ),
-                  )
-                else
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    sliver: SliverList.separated(
-                      itemCount: merchants.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final merchant = merchants[index];
-                        return MerchantCard(
-                          merchant: merchant,
-                          distanceLabel: distanceLabelFor(
-                            merchant,
-                            _devicePosition,
-                            l10n,
-                          ),
-                          onTap: () => openMerchant(merchant),
-                        );
-                      },
-                    ),
-                  ),
-              ],
-            );
-          },
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: SearchField(controller: _searchController),
+            ),
+            Expanded(child: _buildBody(l10n)),
+          ],
         ),
       ),
     );
   }
+
+  Widget _buildBody(AppLocalizations l10n) {
+    if (_isInitialLoading) return const _MerchantsLoadingSkeleton();
+
+    if (_initialError != null) {
+      return _StateMessage(
+        icon: Icons.wifi_off_rounded,
+        message: l10n.merchantsLoadError,
+        actionLabel: l10n.retry,
+        onAction: () => _restart(_query),
+      );
+    }
+
+    if (_visible.isEmpty) {
+      return _StateMessage(
+        icon: _query.isEmpty
+            ? Icons.storefront_outlined
+            : Icons.search_off_rounded,
+        message: _query.isEmpty
+            ? l10n.noMerchantsMessage
+            : l10n.noResultsFor(_query),
+      );
+    }
+
+    return FutureBuilder<_MerchantsSections>(
+      future: _sectionsFuture,
+      builder: (context, snapshot) {
+        final sections = snapshot.data;
+        final nearest = sections == null
+            ? const <Merchant>[]
+            : nearestMerchants(sections.pool, _devicePosition);
+        final openNow = sections == null
+            ? const <Merchant>[]
+            : sections.pool.where((m) => m.isOpenNow == true).take(8).toList();
+        final showSections =
+            _query.isEmpty &&
+            sections != null &&
+            (sections.featured.isNotEmpty ||
+                sections.topOrdered.isNotEmpty ||
+                openNow.isNotEmpty ||
+                nearest.isNotEmpty ||
+                sections.newest.isNotEmpty);
+
+        return CustomScrollView(
+          slivers: [
+            if (showSections)
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    if (sections.featured.isNotEmpty)
+                      MerchantSmartSection(
+                        title: l10n.featuredSectionTitle,
+                        icon: Icons.star_rounded,
+                        merchants: sections.featured,
+                        onTapMerchant: _openMerchant,
+                      ),
+                    if (sections.topOrdered.isNotEmpty)
+                      MerchantSmartSection(
+                        title: l10n.topOrderedSectionTitle,
+                        icon: Icons.local_fire_department_rounded,
+                        merchants: sections.topOrdered,
+                        onTapMerchant: _openMerchant,
+                      ),
+                    if (openNow.isNotEmpty)
+                      MerchantSmartSection(
+                        title: l10n.openNowSectionTitle,
+                        icon: Icons.access_time_filled_rounded,
+                        merchants: openNow,
+                        onTapMerchant: _openMerchant,
+                      ),
+                    if (nearest.isNotEmpty)
+                      MerchantSmartSection(
+                        title: l10n.nearestSectionTitle,
+                        icon: Icons.near_me_rounded,
+                        merchants: nearest,
+                        onTapMerchant: _openMerchant,
+                      ),
+                    if (sections.newest.isNotEmpty)
+                      MerchantSmartSection(
+                        title: l10n.newestSectionTitle,
+                        icon: Icons.fiber_new_rounded,
+                        merchants: sections.newest,
+                        onTapMerchant: _openMerchant,
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                      child: Row(
+                        children: [
+                          Text(
+                            l10n.allMerchantsSectionLabel,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              sliver: SliverList.separated(
+                itemCount: _visible.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final merchant = _visible[index];
+                  return MerchantCard(
+                    merchant: merchant,
+                    distanceLabel: distanceLabelFor(
+                      merchant,
+                      _devicePosition,
+                      l10n,
+                    ),
+                    onTap: () => _openMerchant(merchant),
+                  );
+                },
+              ),
+            ),
+            if (_hasMore)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                  child: _LoadMoreFooter(
+                    isLoading: _isLoadingMore,
+                    hasError: _loadMoreError,
+                    onTap: _loadPage,
+                    l10n: l10n,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
 }
 
-/// حزمة بيانات صفحة المحلات: القائمة الكاملة + الأقسام الذكية الأربعة
-/// (تبقى فارغة تلقائيًا عند فتح الشاشة بدون تصنيف محدَّد، أو حين لا
-/// توجد بيانات حقيقية كافية لأي قسم — لا نعرض قسمًا فارغًا أبدًا).
-class _MerchantsPageData {
-  final List<Merchant> all;
+/// الأقسام الذكية فوق القائمة الرئيسية — راجع _loadSections لتفاصيل كل حقل.
+class _MerchantsSections {
   final List<Merchant> featured;
   final List<Merchant> topOrdered;
-  final List<Merchant> openNow;
   final List<Merchant> newest;
+  final List<Merchant> pool;
 
-  const _MerchantsPageData({
-    required this.all,
+  const _MerchantsSections({
     required this.featured,
     required this.topOrdered,
-    required this.openNow,
     required this.newest,
+    required this.pool,
   });
 }
 
@@ -409,6 +499,70 @@ class _StateMessage extends StatelessWidget {
               ElevatedButton(onPressed: onAction, child: Text(actionLabel!)),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// عنصر "تحميل المزيد" أسفل قائمة المحلات — نفس نمط _LoadMoreControl في
+/// search_screen.dart بالضبط (زر عادي / مؤشر تحميل / خطأ + إعادة محاولة
+/// للصفحة الفاشلة فقط).
+class _LoadMoreFooter extends StatelessWidget {
+  final bool isLoading;
+  final bool hasError;
+  final VoidCallback onTap;
+  final AppLocalizations l10n;
+
+  const _LoadMoreFooter({
+    required this.isLoading,
+    required this.hasError,
+    required this.onTap,
+    required this.l10n,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    if (isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+
+    if (hasError) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        child: Center(
+          child: Column(
+            children: [
+              Text(
+                l10n.loadMoreError,
+                style: TextStyle(color: theme.colorScheme.error),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              OutlinedButton(onPressed: onTap, child: Text(l10n.retry)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: Center(
+        child: OutlinedButton(
+          onPressed: onTap,
+          child: Text(l10n.loadMoreAction),
         ),
       ),
     );
