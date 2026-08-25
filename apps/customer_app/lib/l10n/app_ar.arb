@@ -112,5 +112,260 @@
   "connectionErrorMessage": "يبدو أن الاتصال بالإنترنت غير متاح.",
   "@connectionErrorMessage": {
     "description": "رسالة خطأ عامة عند فشل الاتصال بالشبكة"
-  }
+  },
+
+  "cancelAction": "إلغاء",
+  "@cancelAction": {
+    "description": "زر إلغاء عام (يُستخدم في حوارات متعددة)"
+  },
+
+  "submitAction": "إرسال",
+  "@submitAction": {
+    "description": "زر إرسال عام (يُستخدم في حوارات متعددة)"
+  },
+
+  "currencyAmount": "{amount} دج",
+  "@currencyAmount": {
+    "description": "مبلغ مالي بالدينار الجزائري، amount مُنسَّق مسبقًا كنص",
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+
+  "orderDetailsTitle": "تفاصيل الطلب",
+  "@orderDetailsTitle": {
+    "description": "عنوان شاشة تفاصيل الطلب"
+  },
+
+  "orderDetailsLoadError": "تعذّر تحميل تفاصيل الطلب. تحقق من اتصالك بالإنترنت.",
+  "@orderDetailsLoadError": {
+    "description": "رسالة خطأ عند فشل تحميل تفاصيل الطلب"
+  },
+
+  "orderStatusLabel": "الحالة",
+  "@orderStatusLabel": {
+    "description": "عنوان بطاقة حالة الطلب"
+  },
+
+  "storeLabel": "المحل",
+  "@storeLabel": {
+    "description": "عنوان بطاقة اسم المحل (مفرد، بخلاف merchantsLabel الجمع)"
+  },
+
+  "deliveryAddressLabel": "عنوان التوصيل",
+  "@deliveryAddressLabel": {
+    "description": "عنوان بطاقة عنوان التوصيل"
+  },
+
+  "subtotalLabel": "المجموع الفرعي",
+  "@subtotalLabel": {
+    "description": "تسمية المجموع الفرعي قبل رسوم التوصيل"
+  },
+
+  "deliveryFeeLabel": "رسوم التوصيل",
+  "@deliveryFeeLabel": {
+    "description": "تسمية رسوم التوصيل"
+  },
+
+  "totalLabel": "الإجمالي",
+  "@totalLabel": {
+    "description": "تسمية المبلغ الإجمالي النهائي"
+  },
+
+  "reviewPromptMessage": "كيف كانت تجربتك مع هذا المحل؟",
+  "@reviewPromptMessage": {
+    "description": "سؤال يدعو العميل لتقييم المحل بعد التسليم"
+  },
+
+  "rateNowAction": "قيّم الآن",
+  "@rateNowAction": {
+    "description": "زر فتح حوار التقييم"
+  },
+
+  "yourRatingLabel": "تقييمك",
+  "@yourRatingLabel": {
+    "description": "عنوان يسبق نجوم التقييم المُرسَل مسبقًا"
+  },
+
+  "cancelOrderTitle": "إلغاء الطلب",
+  "@cancelOrderTitle": {
+    "description": "عنوان حوار إلغاء الطلب، ونص زر إلغاء الطلب"
+  },
+
+  "cancelOrderConfirmMessage": "هل أنت متأكد من إلغاء هذا الطلب؟",
+  "@cancelOrderConfirmMessage": {
+    "description": "نص تأكيد إلغاء الطلب داخل الحوار"
+  },
+
+  "goBackAction": "تراجع",
+  "@goBackAction": {
+    "description": "زر التراجع عن إلغاء الطلب داخل الحوار (لا يلغي شيئًا)"
+  },
+
+  "confirmCancelOrderAction": "نعم، ألغِ الطلب",
+  "@confirmCancelOrderAction": {
+    "description": "زر تأكيد إلغاء الطلب داخل الحوار"
+  },
+
+  "orderCancelledMessage": "تم إلغاء الطلب",
+  "@orderCancelledMessage": {
+    "description": "رسالة نجاح إلغاء الطلب"
+  },
+
+  "cancelOrderError": "تعذّر إلغاء الطلب. حاول مرة أخرى.",
+  "@cancelOrderError": {
+    "description": "رسالة خطأ عند فشل إلغاء الطلب"
+  },
+
+  "reviewSubmittedThanks": "شكرًا على تقييمك!",
+  "@reviewSubmittedThanks": {
+    "description": "رسالة نجاح إرسال التقييم"
+  },
+
+  "reviewSubmitError": "تعذّر إرسال التقييم. حاول مرة أخرى.",
+  "@reviewSubmitError": {
+    "description": "رسالة خطأ عند فشل إرسال التقييم"
+  },
+
+  "rateExperienceTitle": "قيّم تجربتك",
+  "@rateExperienceTitle": {
+    "description": "عنوان حوار اختيار النجوم والتعليق"
+  },
+
+  "commentOptionalHint": "تعليق (اختياري)...",
+  "@commentOptionalHint": {
+    "description": "نص placeholder لحقل التعليق الاختياري في حوار التقييم"
+  },
+
+  "orderStatusPending": "قيد المراجعة من المحل",
+  "@orderStatusPending": {"description": "تسمية حالة الطلب: pending"},
+  "orderStatusConfirmed": "تم قبول الطلب",
+  "@orderStatusConfirmed": {"description": "تسمية حالة الطلب: confirmed"},
+  "orderStatusPreparing": "قيد التجهيز",
+  "@orderStatusPreparing": {"description": "تسمية حالة الطلب: preparing"},
+  "orderStatusReadyForPickup": "جاهز للاستلام",
+  "@orderStatusReadyForPickup": {
+    "description": "تسمية حالة الطلب: ready_for_pickup"
+  },
+  "orderStatusPickedUp": "مع الموصّل",
+  "@orderStatusPickedUp": {"description": "تسمية حالة الطلب: picked_up"},
+  "orderStatusOutForDelivery": "في الطريق إليك",
+  "@orderStatusOutForDelivery": {
+    "description": "تسمية حالة الطلب: out_for_delivery"
+  },
+  "orderStatusDelivered": "تم التوصيل ✅",
+  "@orderStatusDelivered": {"description": "تسمية حالة الطلب: delivered"},
+  "orderStatusCancelled": "أُلغي الطلب",
+  "@orderStatusCancelled": {"description": "تسمية حالة الطلب: cancelled"},
+  "orderStatusRejected": "رفض المحل الطلب",
+  "@orderStatusRejected": {"description": "تسمية حالة الطلب: rejected"},
+
+  "myOrdersTitle": "طلباتي",
+  "@myOrdersTitle": {"description": "عنوان شاشة طلباتي"},
+  "activeOrdersTab": "الحالية",
+  "@activeOrdersTab": {"description": "تبويب الطلبات النشطة"},
+  "pastOrdersTab": "السابقة",
+  "@pastOrdersTab": {"description": "تبويب الطلبات السابقة"},
+  "noActiveOrdersMessage": "لا توجد طلبات نشطة حاليًا.",
+  "@noActiveOrdersMessage": {"description": "رسالة فراغ تبويب الطلبات النشطة"},
+  "noPastOrdersMessage": "لا توجد طلبات سابقة بعد.",
+  "@noPastOrdersMessage": {"description": "رسالة فراغ تبويب الطلبات السابقة"},
+  "myOrdersLoadError": "تعذّر تحميل طلباتك. تحقق من اتصالك بالإنترنت.",
+  "@myOrdersLoadError": {"description": "رسالة خطأ تحميل شاشة طلباتي"},
+
+  "deleteAction": "حذف",
+  "@deleteAction": {"description": "زر/تلميح حذف عام"},
+  "editAction": "تعديل",
+  "@editAction": {"description": "زر تعديل عام"},
+  "addressesTitle": "عناويني",
+  "@addressesTitle": {"description": "عنوان شاشة عناويني"},
+  "newAddressAction": "عنوان جديد",
+  "@newAddressAction": {"description": "زر إضافة عنوان جديد"},
+  "addressesLoadError": "تعذّر تحميل العناوين.",
+  "@addressesLoadError": {"description": "رسالة خطأ تحميل قائمة العناوين"},
+  "noAddressesMessage": "لا توجد عناوين محفوظة بعد. أضف أول عنوان لك.",
+  "@noAddressesMessage": {"description": "رسالة فراغ قائمة العناوين"},
+  "defaultBadge": "افتراضي",
+  "@defaultBadge": {"description": "شارة العنوان الافتراضي"},
+  "setAsDefaultAction": "اجعله الافتراضي",
+  "@setAsDefaultAction": {"description": "زر تعيين عنوان كافتراضي"},
+  "setDefaultAddressError": "تعذّر تعيين العنوان كافتراضي. حاول مرة أخرى.",
+  "@setDefaultAddressError": {"description": "رسالة خطأ تعيين عنوان افتراضي"},
+  "deleteAddressTitle": "حذف العنوان",
+  "@deleteAddressTitle": {"description": "عنوان حوار حذف عنوان"},
+  "deleteAddressConfirmMessage": "هل أنت متأكد من حذف هذا العنوان؟",
+  "@deleteAddressConfirmMessage": {"description": "نص تأكيد حذف عنوان"},
+  "deleteAddressError": "لا يمكن حذف عنوان مستخدَم في طلب سابق.",
+  "@deleteAddressError": {"description": "رسالة خطأ حذف عنوان مستخدَم"},
+
+  "checkoutTitle": "إتمام الطلب",
+  "@checkoutTitle": {"description": "عنوان شاشة إتمام الطلب"},
+  "loginStepTitle": "تسجيل الدخول",
+  "@loginStepTitle": {"description": "عنوان خطوة تسجيل الدخول في إتمام الطلب"},
+  "signedInLabel": "✅ مسجَّل الدخول",
+  "@signedInLabel": {"description": "نص يؤكد أن العميل مسجَّل دخوله"},
+  "loginOrSignupAction": "تسجيل الدخول / إنشاء حساب",
+  "@loginOrSignupAction": {"description": "زر تسجيل الدخول أو إنشاء حساب"},
+  "loginFirstMessage": "سجّل الدخول أولاً",
+  "@loginFirstMessage": {"description": "رسالة توجيهية لتسجيل الدخول أولًا"},
+  "changeAddressAction": "تغيير العنوان",
+  "@changeAddressAction": {"description": "زر تغيير عنوان التوصيل المختار"},
+  "selectDeliveryAddressAction": "اختيار عنوان التوصيل",
+  "@selectDeliveryAddressAction": {"description": "زر اختيار عنوان توصيل لأول مرة"},
+  "reviewConfirmStepTitle": "المراجعة والتأكيد",
+  "@reviewConfirmStepTitle": {"description": "عنوان خطوة مراجعة الطلب وتأكيده"},
+  "checkoutTotalLabel": "المجموع",
+  "@checkoutTotalLabel": {"description": "تسمية مجموع السلة في شاشة إتمام الطلب"},
+  "deliveryFeeTbdMessage": "رسوم التوصيل تُحدَّد لاحقًا من الإدارة",
+  "@deliveryFeeTbdMessage": {"description": "توضيح أن رسوم التوصيل تُحدَّد لاحقًا"},
+  "paymentCodLabel": "الدفع: عند الاستلام (COD)",
+  "@paymentCodLabel": {"description": "طريقة الدفع الوحيدة المتاحة حاليًا"},
+  "confirmOrderAction": "تأكيد الطلب",
+  "@confirmOrderAction": {"description": "زر تأكيد إرسال الطلب النهائي"},
+  "orderSubmitError": "تعذّر إرسال الطلب. حاول مرة أخرى.",
+  "@orderSubmitError": {"description": "رسالة خطأ عامة عند فشل إرسال الطلب"},
+
+  "cartTitle": "سلتي",
+  "@cartTitle": {"description": "عنوان شاشة السلة"},
+  "cartEmptyMessage": "سلتك فارغة حاليًا.",
+  "@cartEmptyMessage": {"description": "رسالة سلة فارغة"},
+  "orderFromLabel": "الطلب من: {merchantName}",
+  "@orderFromLabel": {
+    "description": "توضيح اسم المحل الذي منه هذا الطلب في السلة",
+    "placeholders": {
+      "merchantName": {"type": "String"}
+    }
+  },
+  "cartTotalWithoutDeliveryLabel": "المجموع (بدون رسوم التوصيل)",
+  "@cartTotalWithoutDeliveryLabel": {"description": "توضيح أن المجموع لا يشمل التوصيل"},
+  "continueOrderAction": "متابعة الطلب",
+  "@continueOrderAction": {"description": "زر الانتقال من السلة لإتمام الطلب"},
+
+  "addedToCartMessage": "أُضيف \"{productName}\" إلى السلة",
+  "@addedToCartMessage": {
+    "description": "رسالة نجاح إضافة منتج للسلة",
+    "placeholders": {
+      "productName": {"type": "String"}
+    }
+  },
+  "differentMerchantCartTitle": "سلتك من محل آخر",
+  "@differentMerchantCartTitle": {"description": "عنوان حوار تعارض محل مختلف في السلة"},
+  "differentMerchantCartMessage": "سلتك تحتوي منتجات من \"{currentMerchant}\". لا يمكن الطلب من محلّين في نفس الوقت. هل تريد إفراغ السلة وإضافة هذا المنتج من \"{newMerchant}\" بدلاً منها؟",
+  "@differentMerchantCartMessage": {
+    "description": "شرح تعارض إضافة منتج من محل مختلف عن محل السلة الحالي",
+    "placeholders": {
+      "currentMerchant": {"type": "String"},
+      "newMerchant": {"type": "String"}
+    }
+  },
+  "clearCartAndAddAction": "نعم، إفراغ السلة",
+  "@clearCartAndAddAction": {"description": "زر تأكيد إفراغ السلة وإضافة منتج من محل آخر"},
+  "merchantProductsLoadError": "تعذّر تحميل منتجات هذا المحل.",
+  "@merchantProductsLoadError": {"description": "رسالة خطأ تحميل منتجات محل"},
+  "noProductsMessage": "لا توجد منتجات متاحة في هذا المحل حاليًا.",
+  "@noProductsMessage": {"description": "رسالة فراغ منتجات محل"},
+  "addToCartTooltip": "أضف للسلة",
+  "@addToCartTooltip": {"description": "تلميح زر الإضافة السريعة للسلة"},
+  "otherCategoryLabel": "أخرى",
+  "@otherCategoryLabel": {"description": "اسم تصنيف احتياطي للمنتجات بلا تصنيف محدَّد"}
 }

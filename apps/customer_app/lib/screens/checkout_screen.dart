@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../services/cart_service.dart';
 import 'address_list_screen.dart';
@@ -123,7 +124,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     } on PostgrestException catch (e) {
       setState(() => _errorMessage = e.message);
     } catch (e) {
-      setState(() => _errorMessage = 'تعذّر إرسال الطلب. حاول مرة أخرى.');
+      setState(
+        () => _errorMessage = AppLocalizations.of(context).orderSubmitError,
+      );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -132,34 +135,35 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final cart = context.watch<CartService>();
     final canConfirm = _isSignedIn && _addressId != null && !cart.isEmpty;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('إتمام الطلب')),
+      appBar: AppBar(title: Text(l10n.checkoutTitle)),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             _StepCard(
               stepNumber: 1,
-              title: 'تسجيل الدخول',
+              title: l10n.loginStepTitle,
               isDone: _isSignedIn,
               child: _isSignedIn
-                  ? const Text('✅ مسجَّل الدخول')
+                  ? Text(l10n.signedInLabel)
                   : ElevatedButton(
                       onPressed: _goToLogin,
-                      child: const Text('تسجيل الدخول / إنشاء حساب'),
+                      child: Text(l10n.loginOrSignupAction),
                     ),
             ),
             const SizedBox(height: 12),
             _StepCard(
               stepNumber: 2,
-              title: 'عنوان التوصيل',
+              title: l10n.deliveryAddressLabel,
               isDone: _addressId != null,
               child: !_isSignedIn
                   ? Text(
-                      'سجّل الدخول أولاً',
+                      l10n.loginFirstMessage,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: Colors.black45,
                       ),
@@ -174,19 +178,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         const SizedBox(height: 8),
                         OutlinedButton(
                           onPressed: _goToAddress,
-                          child: const Text('تغيير العنوان'),
+                          child: Text(l10n.changeAddressAction),
                         ),
                       ],
                     )
                   : ElevatedButton(
                       onPressed: _goToAddress,
-                      child: const Text('اختيار عنوان التوصيل'),
+                      child: Text(l10n.selectDeliveryAddressAction),
                     ),
             ),
             const SizedBox(height: 12),
             _StepCard(
               stepNumber: 3,
-              title: 'المراجعة والتأكيد',
+              title: l10n.reviewConfirmStepTitle,
               isDone: false,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -198,7 +202,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('${item.productName} × ${item.quantity}'),
-                          Text('${item.subtotal.toStringAsFixed(0)} دج'),
+                          Text(
+                            l10n.currencyAmount(
+                              item.subtotal.toStringAsFixed(0),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -207,16 +215,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('المجموع'),
+                      Text(l10n.checkoutTotalLabel),
                       Text(
-                        '${cart.subtotal.toStringAsFixed(0)} دج',
+                        l10n.currencyAmount(cart.subtotal.toStringAsFixed(0)),
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'رسوم التوصيل تُحدَّد لاحقًا من الإدارة',
+                    l10n.deliveryFeeTbdMessage,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: Colors.black45,
                     ),
@@ -229,7 +237,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         color: theme.colorScheme.primary,
                       ),
                       const SizedBox(width: 8),
-                      const Text('الدفع: عند الاستلام (COD)'),
+                      Text(l10n.paymentCodLabel),
                     ],
                   ),
                 ],
@@ -257,7 +265,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         color: Colors.white,
                       ),
                     )
-                  : const Text('تأكيد الطلب'),
+                  : Text(l10n.confirmOrderAction),
             ),
           ],
         ),

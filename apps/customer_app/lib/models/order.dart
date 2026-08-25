@@ -1,3 +1,5 @@
+import '../l10n/app_localizations.dart';
+
 /// نموذج طلبية، مطابق لجدول orders (+ اسم المحل من علاقة merchants).
 class CustomerOrder {
   final String id;
@@ -34,27 +36,30 @@ class CustomerOrder {
     );
   }
 
-  /// تسمية عربية واضحة لكل حالة، مطابقة لدورة حياة الطلب في PHASE 1.
-  static String statusLabel(String status) {
+  /// تسمية مترجَمة واضحة لكل حالة، مطابقة لدورة حياة الطلب في PHASE 1.
+  /// تأخذ [AppLocalizations] بدل الاعتماد على BuildContext مباشرة — يبقي
+  /// الموديل بلا اعتماد مباشر على شجرة الـWidgets، والمستدعي (الشاشة)
+  /// يمرّر AppLocalizations.of(context) كالمعتاد.
+  static String statusLabel(String status, AppLocalizations l10n) {
     switch (status) {
       case 'pending':
-        return 'قيد المراجعة من المحل';
+        return l10n.orderStatusPending;
       case 'confirmed':
-        return 'تم قبول الطلب';
+        return l10n.orderStatusConfirmed;
       case 'preparing':
-        return 'قيد التجهيز';
+        return l10n.orderStatusPreparing;
       case 'ready_for_pickup':
-        return 'جاهز للاستلام';
+        return l10n.orderStatusReadyForPickup;
       case 'picked_up':
-        return 'مع الموصّل';
+        return l10n.orderStatusPickedUp;
       case 'out_for_delivery':
-        return 'في الطريق إليك';
+        return l10n.orderStatusOutForDelivery;
       case 'delivered':
-        return 'تم التوصيل ✅';
+        return l10n.orderStatusDelivered;
       case 'cancelled':
-        return 'أُلغي الطلب';
+        return l10n.orderStatusCancelled;
       case 'rejected':
-        return 'رفض المحل الطلب';
+        return l10n.orderStatusRejected;
       default:
         return status;
     }

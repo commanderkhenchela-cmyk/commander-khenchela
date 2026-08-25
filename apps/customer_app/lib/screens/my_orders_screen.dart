@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/order.dart';
 import 'order_detail_screen.dart';
 
@@ -76,15 +77,17 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('طلباتي'),
-          bottom: const TabBar(
+          title: Text(l10n.myOrdersTitle),
+          bottom: TabBar(
             tabs: [
-              Tab(text: 'الحالية'),
-              Tab(text: 'السابقة'),
+              Tab(text: l10n.activeOrdersTab),
+              Tab(text: l10n.pastOrdersTab),
             ],
           ),
         ),
@@ -111,12 +114,12 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
               children: [
                 _OrdersList(
                   orders: active,
-                  emptyMessage: 'لا توجد طلبات نشطة حاليًا.',
+                  emptyMessage: l10n.noActiveOrdersMessage,
                   onRefresh: _refresh,
                 ),
                 _OrdersList(
                   orders: past,
-                  emptyMessage: 'لا توجد طلبات سابقة بعد.',
+                  emptyMessage: l10n.noPastOrdersMessage,
                   onRefresh: _refresh,
                 ),
               ],
@@ -223,6 +226,7 @@ class _OrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final statusColor = _statusColor(context);
 
     return Card(
@@ -269,7 +273,7 @@ class _OrderCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${order.totalAmount.toStringAsFixed(0)} دج',
+                    l10n.currencyAmount(order.totalAmount.toStringAsFixed(0)),
                     style: theme.textTheme.titleLarge?.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,
@@ -293,7 +297,7 @@ class _OrderCard extends StatelessWidget {
                     Icon(_statusIcon, size: 15, color: statusColor),
                     const SizedBox(width: 6),
                     Text(
-                      CustomerOrder.statusLabel(order.status),
+                      CustomerOrder.statusLabel(order.status, l10n),
                       style: TextStyle(
                         color: statusColor,
                         fontWeight: FontWeight.w600,
@@ -317,6 +321,8 @@ class _ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -325,15 +331,9 @@ class _ErrorState extends StatelessWidget {
           children: [
             const Icon(Icons.wifi_off_rounded, size: 48, color: Colors.black45),
             const SizedBox(height: 16),
-            const Text(
-              'تعذّر تحميل طلباتك. تحقق من اتصالك بالإنترنت.',
-              textAlign: TextAlign.center,
-            ),
+            Text(l10n.myOrdersLoadError, textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: onRetry,
-              child: const Text('إعادة المحاولة'),
-            ),
+            ElevatedButton(onPressed: onRetry, child: Text(l10n.retry)),
           ],
         ),
       ),

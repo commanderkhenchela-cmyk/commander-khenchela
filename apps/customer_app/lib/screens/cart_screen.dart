@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/cart_service.dart';
 import 'checkout_screen.dart';
 
@@ -11,12 +12,13 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final cart = context.watch<CartService>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('سلتي')),
+      appBar: AppBar(title: Text(l10n.cartTitle)),
       body: cart.isEmpty
-          ? const Center(child: Text('سلتك فارغة حاليًا.'))
+          ? Center(child: Text(l10n.cartEmptyMessage))
           : Column(
               children: [
                 if (cart.merchantName != null)
@@ -25,7 +27,7 @@ class CartScreen extends StatelessWidget {
                     child: Align(
                       alignment: Alignment.centerRight,
                       child: Text(
-                        'الطلب من: ${cart.merchantName}',
+                        l10n.orderFromLabel(cart.merchantName!),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: Colors.black54,
                         ),
@@ -50,7 +52,7 @@ class CartScreen extends StatelessWidget {
                                 color: theme.colorScheme.error,
                                 onPressed: () =>
                                     cart.removeItem(item.productId),
-                                tooltip: 'حذف',
+                                tooltip: l10n.deleteAction,
                               ),
                               Expanded(
                                 child: Column(
@@ -63,7 +65,7 @@ class CartScreen extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      '${item.unitPrice.toStringAsFixed(0)} دج × ${item.quantity}',
+                                      '${l10n.currencyAmount(item.unitPrice.toStringAsFixed(0))} × ${item.quantity}',
                                       style: theme.textTheme.bodyMedium
                                           ?.copyWith(color: Colors.black54),
                                     ),
@@ -130,6 +132,7 @@ class _CartSummaryBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return SafeArea(
       child: Padding(
@@ -140,14 +143,14 @@ class _CartSummaryBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '${subtotal.toStringAsFixed(0)} دج',
+                  l10n.currencyAmount(subtotal.toStringAsFixed(0)),
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: theme.colorScheme.primary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  'المجموع (بدون رسوم التوصيل)',
+                  l10n.cartTotalWithoutDeliveryLabel,
                   style: theme.textTheme.bodyMedium,
                 ),
               ],
@@ -161,7 +164,7 @@ class _CartSummaryBar extends StatelessWidget {
                     MaterialPageRoute(builder: (_) => const CheckoutScreen()),
                   );
                 },
-                child: const Text('متابعة الطلب'),
+                child: Text(l10n.continueOrderAction),
               ),
             ),
           ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/address.dart';
 import 'address_form_screen.dart';
 
@@ -74,8 +75,8 @@ class _AddressListScreenState extends State<AddressListScreen> {
       // و_refresh() أدناه يعكس الحالة الفعلية في قاعدة البيانات بأي حال.
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('تعذّر تعيين العنوان كافتراضي. حاول مرة أخرى.'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).setDefaultAddressError),
         ),
       );
     }
@@ -84,19 +85,20 @@ class _AddressListScreenState extends State<AddressListScreen> {
   }
 
   Future<void> _delete(DeliveryAddress address) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('حذف العنوان'),
-        content: const Text('هل أنت متأكد من حذف هذا العنوان؟'),
+        title: Text(l10n.deleteAddressTitle),
+        content: Text(l10n.deleteAddressConfirmMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('تراجع'),
+            child: Text(l10n.goBackAction),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('حذف'),
+            child: Text(l10n.deleteAction),
           ),
         ],
       ),
@@ -112,7 +114,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لا يمكن حذف عنوان مستخدَم في طلب سابق.')),
+        SnackBar(content: Text(l10n.deleteAddressError)),
       );
     }
   }
@@ -120,13 +122,14 @@ class _AddressListScreenState extends State<AddressListScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('عناويني')),
+      appBar: AppBar(title: Text(l10n.addressesTitle)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _addOrEdit(),
         icon: const Icon(Icons.add),
-        label: const Text('عنوان جديد'),
+        label: Text(l10n.newAddressAction),
       ),
       body: FutureBuilder<List<DeliveryAddress>>(
         future: _addressesFuture,
@@ -136,7 +139,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
           }
 
           if (snapshot.hasError) {
-            return const Center(child: Text('تعذّر تحميل العناوين.'));
+            return Center(child: Text(l10n.addressesLoadError));
           }
 
           final addresses = snapshot.data ?? [];
@@ -154,8 +157,8 @@ class _AddressListScreenState extends State<AddressListScreen> {
                       color: theme.colorScheme.primary,
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'لا توجد عناوين محفوظة بعد. أضف أول عنوان لك.',
+                    Text(
+                      l10n.noAddressesMessage,
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -201,7 +204,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
-                                  'افتراضي',
+                                  l10n.defaultBadge,
                                   style: TextStyle(
                                     color: theme.colorScheme.primary,
                                     fontWeight: FontWeight.w600,
@@ -225,12 +228,12 @@ class _AddressListScreenState extends State<AddressListScreen> {
                           children: [
                             TextButton(
                               onPressed: () => _addOrEdit(address: address),
-                              child: const Text('تعديل'),
+                              child: Text(l10n.editAction),
                             ),
                             if (!address.isDefault)
                               TextButton(
                                 onPressed: () => _makeDefault(address),
-                                child: const Text('اجعله الافتراضي'),
+                                child: Text(l10n.setAsDefaultAction),
                               ),
                             const Spacer(),
                             IconButton(
@@ -239,7 +242,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
                                 color: theme.colorScheme.error,
                               ),
                               onPressed: () => _delete(address),
-                              tooltip: 'حذف',
+                              tooltip: l10n.deleteAction,
                             ),
                           ],
                         ),

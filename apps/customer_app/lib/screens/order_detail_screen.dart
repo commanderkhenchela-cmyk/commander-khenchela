@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/order.dart';
 import '../models/order_detail.dart';
 import '../widgets/review_stars.dart';
@@ -101,12 +102,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
       if (!mounted) return;
       setState(() => _orderFuture = _fetchOrder());
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('شكرًا على تقييمك!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).reviewSubmittedThanks)),
+      );
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تعذّر إرسال التقييم. حاول مرة أخرى.')),
+        SnackBar(content: Text(AppLocalizations.of(context).reviewSubmitError)),
       );
     }
   }
@@ -121,19 +123,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Future<void> _cancelOrder() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('إلغاء الطلب'),
-        content: const Text('هل أنت متأكد من إلغاء هذا الطلب؟'),
+        title: Text(l10n.cancelOrderTitle),
+        content: Text(l10n.cancelOrderConfirmMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('تراجع'),
+            child: Text(l10n.goBackAction),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('نعم، ألغِ الطلب'),
+            child: Text(l10n.confirmCancelOrderAction),
           ),
         ],
       ),
@@ -152,13 +155,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       setState(() {
         _orderFuture = _fetchOrder();
       });
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('تم إلغاء الطلب')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.orderCancelledMessage)));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تعذّر إلغاء الطلب. حاول مرة أخرى.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.cancelOrderError)));
     } finally {
       if (mounted) setState(() => _isCancelling = false);
     }
@@ -167,9 +171,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('تفاصيل الطلب')),
+      appBar: AppBar(title: Text(l10n.orderDetailsTitle)),
       body: FutureBuilder<_OrderPageData>(
         future: _orderFuture,
         builder: (context, snapshot) {
@@ -190,15 +195,15 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       color: Colors.black45,
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'تعذّر تحميل تفاصيل الطلب. تحقق من اتصالك بالإنترنت.',
+                    Text(
+                      l10n.orderDetailsLoadError,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () =>
                           setState(() => _orderFuture = _fetchOrder()),
-                      child: const Text('إعادة المحاولة'),
+                      child: Text(l10n.retry),
                     ),
                   ],
                 ),
@@ -220,10 +225,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('الحالة', style: theme.textTheme.bodySmall),
+                        Text(l10n.orderStatusLabel, style: theme.textTheme.bodySmall),
                         const SizedBox(height: 4),
                         Text(
-                          CustomerOrder.statusLabel(order.status),
+                          CustomerOrder.statusLabel(order.status, l10n),
                           style: theme.textTheme.titleLarge?.copyWith(
                             color: theme.colorScheme.primary,
                             fontWeight: FontWeight.bold,
@@ -240,7 +245,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('المحل', style: theme.textTheme.bodySmall),
+                        Text(l10n.storeLabel, style: theme.textTheme.bodySmall),
                         const SizedBox(height: 4),
                         Text(
                           order.merchantName,
@@ -266,7 +271,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('عنوان التوصيل', style: theme.textTheme.bodySmall),
+                        Text(
+                          l10n.deliveryAddressLabel,
+                          style: theme.textTheme.bodySmall,
+                        ),
                         const SizedBox(height: 4),
                         Text(
                           '${order.communeName} — ${order.addressText}',
@@ -283,7 +291,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('المنتجات', style: theme.textTheme.bodySmall),
+                        Text(l10n.productsLabel, style: theme.textTheme.bodySmall),
                         const SizedBox(height: 8),
                         ...order.items.map(
                           (item) => Padding(
@@ -296,24 +304,28 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                     '${item.productName} × ${item.quantity}',
                                   ),
                                 ),
-                                Text('${item.subtotal.toStringAsFixed(0)} دج'),
+                                Text(
+                                  l10n.currencyAmount(
+                                    item.subtotal.toStringAsFixed(0),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
                         ),
                         const Divider(height: 24),
                         _PriceRow(
-                          label: 'المجموع الفرعي',
+                          label: l10n.subtotalLabel,
                           value: order.subtotal,
                         ),
                         const SizedBox(height: 4),
                         _PriceRow(
-                          label: 'رسوم التوصيل',
+                          label: l10n.deliveryFeeLabel,
                           value: order.deliveryFee,
                         ),
                         const SizedBox(height: 8),
                         _PriceRow(
-                          label: 'الإجمالي',
+                          label: l10n.totalLabel,
                           value: order.totalAmount,
                           bold: true,
                         ),
@@ -331,14 +343,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    'كيف كانت تجربتك مع هذا المحل؟',
+                                    l10n.reviewPromptMessage,
                                     style: theme.textTheme.titleMedium,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                                 ElevatedButton(
                                   onPressed: _openReviewDialog,
-                                  child: const Text('قيّم الآن'),
+                                  child: Text(l10n.rateNowAction),
                                 ),
                               ],
                             )
@@ -346,7 +358,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'تقييمك',
+                                  l10n.yourRatingLabel,
                                   style: theme.textTheme.bodySmall,
                                 ),
                                 const SizedBox(height: 6),
@@ -374,7 +386,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('إلغاء الطلب'),
+                        : Text(l10n.cancelOrderTitle),
                   ),
                 ],
               ],
@@ -425,8 +437,10 @@ class _ReviewDialogState extends State<_ReviewDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return AlertDialog(
-      title: const Text('قيّم تجربتك'),
+      title: Text(l10n.rateExperienceTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -439,9 +453,9 @@ class _ReviewDialogState extends State<_ReviewDialog> {
           TextField(
             controller: _commentController,
             maxLines: 3,
-            decoration: const InputDecoration(
-              hintText: 'تعليق (اختياري)...',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              hintText: l10n.commentOptionalHint,
+              border: const OutlineInputBorder(),
             ),
           ),
         ],
@@ -449,13 +463,13 @@ class _ReviewDialogState extends State<_ReviewDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('إلغاء'),
+          child: Text(l10n.cancelAction),
         ),
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(
             _ReviewInput(rating: _rating, comment: _commentController.text),
           ),
-          child: const Text('إرسال'),
+          child: Text(l10n.submitAction),
         ),
       ],
     );
@@ -483,7 +497,10 @@ class _PriceRow extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: style),
-        Text('${value.toStringAsFixed(0)} دج', style: style),
+        Text(
+          AppLocalizations.of(context).currencyAmount(value.toStringAsFixed(0)),
+          style: style,
+        ),
       ],
     );
   }

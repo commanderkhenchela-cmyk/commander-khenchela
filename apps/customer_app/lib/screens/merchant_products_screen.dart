@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
 import '../services/merchant_views_service.dart';
@@ -66,8 +67,9 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
   Map<String, List<Product>> _groupByCategory(List<Product> products) {
     final grouped = <String, List<Product>>{};
 
+    final otherLabel = AppLocalizations.of(context).otherCategoryLabel;
     for (final product in products) {
-      final category = product.categoryName ?? 'أخرى';
+      final category = product.categoryName ?? otherLabel;
       grouped.putIfAbsent(category, () => []).add(product);
     }
 
@@ -90,7 +92,9 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('أُضيف "${product.name}" إلى السلة'),
+        content: Text(
+          AppLocalizations.of(context).addedToCartMessage(product.name),
+        ),
         duration: const Duration(seconds: 1),
       ),
     );
@@ -99,19 +103,21 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
   /// القاعدة من PHASE 1: الطلب الواحد من تاجر واحد فقط. هذا الحوار يشرح
   /// الموقف بوضوح ويعطي المستخدم خيارًا صريحًا، بدل رفض صامت أو خلط تلقائي.
   void _showDifferentMerchantDialog(Product product, CartService cart) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('سلتك من محل آخر'),
+        title: Text(l10n.differentMerchantCartTitle),
         content: Text(
-          'سلتك تحتوي منتجات من "${cart.merchantName}". '
-          'لا يمكن الطلب من محلّين في نفس الوقت. '
-          'هل تريد إفراغ السلة وإضافة هذا المنتج من "${widget.storeName}" بدلاً منها؟',
+          l10n.differentMerchantCartMessage(
+            cart.merchantName ?? '',
+            widget.storeName,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('إلغاء'),
+            child: Text(l10n.cancelAction),
           ),
           ElevatedButton(
             onPressed: () {
@@ -122,10 +128,10 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
               );
               Navigator.of(dialogContext).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('أُضيف "${product.name}" إلى السلة')),
+                SnackBar(content: Text(l10n.addedToCartMessage(product.name))),
               );
             },
-            child: const Text('نعم، إفراغ السلة'),
+            child: Text(l10n.clearCartAndAddAction),
           ),
         ],
       ),
@@ -135,6 +141,7 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final cart = context.watch<CartService>();
 
     return Scaffold(
@@ -197,8 +204,8 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
                             color: Colors.black45,
                           ),
                           const SizedBox(height: 16),
-                          const Text(
-                            'تعذّر تحميل منتجات هذا المحل.',
+                          Text(
+                            l10n.merchantProductsLoadError,
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 16),
@@ -208,7 +215,7 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
                                 _productsFuture = _fetchProducts();
                               });
                             },
-                            child: const Text('إعادة المحاولة'),
+                            child: Text(l10n.retry),
                           ),
                         ],
                       ),
@@ -219,9 +226,7 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
                 final products = snapshot.data ?? [];
 
                 if (products.isEmpty) {
-                  return const Center(
-                    child: Text('لا توجد منتجات متاحة في هذا المحل حاليًا.'),
-                  );
+                  return Center(child: Text(l10n.noProductsMessage));
                 }
 
                 final grouped = _groupByCategory(products);
@@ -324,7 +329,9 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
                                       ],
                                       const SizedBox(height: 4),
                                       Text(
-                                        '${product.price.toStringAsFixed(0)} دج',
+                                        l10n.currencyAmount(
+                                          product.price.toStringAsFixed(0),
+                                        ),
                                         style: theme.textTheme.bodyMedium
                                             ?.copyWith(
                                               color: theme.colorScheme.primary,
@@ -342,7 +349,7 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
                                     size: 32,
                                   ),
                                   onPressed: () => _addToCart(product),
-                                  tooltip: 'أضف للسلة',
+                                  tooltip: l10n.addToCartTooltip,
                                 ),
                               ],
                             ),
