@@ -28,7 +28,7 @@ class HomeServicesSection extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: SizedBox(
-        height: 104,
+        height: 112,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
