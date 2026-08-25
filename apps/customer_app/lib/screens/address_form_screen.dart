@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../l10n/app_localizations.dart';
 import '../models/commune.dart';
 import '../models/address.dart';
+import '../widgets/loading_elevated_button.dart';
 
 const int _khenchelaWilayaId = 40;
 
@@ -211,18 +212,10 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                         ),
                       ],
                       const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: _isSaving ? null : _save,
-                        child: _isSaving
-                            ? const SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : Text(l10n.saveAddressAction),
+                      LoadingElevatedButton(
+                        isLoading: _isSaving,
+                        onPressed: _save,
+                        child: Text(l10n.saveAddressAction),
                       ),
                     ],
                   ),

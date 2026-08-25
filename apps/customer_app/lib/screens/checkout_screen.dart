@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../services/cart_service.dart';
+import '../widgets/loading_elevated_button.dart';
 import 'address_list_screen.dart';
 import 'login_screen.dart';
 import 'order_confirmation_screen.dart';
@@ -252,20 +253,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ],
             const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: canConfirm && !_isSubmitting
-                  ? () => _confirmOrder(cart)
-                  : null,
-              child: _isSubmitting
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(l10n.confirmOrderAction),
+            LoadingElevatedButton(
+              isLoading: _isSubmitting,
+              onPressed: canConfirm ? () => _confirmOrder(cart) : null,
+              child: Text(l10n.confirmOrderAction),
             ),
           ],
         ),

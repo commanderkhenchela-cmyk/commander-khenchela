@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
+import '../widgets/loading_elevated_button.dart';
 import 'signup_screen.dart';
 
 /// شاشة تسجيل الدخول — رقم الهاتف + كلمة سر فقط.
@@ -111,18 +112,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ],
                 const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _submit,
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(l10n.loginAction),
+                LoadingElevatedButton(
+                  isLoading: _isLoading,
+                  onPressed: _submit,
+                  child: Text(l10n.loginAction),
                 ),
                 const SizedBox(height: 12),
                 TextButton(

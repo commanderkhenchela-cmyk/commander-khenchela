@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
+import '../widgets/loading_elevated_button.dart';
 
 /// شاشة إنشاء حساب جديد — الاسم + رقم الهاتف + كلمة سر فقط.
 class SignupScreen extends StatefulWidget {
@@ -132,18 +133,10 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ],
                 const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _submit,
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : Text(l10n.createAccountAction),
+                LoadingElevatedButton(
+                  isLoading: _isLoading,
+                  onPressed: _submit,
+                  child: Text(l10n.createAccountAction),
                 ),
               ],
             ),
