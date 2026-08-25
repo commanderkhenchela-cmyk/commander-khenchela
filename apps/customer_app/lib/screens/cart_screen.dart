@@ -18,7 +18,7 @@ class CartScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.cartTitle)),
       body: cart.isEmpty
-          ? Center(child: Text(l10n.cartEmptyMessage))
+          ? _EmptyCart(message: l10n.cartEmptyMessage)
           : Column(
               children: [
                 if (cart.merchantName != null)
@@ -90,6 +90,49 @@ class CartScreen extends StatelessWidget {
                 _CartSummaryBar(subtotal: cart.subtotal),
               ],
             ),
+    );
+  }
+}
+
+/// حالة "السلة فارغة" — أيقونة + رسالة + زر فعلي للعودة إلى تصفّح
+/// المحلات، بدل نص وحيد بلا أي إجراء (كانت هذه الحالة تعرض فقط
+/// [Text] بلا أيقونة ولا زر).
+class _EmptyCart extends StatelessWidget {
+  final String message;
+
+  const _EmptyCart({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.shopping_cart_outlined,
+              size: 64,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 20),
+            OutlinedButton(
+              onPressed: () =>
+                  Navigator.of(context).popUntil((route) => route.isFirst),
+              child: Text(l10n.browseShopsAction),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

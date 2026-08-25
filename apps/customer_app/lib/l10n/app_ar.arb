@@ -331,6 +331,8 @@
   "@cartTitle": {"description": "عنوان شاشة السلة"},
   "cartEmptyMessage": "سلتك فارغة حاليًا.",
   "@cartEmptyMessage": {"description": "رسالة سلة فارغة"},
+  "browseShopsAction": "تصفّح المحلات",
+  "@browseShopsAction": {"description": "زر الانتقال لتصفّح المحلات من شاشة فارغة (السلة مثلًا)"},
   "orderFromLabel": "الطلب من: {merchantName}",
   "@orderFromLabel": {
     "description": "توضيح اسم المحل الذي منه هذا الطلب في السلة",

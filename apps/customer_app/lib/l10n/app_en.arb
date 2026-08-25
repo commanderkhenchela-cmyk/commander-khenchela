@@ -123,6 +123,7 @@
 
   "cartTitle": "My cart",
   "cartEmptyMessage": "Your cart is empty right now.",
+  "browseShopsAction": "Browse shops",
   "orderFromLabel": "Ordering from: {merchantName}",
   "cartTotalWithoutDeliveryLabel": "Total (excluding delivery fee)",
   "continueOrderAction": "Continue order",

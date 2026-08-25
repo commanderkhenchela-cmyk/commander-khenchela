@@ -83,6 +83,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               return _CenterMessage(
                 icon: Icons.wifi_off_rounded,
                 message: l10n.favoritesLoadError,
+                action: OutlinedButton(
+                  onPressed: () => setState(() => _future = _fetch(ids)),
+                  child: Text(l10n.retry),
+                ),
               );
             }
 
@@ -92,6 +96,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               return _CenterMessage(
                 icon: Icons.favorite_border_rounded,
                 message: l10n.noFavoritesMessage,
+                action: OutlinedButton(
+                  onPressed: () =>
+                      Navigator.of(context).popUntil((route) => route.isFirst),
+                  child: Text(l10n.browseShopsAction),
+                ),
               );
             }
 
@@ -117,8 +126,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 class _CenterMessage extends StatelessWidget {
   final IconData icon;
   final String message;
+  final Widget? action;
 
-  const _CenterMessage({required this.icon, required this.message});
+  const _CenterMessage({required this.icon, required this.message, this.action});
 
   @override
   Widget build(BuildContext context) {
@@ -143,6 +153,7 @@ class _CenterMessage extends StatelessWidget {
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
+            if (action != null) ...[const SizedBox(height: 16), action!],
           ],
         ),
       ),

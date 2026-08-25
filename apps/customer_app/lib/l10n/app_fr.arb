@@ -123,6 +123,7 @@
 
   "cartTitle": "Mon panier",
   "cartEmptyMessage": "Votre panier est vide pour le moment.",
+  "browseShopsAction": "Parcourir les commerces",
   "orderFromLabel": "Commande chez : {merchantName}",
   "cartTotalWithoutDeliveryLabel": "Total (hors frais de livraison)",
   "continueOrderAction": "Continuer la commande",
