@@ -39,6 +39,7 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   static const _minQueryLength = 2;
   static const _debounceDuration = Duration(milliseconds: 400);
+  static const _productsPageSize = 15;
 
   final _controller = TextEditingController();
   Timer? _debounce;
@@ -50,6 +51,12 @@ class _SearchScreenState extends State<SearchScreen> {
   Future<List<String>>? _recentFuture;
   Future<List<String>>? _popularFuture;
   Future<_SearchResults>? _resultsFuture;
+
+  // Pagination حقيقية من Supabase لنتائج المنتجات (الأكبر عادة بين
+  // الأقسام الثلاثة) — لا تحميل دفعة واحدة لكل النتائج، فقط صفحة واحدة
+  // إضافية (.range) عند طلب "تحميل المزيد" صراحة. راجع _loadMoreProducts.
+  bool _isLoadingMoreProducts = false;
+  bool _loadMoreProductsError = false;
 
   @override
   void initState() {
@@ -93,6 +100,8 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() {
       _query = text;
       _resultsFuture = _search(text);
+      _isLoadingMoreProducts = false;
+      _loadMoreProductsError = false;
     });
 
     // لا تُنتظَر أبدًا — تسجيل إحصائي بحت، فشله لا يجب أن يؤثّر على
@@ -137,13 +146,15 @@ class _SearchScreenState extends State<SearchScreen> {
         )
         .eq('is_active', true)
         .ilike('name', pattern)
-        .limit(15);
+        .range(0, _productsPageSize - 1);
 
     final results = await Future.wait([
       merchantsFuture,
       categoriesFuture,
       productsFuture,
     ]);
+
+    final productRows = results[2] as List;
 
     return _SearchResults(
       merchants: (results[0] as List)
@@ -152,12 +163,58 @@ class _SearchScreenState extends State<SearchScreen> {
       categories: (results[1] as List)
           .map((row) => MerchantCategory.fromMap(row as Map<String, dynamic>))
           .toList(),
-      products: (results[2] as List)
+      products: productRows
           .map(
             (row) => ProductSearchResult.fromMap(row as Map<String, dynamic>),
           )
           .toList(),
+      // صفحة كاملة (== حجم الصفحة) تعني على الأرجح وجود صفحة تالية —
+      // نفس المنطق المتّبع في كل pagination بـ Supabase عبر .range، بلا
+      // استعلام count إضافي منفصل غير ضروري لهذا الحجم من البيانات.
+      hasMoreProducts: productRows.length == _productsPageSize,
     );
+  }
+
+  /// يجلب صفحة إضافية واحدة من نتائج المنتجات فقط (الأكبر بين الأقسام
+  /// الثلاثة عادة) عبر .range — لا يعيد تحميل القائمة كاملة، فقط
+  /// يُلحِق العناصر الجديدة بنفس كائن النتائج المحمَّل مسبقًا.
+  Future<void> _loadMoreProducts() async {
+    final results = await _resultsFuture;
+    if (!mounted || results == null || !results.hasMoreProducts) return;
+    if (_isLoadingMoreProducts) return;
+
+    setState(() {
+      _isLoadingMoreProducts = true;
+      _loadMoreProductsError = false;
+    });
+
+    try {
+      final client = Supabase.instance.client;
+      final pattern = '%$_query%';
+      final from = results.products.length;
+      final rows = await client
+          .from('products')
+          .select(
+            'id, name, description, price, product_images(image_url), '
+            'merchants(id, store_name)',
+          )
+          .eq('is_active', true)
+          .ilike('name', pattern)
+          .range(from, from + _productsPageSize - 1);
+
+      final newItems = (rows as List)
+          .map(
+            (row) => ProductSearchResult.fromMap(row as Map<String, dynamic>),
+          )
+          .toList();
+
+      results.products.addAll(newItems);
+      results.hasMoreProducts = newItems.length == _productsPageSize;
+    } catch (_) {
+      if (mounted) setState(() => _loadMoreProductsError = true);
+    } finally {
+      if (mounted) setState(() => _isLoadingMoreProducts = false);
+    }
   }
 
   void _refresh() {
@@ -444,6 +501,15 @@ class _SearchScreenState extends State<SearchScreen> {
                               result: result,
                               onTap: () => _openProduct(result),
                             ),
+                          if (showProducts && data.hasMoreProducts) ...[
+                            const SizedBox(height: AppSpacing.sm),
+                            _LoadMoreControl(
+                              isLoading: _isLoadingMoreProducts,
+                              hasError: _loadMoreProductsError,
+                              onTap: _loadMoreProducts,
+                              l10n: l10n,
+                            ),
+                          ],
                         ],
                       ],
                     ),
@@ -458,12 +524,17 @@ class _SearchScreenState extends State<SearchScreen> {
 class _SearchResults {
   final List<Merchant> merchants;
   final List<MerchantCategory> categories;
+  // غير final عمدًا: _loadMoreProducts يُلحِق بها صفحات إضافية في
+  // مكانها (نفس كائن الـFuture المُخزَّن)، بدل إعادة بناء _SearchResults
+  // كاملة لمجرد تحميل صفحة واحدة إضافية.
   final List<ProductSearchResult> products;
+  bool hasMoreProducts;
 
-  const _SearchResults({
+  _SearchResults({
     required this.merchants,
     required this.categories,
     required this.products,
+    required this.hasMoreProducts,
   });
 }
 
@@ -773,6 +844,70 @@ class _ProductResultTile extends StatelessWidget {
             color: theme.colorScheme.primary,
             fontWeight: FontWeight.bold,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// عنصر "تحميل المزيد" أسفل قائمة المنتجات — 3 حالات: زر عادي، مؤشر
+/// تحميل أثناء جلب الصفحة التالية، أو رسالة خطأ + إعادة محاولة عند
+/// فشل الصفحة الإضافية تحديدًا (لا يؤثر على النتائج المحمَّلة أصلًا).
+class _LoadMoreControl extends StatelessWidget {
+  final bool isLoading;
+  final bool hasError;
+  final VoidCallback onTap;
+  final AppLocalizations l10n;
+
+  const _LoadMoreControl({
+    required this.isLoading,
+    required this.hasError,
+    required this.onTap,
+    required this.l10n,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    if (isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+
+    if (hasError) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        child: Center(
+          child: Column(
+            children: [
+              Text(
+                l10n.loadMoreError,
+                style: TextStyle(color: theme.colorScheme.error),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              OutlinedButton(onPressed: onTap, child: Text(l10n.retry)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: Center(
+        child: OutlinedButton(
+          onPressed: onTap,
+          child: Text(l10n.loadMoreAction),
         ),
       ),
     );

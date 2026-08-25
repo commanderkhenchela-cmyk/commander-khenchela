@@ -259,5 +259,8 @@
   "removeFavoriteTooltip": "Remove from favorites",
   "addFavoriteTooltip": "Add to favorites",
   "storeCountLabel": "{count} store(s)",
-  "unknownInitial": "?"
+  "unknownInitial": "?",
+
+  "loadMoreAction": "Load more",
+  "loadMoreError": "Couldn't load more results. Try again."
 }

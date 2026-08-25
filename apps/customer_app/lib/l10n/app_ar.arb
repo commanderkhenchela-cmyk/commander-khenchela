@@ -655,5 +655,10 @@
     }
   },
   "unknownInitial": "؟",
-  "@unknownInitial": {"description": "حرف بديل لأول حرف من الاسم عند غيابه"}
+  "@unknownInitial": {"description": "حرف بديل لأول حرف من الاسم عند غيابه"},
+
+  "loadMoreAction": "تحميل المزيد",
+  "@loadMoreAction": {"description": "زر تحميل صفحة نتائج إضافية"},
+  "loadMoreError": "تعذّر تحميل المزيد. حاول مرة أخرى.",
+  "@loadMoreError": {"description": "رسالة خطأ عند فشل تحميل صفحة إضافية"}
 }

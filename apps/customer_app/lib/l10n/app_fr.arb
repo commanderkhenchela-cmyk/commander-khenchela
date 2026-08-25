@@ -259,5 +259,8 @@
   "removeFavoriteTooltip": "Retirer des favoris",
   "addFavoriteTooltip": "Ajouter aux favoris",
   "storeCountLabel": "{count} commerce(s)",
-  "unknownInitial": "?"
+  "unknownInitial": "?",
+
+  "loadMoreAction": "Charger plus",
+  "loadMoreError": "Impossible de charger plus de résultats. Réessayez."
 }
