@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/design_tokens.dart';
+
 /// عرض Skeleton بسيط أثناء أول تحميل للصفحة الرئيسية — يعكس شكل الصفحة
 /// القادمة تقريبًا (شريط بحث + بانر + صف شرائح + بطاقات أفقية) بدل
 /// مؤشر تحميل وحيد.
@@ -16,7 +18,7 @@ class HomeLoadingSkeleton extends StatelessWidget {
       margin: margin ?? const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: base,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadius.cardAll,
       ),
     );
 
@@ -52,7 +54,7 @@ class HomeLoadingSkeleton extends StatelessWidget {
               width: 128,
               decoration: BoxDecoration(
                 color: base,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: AppRadius.cardAll,
               ),
             ),
           ),

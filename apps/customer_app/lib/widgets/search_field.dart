@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
+import '../theme/design_tokens.dart';
 
 /// حقل بحث موحَّد الشكل، يُستخدم داخل شاشة تصنيف واحد (بحث محلي ضمن
 /// القائمة المحمَّلة) وداخل شاشة البحث العامة (SearchScreen). قابلية
@@ -40,7 +41,7 @@ class SearchField extends StatelessWidget {
         filled: true,
         fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppRadius.mdAll,
           borderSide: BorderSide.none,
         ),
         contentPadding: const EdgeInsets.symmetric(vertical: 14),

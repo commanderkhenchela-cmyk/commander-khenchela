@@ -7,6 +7,7 @@ import '../services/branding_service.dart';
 import '../services/locale_controller.dart';
 import '../services/push_notification_service.dart';
 import '../services/theme_controller.dart';
+import '../theme/design_tokens.dart';
 import 'support_screen.dart';
 
 const String _prefsPushEnabledKey = 'push_enabled';
@@ -251,7 +252,7 @@ class _SettingsGroup extends StatelessWidget {
         Card(
           margin: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: AppRadius.cardAll,
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(

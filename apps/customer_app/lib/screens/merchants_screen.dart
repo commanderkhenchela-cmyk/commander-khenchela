@@ -587,7 +587,7 @@ class _MerchantsLoadingSkeleton extends StatelessWidget {
         height: 84,
         decoration: BoxDecoration(
           color: base,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: AppRadius.lgAll,
         ),
       ),
     );

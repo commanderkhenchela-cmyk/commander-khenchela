@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/address.dart';
+import '../theme/design_tokens.dart';
 import 'address_form_screen.dart';
 
 /// شاشة "عناويني" — تعرض كل عناوين العميل المحفوظة.
@@ -197,7 +198,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
                                   color: theme.colorScheme.primary.withValues(
                                     alpha: 0.1,
                                   ),
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: AppRadius.pillAll,
                                 ),
                                 child: Text(
                                   l10n.defaultBadge,

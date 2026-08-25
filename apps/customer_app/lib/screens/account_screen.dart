@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
+import '../theme/design_tokens.dart';
 import 'address_list_screen.dart';
 import 'favorites_screen.dart';
 import 'login_screen.dart';
@@ -95,7 +96,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 theme.colorScheme.primary.withValues(alpha: 0.85),
               ],
             ),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: AppRadius.pillAll,
           ),
           child: Row(
             children: [
@@ -264,7 +265,7 @@ class _MenuGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: AppRadius.cardAll),
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [

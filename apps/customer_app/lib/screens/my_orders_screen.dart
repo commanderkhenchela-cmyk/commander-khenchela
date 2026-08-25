@@ -357,7 +357,7 @@ class _OrderCard extends StatelessWidget {
 
     return Card(
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      shape: RoundedRectangleBorder(borderRadius: AppRadius.lgAll),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () async {
@@ -415,7 +415,7 @@ class _OrderCard extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: AppRadius.pillAll,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,

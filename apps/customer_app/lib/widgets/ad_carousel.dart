@@ -7,6 +7,7 @@ import 'package:video_player/video_player.dart';
 import '../l10n/app_localizations.dart';
 import '../models/advertisement.dart';
 import '../services/ad_stats_service.dart';
+import '../theme/design_tokens.dart';
 
 /// لوحة إعلانات فيديو Premium أعلى الصفحة الرئيسية — Carousel أفقي
 /// قابل للسحب، كل صفحة فيديو مستقل. لا تُهيَّأ (initialize) أي فيديو
@@ -72,7 +73,7 @@ class _AdCarouselState extends State<AdCarousel> {
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: AppRadius.pillAll,
                     child: _AdVideoPage(
                       ad: widget.ads[index],
                       isActivePage: index == _currentPage,
@@ -399,10 +400,10 @@ class _CtaButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: AppRadius.pillAll,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: AppRadius.pillAll,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
           child: Text(

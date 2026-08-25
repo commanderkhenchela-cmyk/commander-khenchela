@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'design_tokens.dart';
+
 /// تصميم موحّد للتطبيق: بسيط، واضح، ألوان بتباين جيد، أزرار كبيرة
 /// مناسبة لكل الأعمار (راجع قسم "Customer Experience" في وثيقة المتطلبات).
 ///
@@ -48,7 +50,7 @@ class AppTheme {
           minimumSize: const Size.fromHeight(56), // زر كبير، سهل اللمس
           textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: AppRadius.mdAll,
           ),
         ),
       ),
@@ -110,7 +112,7 @@ class AppTheme {
           minimumSize: const Size.fromHeight(56),
           textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: AppRadius.mdAll,
           ),
         ),
       ),

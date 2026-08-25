@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
+import '../theme/design_tokens.dart';
 import 'pressable_scale.dart';
 
 /// "شريحة" تصنيف صغيرة لقسم أفقي قابل للتمرير في الصفحة الرئيسية — بديل
@@ -29,7 +30,7 @@ class CategoryChip extends StatelessWidget {
       child: PressableScale(
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppRadius.cardAll,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -80,7 +81,7 @@ class SeeAllCategoriesChip extends StatelessWidget {
       child: PressableScale(
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppRadius.cardAll,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/service.dart';
+import '../../theme/design_tokens.dart';
 import '../../utils/service_icon.dart';
 import '../pressable_scale.dart';
 
@@ -68,7 +69,7 @@ class _ServiceTile extends StatelessWidget {
       child: PressableScale(
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: AppRadius.lgAll,
           child: Opacity(
             opacity: opacity,
             child: Column(

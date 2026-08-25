@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
+import '../theme/design_tokens.dart';
 import 'pressable_scale.dart';
 
 /// بطاقة تصنيف واحدة داخل شبكة التصنيفات — Component مستقل وقابل لإعادة
@@ -34,14 +35,14 @@ class CategoryGridTile extends StatelessWidget {
     return PressableScale(
       child: Material(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: AppRadius.pillAll,
         elevation: 0,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: AppRadius.pillAll,
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: AppRadius.pillAll,
               border: Border.all(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.06),
               ),

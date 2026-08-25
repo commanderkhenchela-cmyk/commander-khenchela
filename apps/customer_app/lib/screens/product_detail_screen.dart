@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../l10n/app_localizations.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
+import '../theme/design_tokens.dart';
 
 /// صفحة تفاصيل منتج حقيقية — راجع تقرير الفحص السابق: لم تكن موجودة
 /// إطلاقًا (المنتجات كانت تُعرض فقط داخل قائمة MerchantProductsScreen).
@@ -228,7 +229,7 @@ class _QuantityStepper extends StatelessWidget {
         border: Border.all(
           color: theme.colorScheme.onSurface.withValues(alpha: 0.15),
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppRadius.mdAll,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

@@ -26,12 +26,16 @@ class AppRadius {
 
   static const double sm = 10;
   static const double md = 14;
+  static const double card = 16;
   static const double lg = 18;
+  static const double pill = 20;
   static const double xl = 24;
 
   static BorderRadius get smAll => BorderRadius.circular(sm);
   static BorderRadius get mdAll => BorderRadius.circular(md);
+  static BorderRadius get cardAll => BorderRadius.circular(card);
   static BorderRadius get lgAll => BorderRadius.circular(lg);
+  static BorderRadius get pillAll => BorderRadius.circular(pill);
   static BorderRadius get xlAll => BorderRadius.circular(xl);
 }
 

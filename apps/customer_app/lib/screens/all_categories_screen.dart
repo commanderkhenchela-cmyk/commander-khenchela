@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/merchant_category.dart';
+import '../theme/design_tokens.dart';
 import '../utils/merchant_category_icon.dart';
 import '../widgets/category_grid_tile.dart';
 import 'account_screen.dart';
@@ -418,7 +419,7 @@ class _CategoriesLoadingSkeleton extends StatelessWidget {
       itemBuilder: (context, index) => Container(
         decoration: BoxDecoration(
           color: base,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: AppRadius.pillAll,
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/merchant.dart';
+import '../theme/design_tokens.dart';
 import 'merchant_logo.dart';
 
 /// بطاقة محل مصغّرة لقسم أفقي قابل للتمرير (مميزة / الأكثر طلبًا /
@@ -28,7 +29,7 @@ class MerchantMiniCard extends StatelessWidget {
       width: 128,
       child: Card(
         margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.cardAll),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,

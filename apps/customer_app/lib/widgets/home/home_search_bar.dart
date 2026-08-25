@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../theme/design_tokens.dart';
 
 /// شريط بحث "زخرفي" أعلى الصفحة الرئيسية — لا يحرّر النص هنا مباشرة، بل
 /// ينقل فورًا إلى SearchScreen (نفس نمط تطبيقات التجارة الكبرى: شريط
@@ -17,10 +18,10 @@ class HomeSearchBar extends StatelessWidget {
 
     return Material(
       color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: AppRadius.mdAll,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppRadius.mdAll,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           child: Row(

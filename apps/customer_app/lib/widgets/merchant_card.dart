@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/merchant.dart';
+import '../theme/design_tokens.dart';
 import 'favorite_button.dart';
 import 'merchant_logo.dart';
 import 'open_status_badge.dart';
@@ -28,7 +29,7 @@ class MerchantCard extends StatelessWidget {
 
     return Card(
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      shape: RoundedRectangleBorder(borderRadius: AppRadius.lgAll),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
