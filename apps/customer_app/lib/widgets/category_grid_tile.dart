@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import 'pressable_scale.dart';
 
 /// بطاقة تصنيف واحدة داخل شبكة التصنيفات — Component مستقل وقابل لإعادة
@@ -79,7 +80,9 @@ class CategoryGridTile extends StatelessWidget {
                 // نص متكرر بلا معنى فعلي.
                 const SizedBox(height: 2),
                 Text(
-                  count > 0 ? '$count محل' : ' ',
+                  count > 0
+                      ? AppLocalizations.of(context).storeCountLabel(count)
+                      : ' ',
                   maxLines: 1,
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.45),

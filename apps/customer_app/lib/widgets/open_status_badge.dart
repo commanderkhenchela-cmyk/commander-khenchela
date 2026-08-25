@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
+
 /// شارة صغيرة "مفتوح الآن" / "مغلق الآن" — تُستخدم في بطاقات المحل
 /// (العمودية والأفقية). لا تُعرض أبدًا إلا عندما تُعرَف الحالة فعليًا
 /// (merchant.isOpenNow != null من طرف الشاشة المستدعية)، أبدًا كتخمين.
@@ -23,7 +25,9 @@ class OpenStatusBadge extends StatelessWidget {
         ),
         const SizedBox(width: 4),
         Text(
-          isOpen ? 'مفتوح الآن' : 'مغلق الآن',
+          isOpen
+              ? AppLocalizations.of(context).openNowSectionTitle
+              : AppLocalizations.of(context).closedNowLabel,
           style: theme.textTheme.bodySmall?.copyWith(
             color: color,
             fontWeight: FontWeight.w600,

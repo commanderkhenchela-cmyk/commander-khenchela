@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:customer_app/l10n/app_localizations.dart';
 import 'package:customer_app/widgets/category_grid_tile.dart';
 
 /// اختبار مباشر لإصلاح مشكلة "BOTTOM OVERFLOWED" في بطاقة التصنيف:
@@ -23,6 +24,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('ar'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) => MediaQuery(
           data: MediaQuery.of(context)
               .copyWith(textScaler: TextScaler.linear(textScale)),

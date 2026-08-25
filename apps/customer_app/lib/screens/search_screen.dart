@@ -766,7 +766,9 @@ class _ProductResultTile extends StatelessWidget {
         ),
         subtitle: Text(result.merchantName),
         trailing: Text(
-          '${product.price.toStringAsFixed(0)} دج',
+          AppLocalizations.of(context).currencyAmount(
+            product.price.toStringAsFixed(0),
+          ),
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.primary,
             fontWeight: FontWeight.bold,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/app_localizations.dart';
 import '../screens/login_screen.dart';
 import '../services/auth_service.dart';
 import '../services/favorites_controller.dart';
@@ -35,7 +36,9 @@ class FavoriteButton extends StatelessWidget {
       color: isFavorite
           ? Colors.redAccent
           : theme.colorScheme.onSurface.withValues(alpha: 0.35),
-      tooltip: isFavorite ? 'إزالة من المفضّلة' : 'إضافة للمفضّلة',
+      tooltip: isFavorite
+          ? AppLocalizations.of(context).removeFavoriteTooltip
+          : AppLocalizations.of(context).addFavoriteTooltip,
       visualDensity: VisualDensity.compact,
     );
   }

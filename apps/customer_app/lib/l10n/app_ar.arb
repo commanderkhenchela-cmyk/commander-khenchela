@@ -608,5 +608,52 @@
   "visitAction": "زيارة",
   "@visitAction": {"description": "زر زيارة إعلان أو رابط خارجي"},
   "seeAllAction": "عرض الكل",
-  "@seeAllAction": {"description": "زر/شريحة عرض كل التصنيفات"}
+  "@seeAllAction": {"description": "زر/شريحة عرض كل التصنيفات"},
+
+  "homeLoadError": "تعذّر تحميل الصفحة الرئيسية. تحقق من اتصالك بالإنترنت.",
+  "@homeLoadError": {"description": "رسالة خطأ تحميل الصفحة الرئيسية"},
+  "homeEmptyMessage": "المحتوى قيد الإعداد حاليًا في {location}.\nعد قريبًا!",
+  "@homeEmptyMessage": {
+    "description": "رسالة عدم وجود محتوى حقيقي في الصفحة الرئيسية",
+    "placeholders": {
+      "location": {"type": "String"}
+    }
+  },
+  "allCategoriesTitle": "كل التصنيفات",
+  "@allCategoriesTitle": {"description": "عنوان شاشة كل التصنيفات"},
+  "categoriesLoadError": "تعذّر تحميل التصنيفات. تحقق من اتصالك بالإنترنت.",
+  "@categoriesLoadError": {"description": "رسالة خطأ تحميل التصنيفات"},
+  "noCategoriesMessage": "لا توجد تصنيفات متاحة حاليًا. عد قريبًا!",
+  "@noCategoriesMessage": {"description": "رسالة فراغ التصنيفات"},
+
+  "distanceMeters": "{meters} م",
+  "@distanceMeters": {
+    "description": "مسافة بالأمتار",
+    "placeholders": {
+      "meters": {"type": "String"}
+    }
+  },
+  "distanceKm": "{km} كم",
+  "@distanceKm": {
+    "description": "مسافة بالكيلومترات",
+    "placeholders": {
+      "km": {"type": "String"}
+    }
+  },
+
+  "closedNowLabel": "مغلق الآن",
+  "@closedNowLabel": {"description": "شارة محل مغلق حاليًا"},
+  "removeFavoriteTooltip": "إزالة من المفضّلة",
+  "@removeFavoriteTooltip": {"description": "تلميح زر إزالة من المفضّلة"},
+  "addFavoriteTooltip": "إضافة للمفضّلة",
+  "@addFavoriteTooltip": {"description": "تلميح زر إضافة للمفضّلة"},
+  "storeCountLabel": "{count} محل",
+  "@storeCountLabel": {
+    "description": "عدد المحلات ضمن تصنيف",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "unknownInitial": "؟",
+  "@unknownInitial": {"description": "حرف بديل لأول حرف من الاسم عند غيابه"}
 }

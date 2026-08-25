@@ -244,5 +244,20 @@
   "saveAddressAction": "Save address",
 
   "visitAction": "Visit",
-  "seeAllAction": "See all"
+  "seeAllAction": "See all",
+
+  "homeLoadError": "Couldn't load the home page. Check your internet connection.",
+  "homeEmptyMessage": "Content is being set up in {location} right now.\nCheck back soon!",
+  "allCategoriesTitle": "All categories",
+  "categoriesLoadError": "Couldn't load the categories. Check your internet connection.",
+  "noCategoriesMessage": "No categories available right now. Check back soon!",
+
+  "distanceMeters": "{meters} m",
+  "distanceKm": "{km} km",
+
+  "closedNowLabel": "Closed now",
+  "removeFavoriteTooltip": "Remove from favorites",
+  "addFavoriteTooltip": "Add to favorites",
+  "storeCountLabel": "{count} store(s)",
+  "unknownInitial": "?"
 }

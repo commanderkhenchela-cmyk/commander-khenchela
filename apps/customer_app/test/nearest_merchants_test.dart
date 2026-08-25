@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geolocator/geolocator.dart';
 
+import 'package:customer_app/l10n/app_localizations_ar.dart';
 import 'package:customer_app/models/merchant.dart';
 import 'package:customer_app/utils/nearest_merchants.dart';
 
@@ -65,21 +66,23 @@ void main() {
   });
 
   group('distanceLabelFor', () {
+    final l10n = AppLocalizationsAr();
+
     test('null عند عدم توفّر موقع الجهاز', () {
       final merchant = _merchant('a', lat: 35.43, lon: 7.14);
-      expect(distanceLabelFor(merchant, null), isNull);
+      expect(distanceLabelFor(merchant, null, l10n), isNull);
     });
 
     test('null عندما لا يحفظ المحل موقعه', () {
       final device = _position(35.4333, 7.1417);
       final merchant = _merchant('a');
-      expect(distanceLabelFor(merchant, device), isNull);
+      expect(distanceLabelFor(merchant, device, l10n), isNull);
     });
 
     test('نص مسافة جاهز للعرض عند توفّر الموقعين معًا', () {
       final device = _position(35.4333, 7.1417);
       final merchant = _merchant('a', lat: 35.4333, lon: 7.1417);
-      expect(distanceLabelFor(merchant, device), '0 م');
+      expect(distanceLabelFor(merchant, device, l10n), '0 م');
     });
   });
 }

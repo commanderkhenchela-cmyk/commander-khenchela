@@ -76,7 +76,9 @@ class _AccountScreenState extends State<AccountScreen> {
         AuthService.currentUser?.userMetadata?['full_name'] as String? ?? '';
     final phone =
         AuthService.currentUser?.userMetadata?['phone'] as String? ?? '';
-    final initial = fullName.isNotEmpty ? fullName.substring(0, 1) : '؟';
+    final initial = fullName.isNotEmpty
+        ? fullName.substring(0, 1)
+        : l10n.unknownInitial;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),

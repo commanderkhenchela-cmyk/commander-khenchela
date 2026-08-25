@@ -334,6 +334,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 12,
@@ -355,7 +357,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none_rounded),
-            tooltip: 'إشعاراتي',
+            tooltip: l10n.notificationsMenuLabel,
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const NotificationsScreen()),
@@ -364,7 +366,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.person_outline_rounded),
-            tooltip: 'حسابي',
+            tooltip: l10n.accountTitle,
             onPressed: () {
               Navigator.of(
                 context,
@@ -386,9 +388,8 @@ class _HomeScreenState extends State<HomeScreen> {
             if (snapshot.hasError) {
               return HomeStateMessage(
                 icon: Icons.wifi_off_rounded,
-                message:
-                    'تعذّر تحميل الصفحة الرئيسية. تحقق من اتصالك بالإنترنت.',
-                actionLabel: 'إعادة المحاولة',
+                message: l10n.homeLoadError,
+                actionLabel: l10n.retry,
                 onAction: _refresh,
               );
             }
@@ -423,9 +424,8 @@ class _HomeScreenState extends State<HomeScreen> {
             if (!hasAnyContent) {
               return HomeStateMessage(
                 icon: Icons.storefront_outlined,
-                message:
-                    'المحتوى قيد الإعداد حاليًا في ${widget.locationName}.\nعد قريبًا!',
-                actionLabel: 'إعادة المحاولة',
+                message: l10n.homeEmptyMessage(widget.locationName),
+                actionLabel: l10n.retry,
                 onAction: _refresh,
               );
             }

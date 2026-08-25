@@ -1,5 +1,6 @@
 import 'package:geolocator/geolocator.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/merchant.dart';
 import 'distance.dart';
 
@@ -36,7 +37,11 @@ List<Merchant> nearestMerchants(
 
 /// نص المسافة الجاهز للعرض بجانب محل معيَّن، أو null إن لم تتوفّر كلتا
 /// الإحداثيتين (موقع الجهاز وموقع المحل معًا).
-String? distanceLabelFor(Merchant merchant, Position? position) {
+String? distanceLabelFor(
+  Merchant merchant,
+  Position? position,
+  AppLocalizations l10n,
+) {
   if (position == null || !merchant.hasLocation) return null;
 
   return formatDistance(
@@ -46,5 +51,6 @@ String? distanceLabelFor(Merchant merchant, Position? position) {
       merchant.latitude!,
       merchant.longitude!,
     ),
+    l10n,
   );
 }

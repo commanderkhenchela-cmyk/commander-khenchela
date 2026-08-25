@@ -244,5 +244,20 @@
   "saveAddressAction": "Enregistrer l'adresse",
 
   "visitAction": "Visiter",
-  "seeAllAction": "Tout voir"
+  "seeAllAction": "Tout voir",
+
+  "homeLoadError": "Impossible de charger la page d'accueil. Vérifiez votre connexion Internet.",
+  "homeEmptyMessage": "Le contenu est en préparation à {location}.\nRevenez bientôt !",
+  "allCategoriesTitle": "Toutes les catégories",
+  "categoriesLoadError": "Impossible de charger les catégories. Vérifiez votre connexion Internet.",
+  "noCategoriesMessage": "Aucune catégorie disponible pour le moment. Revenez bientôt !",
+
+  "distanceMeters": "{meters} m",
+  "distanceKm": "{km} km",
+
+  "closedNowLabel": "Fermé maintenant",
+  "removeFavoriteTooltip": "Retirer des favoris",
+  "addFavoriteTooltip": "Ajouter aux favoris",
+  "storeCountLabel": "{count} commerce(s)",
+  "unknownInitial": "?"
 }

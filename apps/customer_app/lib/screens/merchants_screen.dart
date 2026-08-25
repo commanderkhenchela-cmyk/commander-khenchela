@@ -332,6 +332,7 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
                           distanceLabel: distanceLabelFor(
                             merchant,
                             _devicePosition,
+                            l10n,
                           ),
                           onTap: () => openMerchant(merchant),
                         );

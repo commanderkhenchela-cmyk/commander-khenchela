@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import '../l10n/app_localizations.dart';
+
 /// صيغة Haversine لحساب المسافة التقريبية بالكيلومترات بين نقطتَي إحداثيات
 /// (خط عرض/خط طول) على سطح الأرض. دقّة كافية جدًا لغرض "الأقرب إليك"
 /// داخل مدينة واحدة — لا حاجة لأي مكتبة خرائط خارجية لمجرد حساب مسافة.
@@ -23,11 +25,14 @@ double haversineKm(double lat1, double lon1, double lat2, double lon2) {
 double _degToRad(double deg) => deg * pi / 180;
 
 /// تنسيق مسافة للعرض في الواجهة — أمتار تحت الكيلومتر الواحد، وإلا
-/// كيلومترات برقم عشري واحد.
-String formatDistance(double km) {
+/// كيلومترات برقم عشري واحد. يأخذ [AppLocalizations] بدل الاعتماد على
+/// BuildContext مباشرة (نفس نمط CustomerOrder.statusLabel) — يبقي هذا
+/// الملف Dart خالص بلا اعتماد على شجرة الـWidgets، وقابلًا للاختبار
+/// بوحدات دون Widget pump.
+String formatDistance(double km, AppLocalizations l10n) {
   if (km < 1) {
     final meters = (km * 1000).round();
-    return '$meters م';
+    return l10n.distanceMeters('$meters');
   }
-  return '${km.toStringAsFixed(1)} كم';
+  return l10n.distanceKm(km.toStringAsFixed(1));
 }

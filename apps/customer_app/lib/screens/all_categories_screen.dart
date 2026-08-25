@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/merchant_category.dart';
 import '../utils/merchant_category_icon.dart';
 import '../widgets/category_grid_tile.dart';
@@ -156,18 +157,19 @@ class _AllCategoriesScreenState extends State<AllCategoriesScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.title ?? 'كل التصنيفات',
+          widget.title ?? l10n.allCategoriesTitle,
           style: const TextStyle(fontWeight: FontWeight.w700),
         ),
         centerTitle: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.person_outline_rounded),
-            tooltip: 'حسابي',
+            tooltip: l10n.accountTitle,
             onPressed: () {
               Navigator.of(
                 context,
@@ -186,8 +188,8 @@ class _AllCategoriesScreenState extends State<AllCategoriesScreen>
           if (snapshot.hasError) {
             return _StateMessage(
               icon: Icons.wifi_off_rounded,
-              message: 'تعذّر تحميل التصنيفات. تحقق من اتصالك بالإنترنت.',
-              actionLabel: 'إعادة المحاولة',
+              message: l10n.categoriesLoadError,
+              actionLabel: l10n.retry,
               onAction: _refresh,
             );
           }
@@ -195,9 +197,9 @@ class _AllCategoriesScreenState extends State<AllCategoriesScreen>
           final data = snapshot.data!;
 
           if (data.categories.isEmpty) {
-            return const _StateMessage(
+            return _StateMessage(
               icon: Icons.category_outlined,
-              message: 'لا توجد تصنيفات متاحة حاليًا. عد قريبًا!',
+              message: l10n.noCategoriesMessage,
             );
           }
 
@@ -239,7 +241,7 @@ class _AllCategoriesScreenState extends State<AllCategoriesScreen>
                                 ? CategoryGridTile(
                                     icon: Icons.apps_rounded,
                                     color: theme.colorScheme.primary,
-                                    label: 'كل المحلات',
+                                    label: l10n.allMerchantsSectionLabel,
                                     count: data.totalMerchants,
                                     onTap: () => _openMerchants(),
                                   )

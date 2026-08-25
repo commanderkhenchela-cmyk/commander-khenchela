@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
+
 /// حقل بحث موحَّد الشكل، يُستخدم داخل شاشة تصنيف واحد (بحث محلي ضمن
 /// القائمة المحمَّلة) وداخل شاشة البحث العامة (SearchScreen). قابلية
 /// إعادة استخدام بدل تكرار نفس الـ Widget الخاص في أكثر من شاشة.
 class SearchField extends StatelessWidget {
   final TextEditingController controller;
-  final String hintText;
+  final String? hintText;
   final bool autofocus;
 
   const SearchField({
     super.key,
     required this.controller,
-    this.hintText = 'ابحث عن محل...',
+    this.hintText,
     this.autofocus = false,
   });
 
@@ -24,7 +26,7 @@ class SearchField extends StatelessWidget {
       autofocus: autofocus,
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
-        hintText: hintText,
+        hintText: hintText ?? AppLocalizations.of(context).searchHint,
         prefixIcon: const Icon(Icons.search_rounded),
         suffixIcon: ValueListenableBuilder<TextEditingValue>(
           valueListenable: controller,

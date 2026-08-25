@@ -1,8 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:customer_app/l10n/app_localizations_ar.dart';
 import 'package:customer_app/utils/distance.dart';
 
 void main() {
+  final l10n = AppLocalizationsAr();
+
   group('haversineKm', () {
     test('نفس النقطة → مسافة صفر', () {
       expect(haversineKm(35.4333, 7.1417, 35.4333, 7.1417), closeTo(0, 0.001));
@@ -17,15 +20,15 @@ void main() {
 
   group('formatDistance', () {
     test('أقل من كيلومتر واحد → أمتار', () {
-      expect(formatDistance(0.35), '350 م');
+      expect(formatDistance(0.35, l10n), '350 م');
     });
 
     test('كيلومتر واحد أو أكثر → كم برقم عشري واحد', () {
-      expect(formatDistance(2.34), '2.3 كم');
+      expect(formatDistance(2.34, l10n), '2.3 كم');
     });
 
     test('حافة الكيلومتر الواحد بالضبط', () {
-      expect(formatDistance(1.0), '1.0 كم');
+      expect(formatDistance(1.0, l10n), '1.0 كم');
     });
   });
 }
