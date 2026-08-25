@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 
 /// شاشة إنشاء حساب جديد — الاسم + رقم الهاتف + كلمة سر فقط.
@@ -48,24 +49,29 @@ class _SignupScreenState extends State<SignupScreen> {
     } on AuthException catch (e) {
       setState(() => _errorMessage = _friendlyError(e.message));
     } catch (e) {
-      setState(() => _errorMessage = 'حدث خطأ غير متوقع. حاول مرة أخرى.');
+      setState(
+        () => _errorMessage = AppLocalizations.of(context).unexpectedError,
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   String _friendlyError(String message) {
+    final l10n = AppLocalizations.of(context);
     if (message.contains('already registered') ||
         message.contains('User already registered')) {
-      return 'رقم الهاتف هذا مسجَّل بالفعل. جرّب تسجيل الدخول بدلاً من ذلك.';
+      return l10n.phoneAlreadyRegisteredError;
     }
-    return 'تعذّر إنشاء الحساب. تحقق من البيانات وحاول مرة أخرى.';
+    return l10n.signupGenericError;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('إنشاء حساب جديد')),
+      appBar: AppBar(title: Text(l10n.signupTitle)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -76,11 +82,11 @@ class _SignupScreenState extends State<SignupScreen> {
               children: [
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'الاسم الكامل'),
+                  decoration: InputDecoration(labelText: l10n.fullNameLabel),
                   textInputAction: TextInputAction.next,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'أدخل اسمك';
+                      return l10n.fullNameRequiredError;
                     }
                     return null;
                   },
@@ -88,9 +94,9 @@ class _SignupScreenState extends State<SignupScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'رقم الهاتف',
-                    hintText: '0555xxxxxx',
+                  decoration: InputDecoration(
+                    labelText: l10n.phoneLabel,
+                    hintText: l10n.phoneHint,
                   ),
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.next,
@@ -98,7 +104,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     final phone = value?.trim() ?? '';
                     final pattern = RegExp(r'^(\+213|0)(5|6|7)[0-9]{8}$');
                     if (!pattern.hasMatch(phone)) {
-                      return 'أدخل رقم هاتف جزائري صحيح (مثال: 0555xxxxxx)';
+                      return l10n.invalidAlgerianPhoneError;
                     }
                     return null;
                   },
@@ -106,11 +112,11 @@ class _SignupScreenState extends State<SignupScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(labelText: 'كلمة السر'),
+                  decoration: InputDecoration(labelText: l10n.passwordLabel),
                   obscureText: true,
                   validator: (value) {
                     if (value == null || value.length < 6) {
-                      return 'كلمة السر يجب أن تكون 6 أحرف على الأقل';
+                      return l10n.passwordMinLengthError;
                     }
                     return null;
                   },
@@ -137,7 +143,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('إنشاء حساب'),
+                      : Text(l10n.createAccountAction),
                 ),
               ],
             ),

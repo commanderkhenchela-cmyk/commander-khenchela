@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/notification_item.dart';
 
 /// شاشة "إشعاراتي" — تعرض إشعارات المستخدم الحالي فقط (RLS تحميها تلقائيًا).
@@ -87,9 +88,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('إشعاراتي')),
+      appBar: AppBar(title: Text(l10n.notificationsMenuLabel)),
       body: FutureBuilder<List<NotificationItem>>(
         future: _notificationsFuture,
         builder: (context, snapshot) {
@@ -110,14 +112,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       color: Colors.black45,
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'تعذّر تحميل الإشعارات. تحقق من اتصالك بالإنترنت.',
+                    Text(
+                      l10n.notificationsLoadError,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _refresh,
-                      child: const Text('إعادة المحاولة'),
+                      child: Text(l10n.retry),
                     ),
                   ],
                 ),
@@ -134,12 +136,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 await _notificationsFuture;
               },
               child: ListView(
-                children: const [
-                  SizedBox(height: 80),
+                children: [
+                  const SizedBox(height: 80),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Text(
-                      'لا توجد إشعارات بعد.',
+                      l10n.noNotificationsMessage,
                       textAlign: TextAlign.center,
                     ),
                   ),

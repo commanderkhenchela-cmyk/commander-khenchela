@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/contact_service.dart';
 
 /// شاشة "المساعدة" — أسئلة شائعة + طرق تواصل مباشرة، بدون الحاجة
@@ -31,11 +32,12 @@ class SupportScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final facebook = ContactService.facebookUrl;
     final instagram = ContactService.instagramUrl;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('المساعدة')),
+      appBar: AppBar(title: Text(l10n.helpMenuLabel)),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -47,7 +49,7 @@ class SupportScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'تواصل معنا',
+                      l10n.contactUsTitle,
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -55,34 +57,34 @@ class SupportScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     _ContactRow(
                       icon: Icons.chat_bubble_outline,
-                      label: 'واتساب',
+                      label: l10n.whatsappLabel,
                       value: ContactService.displayPhone,
                       onTap: _openWhatsapp,
                     ),
                     _ContactRow(
                       icon: Icons.call_outlined,
-                      label: 'اتصال',
+                      label: l10n.callLabel,
                       value: ContactService.displayPhone,
                       onTap: _call,
                     ),
                     _ContactRow(
                       icon: Icons.email_outlined,
-                      label: 'البريد الإلكتروني',
+                      label: l10n.emailLabel,
                       value: ContactService.supportEmail,
                       onTap: _email,
                     ),
                     if (facebook != null && facebook.isNotEmpty)
                       _ContactRow(
                         icon: Icons.facebook_outlined,
-                        label: 'فيسبوك',
-                        value: 'صفحتنا على فيسبوك',
+                        label: l10n.facebookLabel,
+                        value: l10n.facebookPageValue,
                         onTap: () => _openLink(facebook),
                       ),
                     if (instagram != null && instagram.isNotEmpty)
                       _ContactRow(
                         icon: Icons.camera_alt_outlined,
-                        label: 'إنستغرام',
-                        value: 'حسابنا على إنستغرام',
+                        label: l10n.instagramLabel,
+                        value: l10n.instagramAccountValue,
                         onTap: () => _openLink(instagram),
                       ),
                   ],
@@ -91,30 +93,27 @@ class SupportScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'أسئلة شائعة',
+              l10n.faqTitle,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
-            const _FaqTile(
-              question: 'كيف أتابع حالة طلبي؟',
-              answer: 'من "حسابي" ← "طلباتي"، اضغط على أي طلب لمتابعة حالته لحظة بلحظة.',
+            _FaqTile(
+              question: l10n.faqTrackOrderQuestion,
+              answer: l10n.faqTrackOrderAnswer,
             ),
-            const _FaqTile(
-              question: 'هل يمكنني إلغاء طلبي؟',
-              answer:
-                  'نعم، طالما التاجر لم يوافق على الطلب بعد (الحالة "قيد المراجعة"). '
-                  'بعد الموافقة، يُرجى التواصل معنا مباشرة.',
+            _FaqTile(
+              question: l10n.faqCancelOrderQuestion,
+              answer: l10n.faqCancelOrderAnswer,
             ),
-            const _FaqTile(
-              question: 'كيف أدفع ثمن طلبي؟',
-              answer: 'الدفع عند الاستلام فقط (نقدًا للمندوب عند وصول الطلب).',
+            _FaqTile(
+              question: l10n.faqPaymentQuestion,
+              answer: l10n.faqPaymentAnswer,
             ),
-            const _FaqTile(
-              question: 'هل تخدمون خارج ولاية خنشلة؟',
-              answer:
-                  'حاليًا خدمتنا متاحة فقط داخل ولاية خنشلة، وسنتوسع قريبًا.',
+            _FaqTile(
+              question: l10n.faqCoverageQuestion,
+              answer: l10n.faqCoverageAnswer,
             ),
           ],
         ),

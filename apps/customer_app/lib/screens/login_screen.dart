@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import 'signup_screen.dart';
 
@@ -44,9 +45,13 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       Navigator.of(context).pop();
     } on AuthException {
-      setState(() => _errorMessage = 'رقم الهاتف أو كلمة السر غير صحيحة.');
+      setState(
+        () => _errorMessage = AppLocalizations.of(context).invalidCredentialsError,
+      );
     } catch (e) {
-      setState(() => _errorMessage = 'حدث خطأ غير متوقع. حاول مرة أخرى.');
+      setState(
+        () => _errorMessage = AppLocalizations.of(context).unexpectedError,
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -54,8 +59,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('تسجيل الدخول')),
+      appBar: AppBar(title: Text(l10n.loginStepTitle)),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -66,15 +73,15 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 TextFormField(
                   controller: _phoneController,
-                  decoration: const InputDecoration(
-                    labelText: 'رقم الهاتف',
-                    hintText: '0555xxxxxx',
+                  decoration: InputDecoration(
+                    labelText: l10n.phoneLabel,
+                    hintText: l10n.phoneHint,
                   ),
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.next,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'أدخل رقم هاتفك';
+                      return l10n.phoneRequiredError;
                     }
                     return null;
                   },
@@ -82,11 +89,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(labelText: 'كلمة السر'),
+                  decoration: InputDecoration(labelText: l10n.passwordLabel),
                   obscureText: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'أدخل كلمة السر';
+                      return l10n.passwordRequiredError;
                     }
                     return null;
                   },
@@ -113,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('دخول'),
+                      : Text(l10n.loginAction),
                 ),
                 const SizedBox(height: 12),
                 TextButton(
@@ -122,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       MaterialPageRoute(builder: (_) => const SignupScreen()),
                     );
                   },
-                  child: const Text('ليس لديك حساب؟ أنشئ حسابًا جديدًا'),
+                  child: Text(l10n.noAccountSignupPrompt),
                 ),
               ],
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import 'my_orders_screen.dart';
 
 /// شاشة تأكيد نجاح إرسال الطلب — رسالة نجاح واضحة، بدون تعقيد.
@@ -11,6 +12,7 @@ class OrderConfirmationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final shortId = orderId.substring(0, 8).toUpperCase();
 
     return Scaffold(
@@ -27,20 +29,20 @@ class OrderConfirmationScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                'تم إرسال طلبك بنجاح! ✅',
+                l10n.orderSuccessTitle,
                 style: theme.textTheme.headlineMedium,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               Text(
-                'رقم الطلب: $shortId',
+                l10n.orderNumberLabel(shortId),
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: Colors.black54,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'سيراجع المحل طلبك قريبًا، وستصلك التحديثات هنا.',
+                l10n.orderReviewSoonMessage,
                 style: theme.textTheme.bodyLarge,
                 textAlign: TextAlign.center,
               ),
@@ -54,7 +56,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                       (route) => route.isFirst,
                     );
                   },
-                  child: const Text('عرض طلباتي'),
+                  child: Text(l10n.viewMyOrdersAction),
                 ),
               ),
               const SizedBox(height: 12),
@@ -62,7 +64,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.of(context).popUntil((route) => route.isFirst);
                 },
-                child: const Text('العودة للرئيسية'),
+                child: Text(l10n.backToHomeAction),
               ),
             ],
           ),
