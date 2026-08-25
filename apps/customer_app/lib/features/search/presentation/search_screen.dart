@@ -12,6 +12,7 @@ import '../../../screens/merchants_screen.dart';
 import '../../../screens/product_detail_screen.dart';
 import '../../../theme/design_tokens.dart';
 import '../../../utils/merchant_category_icon.dart';
+import '../../../utils/pagination.dart';
 import '../../../widgets/merchant_card.dart';
 import '../../../widgets/search_field.dart';
 import '../data/recent_searches_service.dart';
@@ -171,7 +172,10 @@ class _SearchScreenState extends State<SearchScreen> {
       // صفحة كاملة (== حجم الصفحة) تعني على الأرجح وجود صفحة تالية —
       // نفس المنطق المتّبع في كل pagination بـ Supabase عبر .range، بلا
       // استعلام count إضافي منفصل غير ضروري لهذا الحجم من البيانات.
-      hasMoreProducts: productRows.length == _productsPageSize,
+      hasMoreProducts: hasMorePages(
+        fetchedCount: productRows.length,
+        pageSize: _productsPageSize,
+      ),
     );
   }
 
@@ -209,7 +213,10 @@ class _SearchScreenState extends State<SearchScreen> {
           .toList();
 
       results.products.addAll(newItems);
-      results.hasMoreProducts = newItems.length == _productsPageSize;
+      results.hasMoreProducts = hasMorePages(
+        fetchedCount: newItems.length,
+        pageSize: _productsPageSize,
+      );
     } catch (_) {
       if (mounted) setState(() => _loadMoreProductsError = true);
     } finally {

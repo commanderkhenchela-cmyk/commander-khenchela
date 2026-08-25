@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../l10n/app_localizations.dart';
 import '../models/order.dart';
 import '../theme/design_tokens.dart';
+import '../utils/pagination.dart';
 import 'order_detail_screen.dart';
 
 const _finalStatuses = {'delivered', 'cancelled', 'rejected'};
@@ -141,7 +142,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
       if (!mounted) return;
       setState(() {
         _past.addAll(items);
-        _hasMorePast = items.length == _pastPageSize;
+        _hasMorePast = hasMorePages(
+          fetchedCount: items.length,
+          pageSize: _pastPageSize,
+        );
         _isInitialLoadingPast = false;
       });
     } catch (e) {

@@ -8,6 +8,7 @@ import '../l10n/app_localizations.dart';
 import '../models/merchant.dart';
 import '../services/location_service.dart';
 import '../theme/design_tokens.dart';
+import '../utils/pagination.dart';
 import '../utils/nearest_merchants.dart';
 import '../widgets/merchant_card.dart';
 import '../widgets/merchant_smart_section.dart';
@@ -154,7 +155,7 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
       if (!mounted) return;
       setState(() {
         _visible.addAll(items);
-        _hasMore = items.length == _pageSize;
+        _hasMore = hasMorePages(fetchedCount: items.length, pageSize: _pageSize);
         _isInitialLoading = false;
       });
     } catch (e) {
