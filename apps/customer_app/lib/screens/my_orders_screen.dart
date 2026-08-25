@@ -3,13 +3,22 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/order.dart';
+import '../theme/design_tokens.dart';
 import 'order_detail_screen.dart';
 
 const _finalStatuses = {'delivered', 'cancelled', 'rejected'};
+const _orderColumns =
+    'id, status, subtotal, delivery_fee, total_amount, created_at, merchants(store_name)';
 
 /// شاشة "طلباتي" — قائمة طلبات العميل الحالي فقط (تحميها RLS تلقائيًا،
 /// لا يمكن لأي عميل رؤية طلبات عميل آخر مهما حدث في التطبيق نفسه).
-/// مقسَّمة لتبويبين: طلبات نشطة (لم تصل لحالة نهائية بعد) وطلبات سابقة.
+/// مقسَّمة لتبويبين بمنطق مختلف عمدًا:
+///
+/// - "الحالية": طلبات لم تصل لحالة نهائية بعد — عدد صغير طبيعيًا (لا
+///   يملك عميل مئات الطلبات النشطة في نفس اللحظة)، فتُجلَب كاملة دفعة
+///   واحدة، بلا حاجة لأي Pagination فعلي.
+/// - "السابقة": تكبر بلا حدّ نظري مع الوقت (كل طلب مكتمل/ملغى يُضاف
+///   إليها للأبد) — هذه فعليًا المُرقَّمة صفحيًا (راجع _loadPastPage).
 class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({super.key});
 
@@ -18,13 +27,24 @@ class MyOrdersScreen extends StatefulWidget {
 }
 
 class _MyOrdersScreenState extends State<MyOrdersScreen> {
-  late Future<List<CustomerOrder>> _ordersFuture;
+  static const _pastPageSize = 15;
+
+  Future<List<CustomerOrder>>? _activeFuture;
+
+  final List<CustomerOrder> _past = [];
+  bool _hasMorePast = true;
+  bool _isInitialLoadingPast = true;
+  bool _isLoadingMorePast = false;
+  bool _loadMorePastError = false;
+  Object? _initialPastError;
+
   RealtimeChannel? _channel;
 
   @override
   void initState() {
     super.initState();
-    _ordersFuture = _fetchOrders();
+    _activeFuture = _fetchActive();
+    _loadPastPage();
     _subscribeToChanges();
   }
 
@@ -37,7 +57,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
   }
 
   /// أي تغيير حالة على طلبات هذا العميل (تأكيد التاجر، تسليم، إلخ) يحدّث
-  /// القائمة فورًا بدل انتظار فتح الشاشة يدويًا — نفس فلسفة شاشة الإشعارات.
+  /// القائمتين فورًا بدل انتظار فتح الشاشة يدويًا — نفس فلسفة شاشة
+  /// الإشعارات. القائمة "السابقة" تُعاد للصفحة الأولى عند أي تحديث بدل
+  /// محاولة دمج التغيير داخل صفحات مُحمَّلة مسبقًا (أبسط وأصحّ من حساب
+  /// أين بالضبط يجب إدراج/نقل صفّ ضمن ترقيم صفحي قائم، وحدث نادر أصلًا).
   void _subscribeToChanges() {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) return;
@@ -54,18 +77,19 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             value: userId,
           ),
           callback: (_) {
-            if (mounted) _refresh();
+            if (!mounted) return;
+            setState(() => _activeFuture = _fetchActive());
+            _restartPast();
           },
         )
         .subscribe();
   }
 
-  Future<List<CustomerOrder>> _fetchOrders() async {
+  Future<List<CustomerOrder>> _fetchActive() async {
     final data = await Supabase.instance.client
         .from('orders')
-        .select(
-          'id, status, subtotal, delivery_fee, total_amount, created_at, merchants(store_name)',
-        )
+        .select(_orderColumns)
+        .not('status', 'in', '(${_finalStatuses.join(',')})')
         .order('created_at', ascending: false);
 
     return (data as List)
@@ -73,7 +97,67 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
         .toList();
   }
 
-  void _refresh() => setState(() => _ordersFuture = _fetchOrders());
+  void _refreshActive() => setState(() => _activeFuture = _fetchActive());
+
+  /// يبدأ ترقيم "السابقة" من الصفحة الأولى من جديد (سحب-للتحديث، إعادة
+  /// محاولة، أو حدث Realtime).
+  void _restartPast() {
+    setState(() {
+      _past.clear();
+      _hasMorePast = true;
+      _isInitialLoadingPast = true;
+      _loadMorePastError = false;
+      _initialPastError = null;
+    });
+    _loadPastPage();
+  }
+
+  /// يجلب صفحة واحدة من الطلبات السابقة — Pagination حقيقية عبر
+  /// .range()، بترتيب ثابت (created_at ثم id كترتيب ثانوي deterministic
+  /// يمنع أي تكرار أو فقدان طلب لو تساوى وقتا إنشاء طلبين). لا تُعاد
+  /// الصفحات السابقة أبدًا، فقط تُلحَق صفحة جديدة.
+  Future<void> _loadPastPage() async {
+    if (_isLoadingMorePast || !_hasMorePast) return;
+
+    setState(() {
+      _isLoadingMorePast = true;
+      _loadMorePastError = false;
+    });
+
+    try {
+      final from = _past.length;
+      final data = await Supabase.instance.client
+          .from('orders')
+          .select(_orderColumns)
+          .inFilter('status', _finalStatuses.toList())
+          .order('created_at', ascending: false)
+          .order('id', ascending: false)
+          .range(from, from + _pastPageSize - 1);
+
+      final items = (data as List)
+          .map((row) => CustomerOrder.fromMap(row as Map<String, dynamic>))
+          .toList();
+
+      if (!mounted) return;
+      setState(() {
+        _past.addAll(items);
+        _hasMorePast = items.length == _pastPageSize;
+        _isInitialLoadingPast = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        if (_past.isEmpty) {
+          _initialPastError = e;
+          _isInitialLoadingPast = false;
+        } else {
+          _loadMorePastError = true;
+        }
+      });
+    } finally {
+      if (mounted) setState(() => _isLoadingMorePast = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,41 +175,81 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             ],
           ),
         ),
-        body: FutureBuilder<List<CustomerOrder>>(
-          future: _ordersFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (snapshot.hasError) {
-              return _ErrorState(onRetry: _refresh);
-            }
-
-            final orders = snapshot.data ?? [];
-            final active = orders
-                .where((o) => !_finalStatuses.contains(o.status))
-                .toList();
-            final past = orders
-                .where((o) => _finalStatuses.contains(o.status))
-                .toList();
-
-            return TabBarView(
-              children: [
-                _OrdersList(
-                  orders: active,
+        body: TabBarView(
+          children: [
+            FutureBuilder<List<CustomerOrder>>(
+              future: _activeFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return _ErrorState(onRetry: _refreshActive);
+                }
+                return _OrdersList(
+                  orders: snapshot.data ?? [],
                   emptyMessage: l10n.noActiveOrdersMessage,
-                  onRefresh: _refresh,
-                ),
-                _OrdersList(
-                  orders: past,
-                  emptyMessage: l10n.noPastOrdersMessage,
-                  onRefresh: _refresh,
-                ),
-              ],
-            );
-          },
+                  onRefresh: () async => _refreshActive(),
+                  onReturned: _refreshActive,
+                );
+              },
+            ),
+            _buildPastTab(l10n),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPastTab(AppLocalizations l10n) {
+    if (_isInitialLoadingPast) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_initialPastError != null) {
+      return _ErrorState(onRetry: _restartPast);
+    }
+
+    if (_past.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: () async => _restartPast(),
+        child: ListView(
+          children: [
+            const SizedBox(height: 80),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                l10n.noPastOrdersMessage,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final hasMore = _hasMorePast;
+
+    return RefreshIndicator(
+      onRefresh: () async => _restartPast(),
+      child: ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: _past.length + (hasMore ? 1 : 0),
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          if (index == _past.length) {
+            return Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
+              child: _LoadMoreFooter(
+                isLoading: _isLoadingMorePast,
+                hasError: _loadMorePastError,
+                onTap: _loadPastPage,
+                l10n: l10n,
+              ),
+            );
+          }
+          return _OrderCard(order: _past[index], onReturned: _restartPast);
+        },
       ),
     );
   }
@@ -134,19 +258,21 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
 class _OrdersList extends StatelessWidget {
   final List<CustomerOrder> orders;
   final String emptyMessage;
-  final VoidCallback onRefresh;
+  final Future<void> Function() onRefresh;
+  final VoidCallback onReturned;
 
   const _OrdersList({
     required this.orders,
     required this.emptyMessage,
     required this.onRefresh,
+    required this.onReturned,
   });
 
   @override
   Widget build(BuildContext context) {
     if (orders.isEmpty) {
       return RefreshIndicator(
-        onRefresh: () async => onRefresh(),
+        onRefresh: onRefresh,
         child: ListView(
           children: [
             const SizedBox(height: 80),
@@ -160,13 +286,13 @@ class _OrdersList extends StatelessWidget {
     }
 
     return RefreshIndicator(
-      onRefresh: () async => onRefresh(),
+      onRefresh: onRefresh,
       child: ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: orders.length,
         separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (context, index) =>
-            _OrderCard(order: orders[index], onReturned: onRefresh),
+            _OrderCard(order: orders[index], onReturned: onReturned),
       ),
     );
   }
@@ -308,6 +434,70 @@ class _OrderCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// نفس نمط _LoadMoreFooter في merchants_screen.dart/_LoadMoreControl في
+/// search_screen.dart — زر عادي / مؤشر تحميل / خطأ + إعادة محاولة
+/// للصفحة الفاشلة فقط.
+class _LoadMoreFooter extends StatelessWidget {
+  final bool isLoading;
+  final bool hasError;
+  final VoidCallback onTap;
+  final AppLocalizations l10n;
+
+  const _LoadMoreFooter({
+    required this.isLoading,
+    required this.hasError,
+    required this.onTap,
+    required this.l10n,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    if (isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+
+    if (hasError) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        child: Center(
+          child: Column(
+            children: [
+              Text(
+                l10n.loadMoreError,
+                style: TextStyle(color: theme.colorScheme.error),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              OutlinedButton(onPressed: onTap, child: Text(l10n.retry)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: Center(
+        child: OutlinedButton(
+          onPressed: onTap,
+          child: Text(l10n.loadMoreAction),
         ),
       ),
     );
