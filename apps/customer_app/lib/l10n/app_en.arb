@@ -120,6 +120,13 @@
   "paymentCodLabel": "Payment: cash on delivery (COD)",
   "confirmOrderAction": "Confirm order",
   "orderSubmitError": "Couldn't submit the order. Try again.",
+  "orderNotSignedInError": "You need to sign in to place an order.",
+  "orderMerchantNotApprovedError": "This shop is not available right now.",
+  "orderInvalidAddressError": "The selected address isn't valid. Choose another one.",
+  "orderEmptyCartError": "Can't submit an empty order.",
+  "orderProductNotFoundError": "One of the products in your order no longer exists.",
+  "orderMixedMerchantsError": "An order can't contain products from more than one shop.",
+  "orderProductUnavailableError": "One of the products is no longer available.",
 
   "cartTitle": "My cart",
   "cartEmptyMessage": "Your cart is empty right now.",

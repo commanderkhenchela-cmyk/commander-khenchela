@@ -120,6 +120,13 @@
   "paymentCodLabel": "Paiement : à la livraison (COD)",
   "confirmOrderAction": "Confirmer la commande",
   "orderSubmitError": "Impossible d'envoyer la commande. Réessayez.",
+  "orderNotSignedInError": "Vous devez vous connecter pour passer une commande.",
+  "orderMerchantNotApprovedError": "Ce commerce n'est plus disponible actuellement.",
+  "orderInvalidAddressError": "L'adresse sélectionnée n'est pas valide. Choisissez-en une autre.",
+  "orderEmptyCartError": "Impossible d'envoyer une commande vide.",
+  "orderProductNotFoundError": "Un des produits de votre commande n'existe plus.",
+  "orderMixedMerchantsError": "Une commande ne peut pas contenir des produits de plusieurs commerces.",
+  "orderProductUnavailableError": "Un des produits n'est plus disponible actuellement.",
 
   "cartTitle": "Mon panier",
   "cartEmptyMessage": "Votre panier est vide pour le moment.",

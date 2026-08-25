@@ -123,13 +123,41 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
       );
     } on PostgrestException catch (e) {
-      setState(() => _errorMessage = e.message);
+      setState(() => _errorMessage = _friendlyOrderError(e.message));
     } catch (e) {
       setState(
         () => _errorMessage = AppLocalizations.of(context).orderSubmitError,
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  /// يحوّل رسالة خطأ RPC `create_order` (نص عربي ثابت من السيرفر، راجع
+  /// migration create_order_function) إلى رسالة مترجَمة حسب لغة التطبيق
+  /// الحالية، بدل عرض النص الخام كما هو دائمًا بالعربية بغضّ النظر عن
+  /// لغة الواجهة — وبدل الثقة الكاملة أن كل خطأ قادم من القاعدة سيكون
+  /// نصًّا معروفًا وصديقًا؛ أي رسالة غير متوقَّعة (خطأ قيد لم يُغطَّ هنا،
+  /// أو أي تفصيل تقني آخر) تُستبدَل برسالة عامة مترجَمة بدل عرضها كما هي.
+  String _friendlyOrderError(String message) {
+    final l10n = AppLocalizations.of(context);
+    switch (message) {
+      case 'يجب تسجيل الدخول لإنشاء طلب':
+        return l10n.orderNotSignedInError;
+      case 'المحل غير موجود أو غير موافَق عليه بعد':
+        return l10n.orderMerchantNotApprovedError;
+      case 'العنوان غير صالح أو لا يخصك':
+        return l10n.orderInvalidAddressError;
+      case 'لا يمكن إنشاء طلب فارغ':
+        return l10n.orderEmptyCartError;
+      case 'منتج غير موجود':
+        return l10n.orderProductNotFoundError;
+      case 'كل منتجات الطلب يجب أن تكون من نفس المحل':
+        return l10n.orderMixedMerchantsError;
+      case 'أحد المنتجات لم يعد متوفرًا حاليًا':
+        return l10n.orderProductUnavailableError;
+      default:
+        return l10n.orderSubmitError;
     }
   }
 
