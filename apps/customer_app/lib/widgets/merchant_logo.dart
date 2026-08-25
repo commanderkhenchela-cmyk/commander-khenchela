@@ -44,6 +44,11 @@ class MerchantLogo extends StatelessWidget {
           : CachedNetworkImage(
               imageUrl: logoUrl,
               fit: BoxFit.cover,
+              // يُفكّ ترميز الصورة بحجم مناسب لعرضها الفعلي فقط (×3 لتغطية
+              // شاشات كثيفة البكسل) بدل الدقة الأصلية الكاملة التي قد
+              // يرفعها التاجر — تفادي فكّ صورة ضخمة لعرضها في دائرة صغيرة.
+              memCacheWidth: (size * 3).round(),
+              memCacheHeight: (size * 3).round(),
               placeholder: (context, url) => Icon(
                 Icons.storefront_rounded,
                 color: theme.colorScheme.primary.withValues(alpha: 0.4),

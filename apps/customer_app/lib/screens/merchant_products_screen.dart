@@ -296,6 +296,8 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
                                             width: 48,
                                             height: 48,
                                             fit: BoxFit.cover,
+                                            memCacheWidth: 144,
+                                            memCacheHeight: 144,
                                             placeholder: (context, url) =>
                                                 _ProductIcon(
                                                   color:
@@ -404,6 +406,7 @@ class _StoreCoverBanner extends StatelessWidget {
                 : CachedNetworkImage(
                     imageUrl: cover,
                     fit: BoxFit.cover,
+                    memCacheWidth: 900,
                     placeholder: (context, url) => Container(
                       color: Theme.of(context).colorScheme.primary
                           .withValues(alpha: 0.08),

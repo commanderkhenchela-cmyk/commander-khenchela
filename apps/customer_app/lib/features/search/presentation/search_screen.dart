@@ -808,6 +808,8 @@ class _ProductResultTile extends StatelessWidget {
                     width: 48,
                     height: 48,
                     fit: BoxFit.cover,
+                    memCacheWidth: 144,
+                    memCacheHeight: 144,
                     placeholder: (context, url) => Container(
                       width: 48,
                       height: 48,
