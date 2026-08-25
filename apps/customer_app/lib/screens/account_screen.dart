@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../theme/design_tokens.dart';
+import '../features/settings/presentation/settings_screen.dart';
 import 'address_list_screen.dart';
 import 'favorites_screen.dart';
 import 'login_screen.dart';
 import 'my_orders_screen.dart';
 import 'notifications_screen.dart';
-import 'settings_screen.dart';
 import 'support_screen.dart';
 
 /// شاشة "حسابي" — نقطة الدخول لتسجيل الدخول أو إدارة الحساب.

@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../l10n/app_localizations.dart';
-import '../services/branding_service.dart';
-import '../services/locale_controller.dart';
-import '../services/push_notification_service.dart';
-import '../services/theme_controller.dart';
-import '../theme/design_tokens.dart';
-import 'support_screen.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../services/branding_service.dart';
+import '../../../services/locale_controller.dart';
+import '../../../services/push_notification_service.dart';
+import '../../../services/theme_controller.dart';
+import '../../../theme/design_tokens.dart';
+import '../../../screens/support_screen.dart';
 
 const String _prefsPushEnabledKey = 'push_enabled';
 
