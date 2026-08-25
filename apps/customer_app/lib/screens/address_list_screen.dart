@@ -113,9 +113,8 @@ class _AddressListScreenState extends State<AddressListScreen> {
       _refresh();
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.deleteAddressError)),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.deleteAddressError)));
     }
   }
 
@@ -157,10 +156,7 @@ class _AddressListScreenState extends State<AddressListScreen> {
                       color: theme.colorScheme.primary,
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      l10n.noAddressesMessage,
-                      textAlign: TextAlign.center,
-                    ),
+                    Text(l10n.noAddressesMessage, textAlign: TextAlign.center),
                   ],
                 ),
               ),

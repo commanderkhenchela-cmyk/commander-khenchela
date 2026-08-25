@@ -46,7 +46,9 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.of(context).pop();
     } on AuthException {
       setState(
-        () => _errorMessage = AppLocalizations.of(context).invalidCredentialsError,
+        () =>
+            _errorMessage = AppLocalizations.of(context)
+                .invalidCredentialsError,
       );
     } catch (e) {
       setState(

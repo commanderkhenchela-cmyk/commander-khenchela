@@ -25,7 +25,7 @@ import 'all_categories_screen.dart';
 import 'merchant_products_screen.dart';
 import 'merchants_screen.dart';
 import 'notifications_screen.dart';
-import 'search_screen.dart';
+import '../features/search/presentation/search_screen.dart';
 
 /// الصفحة الرئيسية الفعلية للتطبيق — Feed ديناميكي متعدد الأقسام، تحلّ
 /// محل الشبكة الثابتة القديمة (كانت MerchantCategoriesScreen هي نقطة

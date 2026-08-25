@@ -20,9 +20,7 @@ class ConfirmWilayaScreen extends StatelessWidget {
     if (!context.mounted) return;
     final wilayaName = AppLocalizations.of(context).wilayaName;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => HomeScreen(locationName: wilayaName),
-      ),
+      MaterialPageRoute(builder: (_) => HomeScreen(locationName: wilayaName)),
     );
   }
 

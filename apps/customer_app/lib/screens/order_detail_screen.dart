@@ -103,7 +103,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       if (!mounted) return;
       setState(() => _orderFuture = _fetchOrder());
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).reviewSubmittedThanks)),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).reviewSubmittedThanks),
+        ),
       );
     } catch (_) {
       if (!mounted) return;
@@ -155,14 +157,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       setState(() {
         _orderFuture = _fetchOrder();
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.orderCancelledMessage)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.orderCancelledMessage)));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.cancelOrderError)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.cancelOrderError)));
     } finally {
       if (mounted) setState(() => _isCancelling = false);
     }
@@ -225,7 +225,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(l10n.orderStatusLabel, style: theme.textTheme.bodySmall),
+                        Text(
+                          l10n.orderStatusLabel,
+                          style: theme.textTheme.bodySmall,
+                        ),
                         const SizedBox(height: 4),
                         Text(
                           CustomerOrder.statusLabel(order.status, l10n),
@@ -291,7 +294,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(l10n.productsLabel, style: theme.textTheme.bodySmall),
+                        Text(
+                          l10n.productsLabel,
+                          style: theme.textTheme.bodySmall,
+                        ),
                         const SizedBox(height: 8),
                         ...order.items.map(
                           (item) => Padding(

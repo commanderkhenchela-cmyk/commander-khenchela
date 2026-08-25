@@ -297,9 +297,8 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
                                             fit: BoxFit.cover,
                                             placeholder: (context, url) =>
                                                 _ProductIcon(
-                                                  color: theme
-                                                      .colorScheme
-                                                      .primary,
+                                                  color:
+                                                      theme.colorScheme.primary,
                                                 ),
                                             errorWidget:
                                                 (context, url, error) =>

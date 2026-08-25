@@ -4,19 +4,19 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../l10n/app_localizations.dart';
-import '../models/merchant.dart';
-import '../models/merchant_category.dart';
-import '../models/product_search_result.dart';
-import '../services/recent_searches_service.dart';
-import '../services/search_stats_service.dart';
-import '../theme/design_tokens.dart';
-import '../utils/merchant_category_icon.dart';
-import '../widgets/merchant_card.dart';
-import '../widgets/search_field.dart';
-import 'merchant_products_screen.dart';
-import 'merchants_screen.dart';
-import 'product_detail_screen.dart';
+import '../../../l10n/app_localizations.dart';
+import '../../../models/merchant.dart';
+import '../../../models/merchant_category.dart';
+import '../../../screens/merchant_products_screen.dart';
+import '../../../screens/merchants_screen.dart';
+import '../../../screens/product_detail_screen.dart';
+import '../../../theme/design_tokens.dart';
+import '../../../utils/merchant_category_icon.dart';
+import '../../../widgets/merchant_card.dart';
+import '../../../widgets/search_field.dart';
+import '../data/recent_searches_service.dart';
+import '../data/search_stats_service.dart';
+import '../domain/product_search_result.dart';
 
 enum _ResultType { all, merchants, products, categories }
 
@@ -846,9 +846,8 @@ class _ProductResultTile extends StatelessWidget {
         ),
         subtitle: Text(result.merchantName),
         trailing: Text(
-          AppLocalizations.of(context).currencyAmount(
-            product.price.toStringAsFixed(0),
-          ),
+          AppLocalizations.of(context)
+              .currencyAmount(product.price.toStringAsFixed(0)),
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.primary,
             fontWeight: FontWeight.bold,
