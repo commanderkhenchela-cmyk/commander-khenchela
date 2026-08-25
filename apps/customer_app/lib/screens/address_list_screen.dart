@@ -139,7 +139,22 @@ class _AddressListScreenState extends State<AddressListScreen> {
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text(l10n.addressesLoadError));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(l10n.addressesLoadError, textAlign: TextAlign.center),
+                    const SizedBox(height: 16),
+                    OutlinedButton(
+                      onPressed: _refresh,
+                      child: Text(l10n.retry),
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
 
           final addresses = snapshot.data ?? [];
