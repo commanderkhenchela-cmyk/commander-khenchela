@@ -808,6 +808,15 @@ class _ProductResultTile extends StatelessWidget {
                     width: 48,
                     height: 48,
                     fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      width: 48,
+                      height: 48,
+                      color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                      child: Icon(
+                        Icons.shopping_bag_outlined,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
                     errorWidget: (context, url, error) => Container(
                       width: 48,
                       height: 48,

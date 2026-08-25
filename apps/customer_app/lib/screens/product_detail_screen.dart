@@ -133,6 +133,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       child: CachedNetworkImage(
                         imageUrl: product.imageUrl!,
                         fit: BoxFit.cover,
+                        placeholder: (context, url) =>
+                            _ImagePlaceholder(color: theme.colorScheme.primary),
                         errorWidget: (context, url, error) =>
                             _ImagePlaceholder(color: theme.colorScheme.primary),
                       ),

@@ -44,6 +44,11 @@ class MerchantLogo extends StatelessWidget {
           : CachedNetworkImage(
               imageUrl: logoUrl,
               fit: BoxFit.cover,
+              placeholder: (context, url) => Icon(
+                Icons.storefront_rounded,
+                color: theme.colorScheme.primary.withValues(alpha: 0.4),
+                size: iconSize,
+              ),
               errorWidget: (context, url, error) => Icon(
                 Icons.storefront_rounded,
                 color: theme.colorScheme.primary,
