@@ -6,8 +6,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class ContactService {
   ContactService._();
 
-  static String whatsappNumber = '213555000000';
-  static String displayPhone = '0555 00 00 00';
+  static String whatsappNumber = '213770773844';
+  static String displayPhone = '0770 77 38 44';
   static String supportEmail = 'support@commanderkhenchela.dz';
   static String? facebookUrl;
   static String? instagramUrl;
