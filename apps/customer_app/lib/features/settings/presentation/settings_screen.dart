@@ -195,7 +195,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () => _push(
                   _StaticInfoScreen(
                     title: l10n.privacyPolicyLabel,
-                    body: l10n.privacyPolicyPlaceholderBody,
+                    body: l10n.privacyPolicyBody,
                   ),
                 ),
               ),
@@ -205,7 +205,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () => _push(
                   _StaticInfoScreen(
                     title: l10n.termsLabel,
-                    body: l10n.termsPlaceholderBody,
+                    body: l10n.termsBody,
                   ),
                 ),
               ),
