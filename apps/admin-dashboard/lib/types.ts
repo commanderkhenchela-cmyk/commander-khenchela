@@ -135,6 +135,8 @@ export interface ActivityLogEntry {
 
 const TABLE_LABELS: Record<string, string> = {
   merchants: "محل",
+  drivers: "موصّل",
+  orders: "طلب",
   app_branding: "الهوية والشعار",
   app_contact: "بيانات التواصل",
   categories: "تصنيف",
@@ -142,6 +144,7 @@ const TABLE_LABELS: Record<string, string> = {
   advertisements: "إعلان",
   users: "دور مستخدم",
   home_sections: "قسم الصفحة الرئيسية",
+  services: "خدمة",
 };
 
 export function tableLabel(tableName: string): string {

@@ -17,9 +17,16 @@ export default async function SettingsPage() {
 
   return (
     <div className="max-w-md">
-      <h1 className="text-2xl font-bold mb-6">إعدادات المنصة</h1>
+      <h1 className="text-2xl font-bold mb-1">إعدادات المنصة</h1>
+      <p className="text-sm text-black/50 mb-6">
+        كل إعداد هنا مقروء ومكتوب مباشرة من جدول settings عبر
+        admin_get_settings/admin_set_setting — لا قيمة مُثبَّتة في الكود.
+      </p>
 
-      <div className="rounded-xl border border-border bg-card p-5">
+      <p className="px-1 mb-2 text-[11px] font-bold uppercase tracking-wide text-black/40">
+        عام
+      </p>
+      <div className="rounded-xl border border-border bg-card p-5 mb-6">
         <p className="font-semibold mb-1">نسبة عمولة المنصة</p>
         <p className="text-sm text-black/60 mb-4">
           تُطبَّق فقط على الطلبات الجديدة — لا تؤثر على طلبات سابقة (كل طلب
@@ -27,6 +34,15 @@ export default async function SettingsPage() {
         </p>
         <SettingsForm settingKey="platform_commission_rate" currentValue={commissionRate} unit="%" />
       </div>
+
+      {/*
+        فئات أخرى (التجار/الموصّلون/التوصيل/الإشعارات/الأمان) غير معروضة
+        عمدًا: لا يوجد أي إعداد فعلي مخزَّن في جدول settings تحت هذه
+        الفئات اليوم — عرض فئة فارغة هنا سيكون واجهة بلا بيانات حقيقية،
+        وهو ما مُنِع صراحة في هذه المرحلة ("لا تُنشئ إعدادات
+        Wallet/Fraud/Taxi أو أي فئة وهمية الآن"). تُضاف كل فئة فقط عند
+        إضافة أول إعداد حقيقي تحتها.
+      */}
     </div>
   );
 }

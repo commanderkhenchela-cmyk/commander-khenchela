@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAdminContext } from "@/lib/admin-context";
 import type { Driver } from "@/lib/types";
 import DriverActions from "./driver-actions";
+import EntityActivityLog from "@/components/entity-activity-log";
 
 export default async function DriverDetailPage({
   params,
@@ -65,10 +66,12 @@ export default async function DriverDetailPage({
         />
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-5">
+      <div className="rounded-xl border border-border bg-card p-5 mb-4">
         <p className="font-semibold mb-3">الإجراء</p>
         <DriverActions driverId={d.id} status={d.status} />
       </div>
+
+      <EntityActivityLog tableName="drivers" recordId={d.id} />
     </div>
   );
 }

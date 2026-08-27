@@ -4,6 +4,7 @@ import { getAdminContext } from "@/lib/admin-context";
 import { ORDER_STATUS_LABELS, type AdminOrder } from "@/lib/types";
 import OrderActions from "./order-actions";
 import DeliveryFeeForm from "./delivery-fee-form";
+import EntityActivityLog from "@/components/entity-activity-log";
 
 export default async function OrderDetailPage({
   params,
@@ -107,10 +108,12 @@ export default async function OrderDetailPage({
         <DeliveryFeeForm orderId={o.id} currentFee={o.delivery_fee} />
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-5">
+      <div className="rounded-xl border border-border bg-card p-5 mb-4">
         <p className="font-semibold mb-3">الإجراء</p>
         <OrderActions orderId={o.id} status={o.status} />
       </div>
+
+      <EntityActivityLog tableName="orders" recordId={o.id} />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import type { Merchant, MerchantCategory } from "@/lib/types";
 import MerchantActions from "./merchant-actions";
 import MerchantCategorySelect from "./merchant-category-select";
 import MerchantFeaturedToggle from "./merchant-featured-toggle";
+import EntityActivityLog from "@/components/entity-activity-log";
 
 export default async function MerchantDetailPage({
   params,
@@ -89,10 +90,12 @@ export default async function MerchantDetailPage({
         <MerchantFeaturedToggle merchantId={m.id} isFeatured={m.is_featured} />
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-5">
+      <div className="rounded-xl border border-border bg-card p-5 mb-4">
         <p className="font-semibold mb-3">الإجراء</p>
         <MerchantActions merchantId={m.id} status={m.status} />
       </div>
+
+      <EntityActivityLog tableName="merchants" recordId={m.id} />
     </div>
   );
 }

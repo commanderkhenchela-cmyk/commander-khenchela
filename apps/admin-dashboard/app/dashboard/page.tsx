@@ -5,43 +5,86 @@ import { tableLabel, type ActivityLogEntry } from "@/lib/types";
 
 export default async function DashboardOverviewPage() {
   const context = await getAdminContext();
+  if (!context) return null;
   const supabase = await createClient();
+
+  const canSeeMerchants = context.hasCapability("merchant.view");
+  const canSeeDrivers = context.hasCapability("driver.view");
+  const canSeeOrders = context.hasCapability("order.view");
+  const canSeeServices = context.hasCapability("service.view");
 
   const [
     { count: pendingMerchants },
-    { count: pendingOrders },
     { count: activeMerchants },
+    { count: pendingDrivers },
+    { count: onlineDrivers },
+    { count: pendingOrders },
+    { count: activeOrders },
     { count: totalOrders },
+    { count: activeServices },
+    { count: totalUsers },
+    { count: unreadNotifications },
     { data: recentActivity },
   ] = await Promise.all([
+    canSeeMerchants
+      ? supabase.from("merchants").select("id", { count: "exact", head: true }).eq("status", "pending")
+      : Promise.resolve({ count: null }),
+    canSeeMerchants
+      ? supabase.from("merchants").select("id", { count: "exact", head: true }).eq("status", "approved")
+      : Promise.resolve({ count: null }),
+    canSeeDrivers
+      ? supabase.from("drivers").select("id", { count: "exact", head: true }).eq("status", "pending")
+      : Promise.resolve({ count: null }),
+    canSeeDrivers
+      ? supabase.from("drivers").select("id", { count: "exact", head: true }).eq("is_online", true)
+      : Promise.resolve({ count: null }),
+    canSeeOrders
+      ? supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "ready_for_pickup")
+      : Promise.resolve({ count: null }),
+    canSeeOrders
+      ? supabase
+          .from("orders")
+          .select("id", { count: "exact", head: true })
+          .not("status", "in", "(delivered,cancelled,rejected)")
+      : Promise.resolve({ count: null }),
+    canSeeOrders
+      ? supabase.from("orders").select("id", { count: "exact", head: true })
+      : Promise.resolve({ count: null }),
+    canSeeServices
+      ? supabase.from("services").select("id", { count: "exact", head: true }).eq("enabled", true)
+      : Promise.resolve({ count: null }),
+    context.isSuperAdmin
+      ? supabase.from("users").select("id", { count: "exact", head: true })
+      : Promise.resolve({ count: null }),
     supabase
-      .from("merchants")
+      .from("notifications")
       .select("id", { count: "exact", head: true })
-      .eq("status", "pending"),
-    supabase
-      .from("orders")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "ready_for_pickup"),
-    supabase
-      .from("merchants")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "approved"),
-    supabase.from("orders").select("id", { count: "exact", head: true }),
-    supabase
-      .from("admin_activity_log")
-      .select("id, admin_name, action, table_name, record_id, created_at")
-      .order("created_at", { ascending: false })
-      .limit(5),
+      .eq("user_id", context.userId)
+      .eq("is_read", false),
+    context.isSuperAdmin
+      ? supabase
+          .from("admin_activity_log")
+          .select("id, admin_name, action, table_name, record_id, created_at")
+          .order("created_at", { ascending: false })
+          .limit(5)
+      : Promise.resolve({ data: null }),
   ]);
 
   const activity = (recentActivity ?? []) as ActivityLogEntry[];
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">نظرة عامة</h1>
+      <h1 className="text-2xl font-bold mb-1">نظرة عامة</h1>
+      <p className="text-sm text-black/50 mb-6">
+        مركز التحكّم — كل رقم أدناه مقروء مباشرة من قاعدة البيانات الآن، لا
+        يوجد رقم افتراضي أو تقديري.
+      </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {context?.canManageStores && (
+        {context.isSuperAdmin && (
+          <StatCard label="إجمالي المستخدمين" value={totalUsers ?? 0} />
+        )}
+        {canSeeMerchants && (
           <>
             <StatCard
               label="محلات بانتظار الموافقة"
@@ -51,20 +94,39 @@ export default async function DashboardOverviewPage() {
             <StatCard label="محلات نشطة" value={activeMerchants ?? 0} />
           </>
         )}
-        {context?.isSuperAdmin && (
+        {canSeeDrivers && (
+          <>
+            <StatCard
+              label="موصّلون بانتظار الموافقة"
+              value={pendingDrivers ?? 0}
+              highlight={(pendingDrivers ?? 0) > 0}
+            />
+            <StatCard label="موصّلون متصلون الآن" value={onlineDrivers ?? 0} />
+          </>
+        )}
+        {canSeeOrders && (
           <>
             <StatCard
               label="طلبات جاهزة للاستلام (تحتاج توصيل)"
               value={pendingOrders ?? 0}
               highlight={(pendingOrders ?? 0) > 0}
             />
+            <StatCard label="طلبات قيد التنفيذ حاليًا" value={activeOrders ?? 0} />
             <StatCard label="إجمالي الطلبات" value={totalOrders ?? 0} />
           </>
         )}
+        {canSeeServices && (
+          <StatCard label="خدمات مفعَّلة" value={activeServices ?? 0} />
+        )}
+        <StatCard
+          label="إشعاراتي غير المقروءة"
+          value={unreadNotifications ?? 0}
+          highlight={(unreadNotifications ?? 0) > 0}
+        />
       </div>
 
       <div className="flex gap-3 flex-wrap">
-        {context?.canManageStores && (pendingMerchants ?? 0) > 0 && (
+        {canSeeMerchants && (pendingMerchants ?? 0) > 0 && (
           <Link
             href="/dashboard/merchants?status=pending"
             className="rounded-lg bg-primary text-white font-semibold px-5 py-3"
@@ -72,7 +134,15 @@ export default async function DashboardOverviewPage() {
             مراجعة المحلات الجديدة
           </Link>
         )}
-        {context?.isSuperAdmin && (pendingOrders ?? 0) > 0 && (
+        {canSeeDrivers && (pendingDrivers ?? 0) > 0 && (
+          <Link
+            href="/dashboard/drivers?status=pending"
+            className="rounded-lg bg-primary text-white font-semibold px-5 py-3"
+          >
+            مراجعة الموصّلين الجدد
+          </Link>
+        )}
+        {canSeeOrders && (pendingOrders ?? 0) > 0 && (
           <Link
             href="/dashboard/orders?status=ready_for_pickup"
             className="rounded-lg border border-primary text-primary font-semibold px-5 py-3"
@@ -82,7 +152,7 @@ export default async function DashboardOverviewPage() {
         )}
       </div>
 
-      {context?.isSuperAdmin && (
+      {context.isSuperAdmin && (
       <div className="mt-8">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-bold">آخر النشاطات</h2>

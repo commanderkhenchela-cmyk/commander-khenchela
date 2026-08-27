@@ -14,6 +14,16 @@ export interface AdminContext {
   canManageStores: boolean;
   /** يدير الإعلانات — Super Admin أو Manager أو Ads Manager. */
   canManageAds: boolean;
+  /**
+   * صلاحيات الدور الدقيقة (resource.action) — مقروءة من جدول
+   * role_capabilities مباشرة (نفس المصدر الذي تعتمد عليه دالة
+   * has_capability() في Postgres)، بدل إعادة كتابة قاعدة الصلاحية
+   * يدويًا هنا كما كان الحال مع canManageStores/canManageAds أعلاه.
+   * الحقلان أعلاه أُبقيا كما هما لعدم كسر أي صفحة تستخدمهما اليوم؛
+   * capabilities هي الأساس لأي شاشة/تنقّل جديد من الآن فصاعدًا.
+   */
+  capabilities: Set<string>;
+  hasCapability(capability: string): boolean;
 }
 
 const ADMIN_ROLES = new Set(["admin", "manager", "ads_manager"]);
@@ -42,6 +52,15 @@ export async function getAdminContext(): Promise<AdminContext | null> {
   const role = profile?.role ?? null;
   const isAdmin = role !== null && ADMIN_ROLES.has(role);
 
+  let capabilities = new Set<string>();
+  if (isAdmin) {
+    const { data: rows } = await supabase
+      .from("role_capabilities")
+      .select("capability")
+      .eq("role", role);
+    capabilities = new Set((rows ?? []).map((r) => r.capability as string));
+  }
+
   return {
     userId: user.id,
     fullName: profile?.full_name ?? "",
@@ -51,5 +70,7 @@ export async function getAdminContext(): Promise<AdminContext | null> {
     canManageStores: role === "admin" || role === "manager",
     canManageAds:
       role === "admin" || role === "manager" || role === "ads_manager",
+    capabilities,
+    hasCapability: (capability: string) => capabilities.has(capability),
   };
 }
