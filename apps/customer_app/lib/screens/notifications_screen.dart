@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/notification_item.dart';
+import 'order_detail_screen.dart';
 
 /// شاشة "إشعاراتي" — تعرض إشعارات المستخدم الحالي فقط (RLS تحميها تلقائيًا).
 /// تُملأ هذه القائمة من طرف Edge Function عند تغيّر حالة الطلب (Phase 11).
@@ -66,7 +67,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<List<NotificationItem>> _fetchNotifications() async {
     final data = await Supabase.instance.client
         .from('notifications')
-        .select('id, title, body, is_read, created_at')
+        .select('id, title, body, is_read, created_at, entity_type, entity_id')
         .order('created_at', ascending: false);
 
     return (data as List)
@@ -83,6 +84,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         .eq('id', notification.id);
 
     if (mounted) _refresh();
+  }
+
+  /// عند الضغط على إشعار: يُعلَّم كمقروء دائمًا كما كان، ثم — إن كان
+  /// مرتبطًا بطلب فعليًا (entity_type='order') — ينتقل مباشرة لتفاصيله.
+  /// أنواع أخرى من entity_type (merchant/driver) لا شاشة مكافئة لها في
+  /// تطبيق الزبون (هذه الإشعارات أصلًا لا تصل لحساب عميل)، فتبقى بلا
+  /// تنقّل، بلا أي خطأ.
+  Future<void> _handleTap(NotificationItem notification) async {
+    await _markAsRead(notification);
+
+    if (!mounted) return;
+    if (notification.entityType == 'order' && notification.entityId != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => OrderDetailScreen(orderId: notification.entityId!),
+        ),
+      );
+    }
   }
 
   @override
@@ -166,7 +185,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       ? null
                       : theme.colorScheme.primary.withValues(alpha: 0.06),
                   child: ListTile(
-                    onTap: () => _markAsRead(notification),
+                    onTap: () => _handleTap(notification),
                     leading: Icon(
                       notification.isRead
                           ? Icons.notifications_none_rounded

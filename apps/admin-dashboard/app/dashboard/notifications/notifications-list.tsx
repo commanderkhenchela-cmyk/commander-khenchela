@@ -1,8 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { AppNotification } from "@/lib/types";
+
+// مسار كل نوع كيان — امتداد بسيط بلا شاشة جديدة، يعيد استخدام صفحات
+// التفاصيل الموجودة أصلًا (merchants/[id]، drivers/[id]، orders/[id]).
+const ENTITY_ROUTES: Record<string, string> = {
+  merchant: "/dashboard/merchants",
+  driver: "/dashboard/drivers",
+  order: "/dashboard/orders",
+};
 
 /**
  * قائمة الإشعارات — جزء تفاعلي (تعليم كمقروء + استماع لحظي)، منفصل عن
@@ -12,6 +21,7 @@ import type { AppNotification } from "@/lib/types";
  * لتغييرات postgres_changes.
  */
 export default function NotificationsList() {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<
     AppNotification[] | null
   >(null);
@@ -23,7 +33,7 @@ export default function NotificationsList() {
     async function load() {
       const { data } = await supabase
         .from("notifications")
-        .select("id, title, body, type, is_read, created_at")
+        .select("id, title, body, type, is_read, created_at, entity_type, entity_id")
         .order("created_at", { ascending: false });
       if (!ignore) {
         setNotifications((data ?? []) as AppNotification[]);
@@ -61,6 +71,16 @@ export default function NotificationsList() {
     );
   }
 
+  // نفس منطق العميل: تعليم كمقروء دائمًا، ثم تنقّل فقط إن وُجد كيان
+  // مرتبط بمسار معروف — إشعارات قديمة/عامة (entity_type=null) تبقى
+  // بلا تنقّل كما كانت تمامًا.
+  function handleClick(n: AppNotification) {
+    markAsRead(n);
+    if (n.entity_type && n.entity_id && ENTITY_ROUTES[n.entity_type]) {
+      router.push(`${ENTITY_ROUTES[n.entity_type]}/${n.entity_id}`);
+    }
+  }
+
   if (notifications === null) {
     return <p className="text-black/60">جارِ التحميل...</p>;
   }
@@ -82,7 +102,7 @@ export default function NotificationsList() {
         {notifications.map((n) => (
           <button
             key={n.id}
-            onClick={() => markAsRead(n)}
+            onClick={() => handleClick(n)}
             className={`text-right rounded-xl border p-4 ${
               n.is_read
                 ? "border-border bg-card"

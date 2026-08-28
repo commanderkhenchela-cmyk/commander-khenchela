@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { AppNotification } from "@/lib/types";
 
@@ -11,6 +12,7 @@ import type { AppNotification } from "@/lib/types";
  * على صاحب الجلسة الحالية، ونفس الشيء لتغييرات postgres_changes.
  */
 export default function NotificationsList() {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<
     AppNotification[] | null
   >(null);
@@ -22,7 +24,7 @@ export default function NotificationsList() {
     async function load() {
       const { data } = await supabase
         .from("notifications")
-        .select("id, title, body, type, is_read, created_at")
+        .select("id, title, body, type, is_read, created_at, entity_type, entity_id")
         .order("created_at", { ascending: false });
       if (!ignore) {
         setNotifications((data ?? []) as AppNotification[]);
@@ -60,6 +62,16 @@ export default function NotificationsList() {
     );
   }
 
+  // إشعارات لوحة التاجر اليوم كلها من نوع order فقط (طلب جديد/تحديث
+  // حالة) — merchant_approved/rejected لا شاشة كيان مكافئة لها هنا
+  // (هي أصلًا عن محله هو، لا شيء آخر للانتقال إليه)، فتبقى بلا تنقّل.
+  function handleClick(n: AppNotification) {
+    markAsRead(n);
+    if (n.entity_type === "order" && n.entity_id) {
+      router.push(`/dashboard/orders/${n.entity_id}`);
+    }
+  }
+
   if (notifications === null) {
     return <p className="text-black/60">جارِ التحميل...</p>;
   }
@@ -81,7 +93,7 @@ export default function NotificationsList() {
         {notifications.map((n) => (
           <button
             key={n.id}
-            onClick={() => markAsRead(n)}
+            onClick={() => handleClick(n)}
             className={`text-right rounded-xl border p-4 ${
               n.is_read
                 ? "border-border bg-card"

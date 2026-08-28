@@ -112,7 +112,15 @@ async function handleOrders(supabase: SupabaseClient, payload: WebhookPayload) {
       .maybeSingle();
 
     if (merchant) {
-      await notifyUser(supabase, merchant.owner_user_id, "طلب جديد 🛍️", "وصلك طلب جديد بانتظار موافقتك", "new_order");
+      await notifyUser(
+        supabase,
+        merchant.owner_user_id,
+        "طلب جديد 🛍️",
+        "وصلك طلب جديد بانتظار موافقتك",
+        "new_order",
+        "order",
+        payload.record.id,
+      );
     }
     return;
   }
@@ -122,7 +130,15 @@ async function handleOrders(supabase: SupabaseClient, payload: WebhookPayload) {
     const newStatus = payload.record.status;
 
     if (oldStatus && oldStatus !== newStatus && ORDER_STATUS_LABELS[newStatus]) {
-      await notifyUser(supabase, payload.record.customer_id, "تحديث طلبك", ORDER_STATUS_LABELS[newStatus], `order_${newStatus}`);
+      await notifyUser(
+        supabase,
+        payload.record.customer_id,
+        "تحديث طلبك",
+        ORDER_STATUS_LABELS[newStatus],
+        `order_${newStatus}`,
+        "order",
+        payload.record.id,
+      );
     }
   }
 }
@@ -132,7 +148,7 @@ async function handleOrders(supabase: SupabaseClient, payload: WebhookPayload) {
 // ---------------------------------------------------------------
 async function handleMerchants(supabase: SupabaseClient, payload: WebhookPayload) {
   if (payload.type === "INSERT") {
-    await notifyAdmins(supabase, "تاجر جديد 🏪", "سجّل تاجر جديد بانتظار الموافقة", "new_merchant");
+    await notifyAdmins(supabase, "تاجر جديد 🏪", "سجّل تاجر جديد بانتظار الموافقة", "new_merchant", "merchant", payload.record.id);
     return;
   }
 
@@ -142,9 +158,25 @@ async function handleMerchants(supabase: SupabaseClient, payload: WebhookPayload
 
     if (oldStatus && oldStatus !== newStatus) {
       if (newStatus === "approved") {
-        await notifyUser(supabase, payload.record.owner_user_id, "تمّت الموافقة على محلك 🎉", "يمكنك الآن إضافة منتجاتك واستقبال الطلبات", "merchant_approved");
+        await notifyUser(
+          supabase,
+          payload.record.owner_user_id,
+          "تمّت الموافقة على محلك 🎉",
+          "يمكنك الآن إضافة منتجاتك واستقبال الطلبات",
+          "merchant_approved",
+          "merchant",
+          payload.record.id,
+        );
       } else if (newStatus === "rejected") {
-        await notifyUser(supabase, payload.record.owner_user_id, "لم تتم الموافقة على محلك", "راجع بيانات محلك أو تواصل مع الإدارة لمزيد من التفاصيل", "merchant_rejected");
+        await notifyUser(
+          supabase,
+          payload.record.owner_user_id,
+          "لم تتم الموافقة على محلك",
+          "راجع بيانات محلك أو تواصل مع الإدارة لمزيد من التفاصيل",
+          "merchant_rejected",
+          "merchant",
+          payload.record.id,
+        );
       }
     }
   }
@@ -155,7 +187,7 @@ async function handleMerchants(supabase: SupabaseClient, payload: WebhookPayload
 // ---------------------------------------------------------------
 async function handleDrivers(supabase: SupabaseClient, payload: WebhookPayload) {
   if (payload.type === "INSERT") {
-    await notifyAdmins(supabase, "موصّل جديد 🏍️", "سجّل موصّل جديد بانتظار الموافقة", "new_driver");
+    await notifyAdmins(supabase, "موصّل جديد 🏍️", "سجّل موصّل جديد بانتظار الموافقة", "new_driver", "driver", payload.record.id);
     return;
   }
 
@@ -165,9 +197,25 @@ async function handleDrivers(supabase: SupabaseClient, payload: WebhookPayload) 
 
     if (oldStatus && oldStatus !== newStatus) {
       if (newStatus === "approved") {
-        await notifyUser(supabase, payload.record.user_id, "تمّت الموافقة على حسابك 🎉", "يمكنك الآن الاتصال واستلام الطلبات", "driver_approved");
+        await notifyUser(
+          supabase,
+          payload.record.user_id,
+          "تمّت الموافقة على حسابك 🎉",
+          "يمكنك الآن الاتصال واستلام الطلبات",
+          "driver_approved",
+          "driver",
+          payload.record.id,
+        );
       } else if (newStatus === "rejected") {
-        await notifyUser(supabase, payload.record.user_id, "لم تتم الموافقة على حسابك", "تواصل مع الإدارة لمزيد من التفاصيل", "driver_rejected");
+        await notifyUser(
+          supabase,
+          payload.record.user_id,
+          "لم تتم الموافقة على حسابك",
+          "تواصل مع الإدارة لمزيد من التفاصيل",
+          "driver_rejected",
+          "driver",
+          payload.record.id,
+        );
       }
     }
   }
@@ -184,8 +232,17 @@ async function notifyUser(
   title: string,
   body: string,
   notifType: string,
+  entityType?: string,
+  entityId?: string,
 ) {
-  await supabase.from("notifications").insert({ user_id: userId, title, body, type: notifType });
+  await supabase.from("notifications").insert({
+    user_id: userId,
+    title,
+    body,
+    type: notifType,
+    entity_type: entityType ?? null,
+    entity_id: entityId ?? null,
+  });
 
   const { data: user } = await supabase
     .from("users")
@@ -206,6 +263,8 @@ async function notifyAdmins(
   title: string,
   body: string,
   notifType: string,
+  entityType?: string,
+  entityId?: string,
 ) {
   const { data: admins } = await supabase
     .from("users")
@@ -215,7 +274,14 @@ async function notifyAdmins(
   if (!admins || admins.length === 0) return;
 
   await supabase.from("notifications").insert(
-    admins.map((a) => ({ user_id: a.id, title, body, type: notifType })),
+    admins.map((a) => ({
+      user_id: a.id,
+      title,
+      body,
+      type: notifType,
+      entity_type: entityType ?? null,
+      entity_id: entityId ?? null,
+    })),
   );
 }
 
