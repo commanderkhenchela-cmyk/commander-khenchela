@@ -1,10 +1,12 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminContext } from "@/lib/admin-context";
-import type { Merchant, MerchantCategory } from "@/lib/types";
+import type { Merchant, MerchantCategory, WalletTransaction } from "@/lib/types";
+import { WALLET_TRANSACTION_LABELS } from "@/lib/types";
 import MerchantActions from "./merchant-actions";
 import MerchantCategorySelect from "./merchant-category-select";
 import MerchantFeaturedToggle from "./merchant-featured-toggle";
+import WalletTopupForm from "./wallet-topup-form";
 import EntityActivityLog from "@/components/entity-activity-log";
 
 export default async function MerchantDetailPage({
@@ -46,6 +48,25 @@ export default async function MerchantDetailPage({
 
   const m = merchant as unknown as Merchant;
   const categories = (allCategories ?? []) as MerchantCategory[];
+
+  const canViewWallet = context.hasCapability("wallet.view");
+  const canManageWallet = context.hasCapability("wallet.manage");
+
+  let walletTransactions: WalletTransaction[] = [];
+  let walletBalance = 0;
+  if (canViewWallet) {
+    // نجلب كل حركات هذا التاجر (بلا حد) — الرصيد يجب أن يكون مجموعًا
+    // دقيقًا لكل السجل، لا لصفحة محدودة فقط. عرض الواجهة يعرض أحدث 30
+    // منها فقط (slice)، لكن الحساب يستخدم المصفوفة الكاملة.
+    const { data: transactions } = await supabase
+      .from("wallet_transactions")
+      .select("id, merchant_id, type, amount, note, order_id, created_at")
+      .eq("merchant_id", id)
+      .order("created_at", { ascending: false });
+    const all = (transactions ?? []) as WalletTransaction[];
+    walletTransactions = all.slice(0, 30);
+    walletBalance = all.reduce((sum, row) => sum + Number(row.amount), 0);
+  }
 
   return (
     <div className="max-w-lg">
@@ -94,6 +115,66 @@ export default async function MerchantDetailPage({
         <p className="font-semibold mb-3">الإجراء</p>
         <MerchantActions merchantId={m.id} status={m.status} />
       </div>
+
+      {canViewWallet && (
+        <div className="rounded-xl border border-border bg-card p-5 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="font-semibold">محفظة التاجر</p>
+            <span
+              className={`text-lg font-bold ${
+                walletBalance < 0 ? "text-error" : "text-primary"
+              }`}
+            >
+              {walletBalance.toFixed(2)} دج
+            </span>
+          </div>
+          <p className="text-xs text-black/50 mb-3">
+            لا يوجد بوابة دفع إلكترونية — الدفع يتم في المكتب. الرصيد =
+            مجموع كل الحركات أدناه (إيداعات + عمولات الطلبات المُسلَّمة
+            تلقائيًا − أي خصم يدوي).
+          </p>
+
+          {canManageWallet && (
+            <div className="grid gap-2 mb-4 sm:grid-cols-2">
+              <WalletTopupForm merchantId={m.id} kind="topup" />
+              <WalletTopupForm merchantId={m.id} kind="deduction" />
+            </div>
+          )}
+
+          {walletTransactions.length === 0 ? (
+            <p className="text-sm text-black/50">لا توجد حركات مسجَّلة بعد.</p>
+          ) : (
+            <div className="grid gap-2">
+              {walletTransactions.map((t) => (
+                <div
+                  key={t.id}
+                  className="flex items-center justify-between gap-3 text-sm border-b border-border last:border-b-0 pb-2 last:pb-0"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium">
+                      {WALLET_TRANSACTION_LABELS[t.type]}
+                    </p>
+                    {t.note && (
+                      <p className="text-xs text-black/50 truncate">{t.note}</p>
+                    )}
+                    <p className="text-xs text-black/40">
+                      {new Date(t.created_at).toLocaleString("ar-DZ")}
+                    </p>
+                  </div>
+                  <span
+                    className={`shrink-0 font-semibold ${
+                      t.amount >= 0 ? "text-primary" : "text-error"
+                    }`}
+                  >
+                    {t.amount >= 0 ? "+" : ""}
+                    {t.amount.toFixed(2)} دج
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <EntityActivityLog tableName="merchants" recordId={m.id} />
     </div>

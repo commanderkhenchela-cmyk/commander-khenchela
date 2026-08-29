@@ -247,6 +247,27 @@ export interface AppContact {
   updated_at: string;
 }
 
+/// حركة محفظة تاجر واحدة — راجع migration 20260829000000_merchant_wallet
+/// للتفاصيل الكاملة (RLS، الرصيد = SUM(amount)، الكتابة حصرًا عبر
+/// admin_wallet_topup/admin_wallet_deduct أو Trigger العمولة التلقائي).
+export type WalletTransactionType = "topup" | "deduction" | "commission";
+
+export interface WalletTransaction {
+  id: string;
+  merchant_id: string;
+  type: WalletTransactionType;
+  amount: number;
+  note: string | null;
+  order_id: string | null;
+  created_at: string;
+}
+
+export const WALLET_TRANSACTION_LABELS: Record<WalletTransactionType, string> = {
+  topup: "إيداع (دفعة مكتب)",
+  deduction: "خصم يدوي",
+  commission: "عمولة طلب",
+};
+
 /** إشعار واحد — نفس جدول notifications المستخدَم في تطبيق الزبون
  * (راجع migration 20260819050823 وشبكة الإشعارات 20260822000000).
  * تُنشأ فقط من طرف السيرفر، RLS تحصر القراءة على صاحبها. */

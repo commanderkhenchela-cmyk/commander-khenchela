@@ -112,6 +112,27 @@ export const DAY_NAMES = [
 /** كود ولاية خنشلة الرسمي — المحل الوحيد المدعوم في V1. */
 export const KHENCHELA_WILAYA_ID = 40;
 
+/// حركة محفظة واحدة — نفس جدول wallet_transactions المستخدَم في لوحة
+/// الإدارة (راجع migration 20260829000000_merchant_wallet). RLS تحصر
+/// القراءة هنا على تاجر واحد فقط: صاحب المحل نفسه، بلا أي كتابة ممكنة
+/// من هذا التطبيق إطلاقًا (لا Policy insert/update/delete على الإطلاق).
+export type WalletTransactionType = "topup" | "deduction" | "commission";
+
+export interface WalletTransaction {
+  id: string;
+  type: WalletTransactionType;
+  amount: number;
+  note: string | null;
+  order_id: string | null;
+  created_at: string;
+}
+
+export const WALLET_TRANSACTION_LABELS: Record<WalletTransactionType, string> = {
+  topup: "إيداع (دفعة مكتب)",
+  deduction: "خصم يدوي",
+  commission: "عمولة طلب",
+};
+
 /** إشعار واحد — نفس جدول notifications المستخدَم في تطبيق الزبون
  * (راجع migration 20260819050823 وشبكة الإشعارات 20260822000000).
  * تُنشأ فقط من طرف السيرفر، RLS تحصر القراءة على صاحبها. */
