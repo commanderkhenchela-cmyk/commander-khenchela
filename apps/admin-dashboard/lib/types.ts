@@ -80,6 +80,7 @@ export interface OrderItem {
 
 export interface AdminOrder {
   id: string;
+  customer_id: string;
   status: OrderStatus;
   subtotal: number;
   delivery_fee: number;
@@ -87,14 +88,25 @@ export interface AdminOrder {
   merchant_amount: number;
   platform_commission_amount: number;
   created_at: string;
-  merchants?: { store_name: string; phone: string | null } | null;
+  merchants?: {
+    store_name: string;
+    phone: string | null;
+    latitude: number | null;
+    longitude: number | null;
+  } | null;
   addresses?: {
     address_text: string;
     phone: string | null;
     communes?: { name: string } | null;
   } | null;
   order_items?: OrderItem[];
-  drivers?: { full_name: string; phone: string } | null;
+  drivers?: {
+    full_name: string;
+    phone: string;
+    is_online: boolean;
+    current_lat: number | null;
+    current_lng: number | null;
+  } | null;
 }
 
 /// موصّلو التوصيل (المرحلة 1 — دراجات فقط). راجع migration

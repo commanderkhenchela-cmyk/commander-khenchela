@@ -1,7 +1,14 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminContext } from "@/lib/admin-context";
-import { ORDER_STATUS_LABELS, type AdminOrder } from "@/lib/types";
+import {
+  ORDER_STATUS_LABELS,
+  WALLET_TRANSACTION_LABELS,
+  type AdminOrder,
+  type AppNotification,
+  type WalletTransaction,
+} from "@/lib/types";
 import OrderActions from "./order-actions";
 import DeliveryFeeForm from "./delivery-fee-form";
 import EntityActivityLog from "@/components/entity-activity-log";
@@ -20,11 +27,11 @@ export default async function OrderDetailPage({
   const { data: order } = await supabase
     .from("orders")
     .select(
-      `id, status, subtotal, delivery_fee, total_amount, merchant_amount, platform_commission_amount, created_at,
-       merchants(store_name, phone),
+      `id, customer_id, status, subtotal, delivery_fee, total_amount, merchant_amount, platform_commission_amount, created_at,
+       merchants(store_name, phone, latitude, longitude),
        addresses(address_text, phone, communes(name)),
        order_items(id, product_id, quantity, unit_price, subtotal, products(name)),
-       drivers(full_name, phone)`,
+       drivers(full_name, phone, is_online, current_lat, current_lng)`,
     )
     .eq("id", id)
     .maybeSingle();
@@ -32,6 +39,53 @@ export default async function OrderDetailPage({
   if (!order) notFound();
 
   const o = order as unknown as AdminOrder;
+
+  // ============================================================
+  // التتبّع الشامل (PRD قسم 24): بيانات موجودة أصلًا فـ جداول منفصلة
+  // (users، wallet_transactions، notifications، fraud_cases) — تُجمَع
+  // هنا فقط للعرض، بلا أي تعديل على أي منها. كل استعلام مستقل ويتحمّل
+  // نتيجة فارغة بأمان (Empty State حقيقي، لا بيانات وهمية).
+  // ============================================================
+  const [
+    { data: customer },
+    { data: walletEntry },
+    { data: orderNotifications },
+    { data: fraudRows },
+  ] = await Promise.all([
+    supabase
+      .from("users")
+      .select("full_name, phone, is_suspended")
+      .eq("id", o.customer_id)
+      .maybeSingle(),
+    supabase
+      .from("wallet_transactions")
+      .select("id, merchant_id, type, amount, note, order_id, created_at")
+      .eq("order_id", o.id)
+      .eq("type", "commission")
+      .maybeSingle(),
+    supabase
+      .from("notifications")
+      .select("id, title, body, type, is_read, created_at, entity_type, entity_id")
+      .eq("entity_type", "order")
+      .eq("entity_id", o.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("fraud_cases")
+      .select("violation_count, status")
+      .eq("user_id", o.customer_id),
+  ]);
+
+  const customerInfo = customer as {
+    full_name: string;
+    phone: string | null;
+    is_suspended: boolean;
+  } | null;
+  const commissionEntry = walletEntry as WalletTransaction | null;
+  const notificationsForOrder = (orderNotifications ?? []) as AppNotification[];
+  const customerFraudTotal = (fraudRows ?? []).reduce(
+    (sum, r) => sum + Number((r as { violation_count: number }).violation_count),
+    0,
+  );
 
   return (
     <div className="max-w-xl">
@@ -46,10 +100,37 @@ export default async function OrderDetailPage({
       </div>
 
       <div className="rounded-xl border border-border bg-card p-5 mb-4">
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-semibold mb-1">العميل</p>
+          {customerFraudTotal > 0 && (
+            <Link
+              href="/dashboard/fraud"
+              className="text-xs text-error font-semibold shrink-0"
+            >
+              {customerFraudTotal} مخالفة مسجَّلة
+            </Link>
+          )}
+        </div>
+        <p className="text-black/70">
+          {customerInfo?.full_name || "—"} — {customerInfo?.phone ?? "—"}
+        </p>
+        {customerInfo?.is_suspended && (
+          <p className="text-error text-sm font-semibold mt-1">حساب موقوف حاليًا</p>
+        )}
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-5 mb-4">
         <p className="font-semibold mb-1">المحل</p>
         <p className="text-black/70">
           {o.merchants?.store_name} — {o.merchants?.phone}
         </p>
+        {o.merchants?.latitude && o.merchants?.longitude ? (
+          <p className="text-xs text-black/40 mt-1">
+            الموقع: {o.merchants.latitude.toFixed(5)}, {o.merchants.longitude.toFixed(5)}
+          </p>
+        ) : (
+          <p className="text-xs text-black/40 mt-1">لم يحدَّد موقع المحل بعد</p>
+        )}
       </div>
 
       <div className="rounded-xl border border-border bg-card p-5 mb-4">
@@ -59,6 +140,14 @@ export default async function OrderDetailPage({
             ? `${o.drivers.full_name} — ${o.drivers.phone}`
             : "لم يُعيَّن موصّل بعد"}
         </p>
+        {o.drivers && (
+          <p className="text-xs text-black/40 mt-1">
+            {o.drivers.is_online ? "متصل الآن" : "غير متصل"}
+            {o.drivers.current_lat && o.drivers.current_lng
+              ? ` — آخر موقع: ${o.drivers.current_lat.toFixed(5)}, ${o.drivers.current_lng.toFixed(5)}`
+              : " — لا يوجد موقع مسجَّل بعد"}
+          </p>
+        )}
       </div>
 
       <div className="rounded-xl border border-border bg-card p-5 mb-4">
@@ -111,6 +200,43 @@ export default async function OrderDetailPage({
       <div className="rounded-xl border border-border bg-card p-5 mb-4">
         <p className="font-semibold mb-3">الإجراء</p>
         <OrderActions orderId={o.id} status={o.status} />
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-5 mb-4">
+        <p className="font-semibold mb-3">أثر الطلب على المحفظة</p>
+        {commissionEntry ? (
+          <div className="flex items-center justify-between text-sm">
+            <span>{WALLET_TRANSACTION_LABELS[commissionEntry.type]}</span>
+            <span className="font-semibold text-error">
+              {commissionEntry.amount.toFixed(2)} دج
+            </span>
+          </div>
+        ) : (
+          <p className="text-sm text-black/50">
+            لا توجد حركة عمولة بعد — تُسجَّل تلقائيًا فقط عند وصول الطلب
+            لحالة &quot;تم التسليم&quot;.
+          </p>
+        )}
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-5 mb-4">
+        <p className="font-semibold mb-3">الإشعارات المرتبطة بهذا الطلب</p>
+        {notificationsForOrder.length === 0 ? (
+          <p className="text-sm text-black/50">لا توجد إشعارات مرتبطة بعد.</p>
+        ) : (
+          <div className="grid gap-2">
+            {notificationsForOrder.map((n) => (
+              <div key={n.id} className="text-sm border-b border-border last:border-b-0 pb-2 last:pb-0">
+                <p className="font-medium">{n.title}</p>
+                <p className="text-black/60">{n.body}</p>
+                <p className="text-xs text-black/40 mt-0.5">
+                  {new Date(n.created_at).toLocaleString("ar-DZ")}
+                  {n.is_read ? " — مقروء" : " — غير مقروء"}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <EntityActivityLog tableName="orders" recordId={o.id} />
