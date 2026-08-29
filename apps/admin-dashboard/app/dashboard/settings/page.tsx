@@ -14,6 +14,10 @@ export default async function SettingsPage() {
   const items = (settings ?? []) as Setting[];
   const commissionRate =
     items.find((s) => s.key === "platform_commission_rate")?.value ?? "10";
+  const warningThreshold =
+    items.find((s) => s.key === "fraud_warning_threshold")?.value ?? "3";
+  const suspensionThreshold =
+    items.find((s) => s.key === "fraud_suspension_threshold")?.value ?? "5";
 
   return (
     <div className="max-w-md">
@@ -39,13 +43,37 @@ export default async function SettingsPage() {
         </p>
       </div>
 
+      <p className="px-1 mb-2 text-[11px] font-bold uppercase tracking-wide text-black/40">
+        مكافحة الاحتيال
+      </p>
+      <div className="rounded-xl border border-border bg-card p-5 mb-6 grid gap-4">
+        <div>
+          <p className="font-semibold mb-1">حدّ التحذير (عدد المخالفات)</p>
+          <p className="text-sm text-black/60 mb-3">
+            عند بلوغ مجموع مخالفات المستخدم هذا العدد، تُصبح حالته
+            &quot;تحذير&quot; فـ سجلّ المخالفات.
+          </p>
+          <SettingsForm settingKey="fraud_warning_threshold" currentValue={warningThreshold} />
+        </div>
+        <div className="border-t border-border pt-4">
+          <p className="font-semibold mb-1">حدّ الإيقاف (عدد المخالفات)</p>
+          <p className="text-sm text-black/60 mb-3">
+            عند بلوغ مجموع مخالفات المستخدم هذا العدد، يُوقَف حسابه
+            تلقائيًا (يُمنَع من إنشاء طلبات جديدة أو استلامها كموصّل).
+          </p>
+          <SettingsForm settingKey="fraud_suspension_threshold" currentValue={suspensionThreshold} />
+        </div>
+        <p className="text-xs text-black/40">
+          إدارة الحسابات الموقوفة وتسجيل المخالفات يدويًا: صفحة
+          &quot;المخالفات والإيقاف&quot;.
+        </p>
+      </div>
+
       {/*
-        فئات أخرى (التجار/الموصّلون/التوصيل/الإشعارات/الأمان) غير معروضة
-        عمدًا: لا يوجد أي إعداد فعلي مخزَّن في جدول settings تحت هذه
-        الفئات اليوم — عرض فئة فارغة هنا سيكون واجهة بلا بيانات حقيقية،
-        وهو ما مُنِع صراحة في هذه المرحلة ("لا تُنشئ إعدادات
-        Wallet/Fraud/Taxi أو أي فئة وهمية الآن"). تُضاف كل فئة فقط عند
-        إضافة أول إعداد حقيقي تحتها.
+        فئات أخرى (التجار/الموصّلون/التوصيل/الإشعارات) غير معروضة عمدًا:
+        لا يوجد أي إعداد فعلي مخزَّن في جدول settings تحت هذه الفئات
+        اليوم — عرض فئة فارغة هنا سيكون واجهة بلا بيانات حقيقية. تُضاف
+        كل فئة فقط عند إضافة أول إعداد حقيقي تحتها.
       */}
     </div>
   );

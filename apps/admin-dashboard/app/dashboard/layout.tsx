@@ -129,6 +129,12 @@ function buildNavModules(context: Awaited<ReturnType<typeof getAdminContext>>): 
         : [],
     },
     {
+      title: "الأمان",
+      links: context.hasCapability("fraud.view")
+        ? [{ href: "/dashboard/fraud", label: "المخالفات والإيقاف" }]
+        : [],
+    },
+    {
       title: "الإدارة والإعدادات",
       links: context.isSuperAdmin
         ? [

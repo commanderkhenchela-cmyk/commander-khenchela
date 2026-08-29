@@ -155,6 +155,41 @@ export function tableLabel(tableName: string): string {
   return TABLE_LABELS[tableName] ?? tableName;
 }
 
+/// حالة مخالفة واحدة — راجع migration 20260831000000_fraud_system
+/// للتفاصيل الكاملة (RLS إدارية فقط، الكتابة حصرًا عبر
+/// admin_log_fraud_violation أو الرصد التلقائي لإلغاء الطلبات).
+export type FraudRole = "customer" | "merchant" | "driver";
+export type FraudStatus = "open" | "warning" | "suspended" | "resolved";
+export type FraudSeverity = "low" | "medium" | "high";
+
+export interface FraudCase {
+  id: string;
+  user_id: string;
+  role: FraudRole;
+  violation_type: string;
+  violation_count: number;
+  severity: FraudSeverity;
+  reason: string | null;
+  status: FraudStatus;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+  users?: { full_name: string; phone: string | null; is_suspended: boolean } | null;
+}
+
+export const FRAUD_ROLE_LABELS: Record<FraudRole, string> = {
+  customer: "عميل",
+  merchant: "تاجر",
+  driver: "موصّل",
+};
+
+export const FRAUD_STATUS_LABELS: Record<FraudStatus, string> = {
+  open: "مفتوحة",
+  warning: "تحذير",
+  suspended: "موقوف",
+  resolved: "محلولة",
+};
+
 export type UserRole = "customer" | "merchant" | "admin" | "manager" | "ads_manager";
 
 export interface TeamMember {

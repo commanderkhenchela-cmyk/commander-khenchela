@@ -12,6 +12,7 @@ export default async function DashboardOverviewPage() {
   const canSeeDrivers = context.hasCapability("driver.view");
   const canSeeOrders = context.hasCapability("order.view");
   const canSeeServices = context.hasCapability("service.view");
+  const canSeeFraud = context.hasCapability("fraud.view");
 
   const [
     { count: pendingMerchants },
@@ -24,6 +25,7 @@ export default async function DashboardOverviewPage() {
     { count: activeServices },
     { count: totalUsers },
     { count: unreadNotifications },
+    { count: suspendedAccounts },
     { data: recentActivity },
   ] = await Promise.all([
     canSeeMerchants
@@ -61,6 +63,9 @@ export default async function DashboardOverviewPage() {
       .select("id", { count: "exact", head: true })
       .eq("user_id", context.userId)
       .eq("is_read", false),
+    canSeeFraud
+      ? supabase.from("users").select("id", { count: "exact", head: true }).eq("is_suspended", true)
+      : Promise.resolve({ count: null }),
     context.isSuperAdmin
       ? supabase
           .from("admin_activity_log")
@@ -118,6 +123,13 @@ export default async function DashboardOverviewPage() {
         {canSeeServices && (
           <StatCard label="خدمات مفعَّلة" value={activeServices ?? 0} />
         )}
+        {canSeeFraud && (
+          <StatCard
+            label="حسابات موقوفة"
+            value={suspendedAccounts ?? 0}
+            highlight={(suspendedAccounts ?? 0) > 0}
+          />
+        )}
         <StatCard
           label="إشعاراتي غير المقروءة"
           value={unreadNotifications ?? 0}
@@ -148,6 +160,14 @@ export default async function DashboardOverviewPage() {
             className="rounded-lg border border-primary text-primary font-semibold px-5 py-3"
           >
             متابعة التوصيل
+          </Link>
+        )}
+        {canSeeFraud && (suspendedAccounts ?? 0) > 0 && (
+          <Link
+            href="/dashboard/fraud"
+            className="rounded-lg border border-error text-error font-semibold px-5 py-3"
+          >
+            مراجعة الحسابات الموقوفة
           </Link>
         )}
       </div>
