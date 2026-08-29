@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminContext } from "@/lib/admin-context";
 import {
+  DELIVERY_FEE_METHOD_LABELS,
   ORDER_STATUS_LABELS,
   WALLET_TRANSACTION_LABELS,
   type AdminOrder,
@@ -10,7 +11,7 @@ import {
   type WalletTransaction,
 } from "@/lib/types";
 import OrderActions from "./order-actions";
-import DeliveryFeeForm from "./delivery-fee-form";
+import DeliveryFeeOverrideForm from "./delivery-fee-override-form";
 import EntityActivityLog from "@/components/entity-activity-log";
 
 export default async function OrderDetailPage({
@@ -27,7 +28,7 @@ export default async function OrderDetailPage({
   const { data: order } = await supabase
     .from("orders")
     .select(
-      `id, customer_id, status, subtotal, delivery_fee, total_amount, merchant_amount, platform_commission_amount, created_at,
+      `id, customer_id, status, subtotal, delivery_fee, delivery_fee_method, driver_earning_share, platform_delivery_share, delivery_fee_override_reason, total_amount, merchant_amount, platform_commission_amount, created_at,
        merchants(store_name, phone, latitude, longitude),
        addresses(address_text, phone, communes(name)),
        order_items(id, product_id, quantity, unit_price, subtotal, products(name)),
@@ -194,7 +195,29 @@ export default async function OrderDetailPage({
 
       <div className="rounded-xl border border-border bg-card p-5 mb-4">
         <p className="font-semibold mb-3">رسوم التوصيل</p>
-        <DeliveryFeeForm orderId={o.id} currentFee={o.delivery_fee} />
+        <div className="grid gap-1 text-sm text-black/70 mb-4">
+          <div className="flex justify-between">
+            <span className="text-black/50">طريقة الحساب</span>
+            <span className="font-medium">
+              {DELIVERY_FEE_METHOD_LABELS[o.delivery_fee_method]}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-black/50">حصة الموصّل</span>
+            <span className="font-medium">{o.driver_earning_share.toFixed(2)} دج</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-black/50">حصة المنصة</span>
+            <span className="font-medium">{o.platform_delivery_share.toFixed(2)} دج</span>
+          </div>
+          {o.delivery_fee_override_reason && (
+            <div className="mt-1 pt-1 border-t border-border">
+              <span className="text-black/50">آخر سبب تعديل يدوي: </span>
+              <span className="font-medium">{o.delivery_fee_override_reason}</span>
+            </div>
+          )}
+        </div>
+        <DeliveryFeeOverrideForm orderId={o.id} currentFee={o.delivery_fee} />
       </div>
 
       <div className="rounded-xl border border-border bg-card p-5 mb-4">

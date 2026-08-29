@@ -139,6 +139,7 @@ function buildNavModules(context: Awaited<ReturnType<typeof getAdminContext>>): 
       links: context.isSuperAdmin
         ? [
             { href: "/dashboard/settings", label: "إعدادات المنصة" },
+            { href: "/dashboard/delivery-fees", label: "رسوم التوصيل" },
             { href: "/dashboard/branding", label: "الهوية والشعار" },
             { href: "/dashboard/app-settings", label: "بيانات التواصل" },
             { href: "/dashboard/activity-log", label: "سجل النشاطات" },

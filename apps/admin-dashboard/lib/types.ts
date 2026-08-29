@@ -84,6 +84,10 @@ export interface AdminOrder {
   status: OrderStatus;
   subtotal: number;
   delivery_fee: number;
+  delivery_fee_method: DeliveryFeeMethod | "unconfigured" | "manual_override";
+  driver_earning_share: number;
+  platform_delivery_share: number;
+  delivery_fee_override_reason: string | null;
   total_amount: number;
   merchant_amount: number;
   platform_commission_amount: number;
@@ -269,6 +273,43 @@ export interface Service {
   created_at: string;
   updated_at: string;
 }
+
+/// إعدادات رسوم التوصيل لخدمة واحدة — راجع migration
+/// 20260901000000_delivery_fee_engine للتفاصيل الكاملة (المحرك،
+/// RLS، الحماية من التعديل المباشر).
+export type DeliveryFeeMethod = "fixed" | "distance" | "zone";
+export type DeliveryShareType = "fixed" | "percentage";
+
+export interface DeliveryFeeConfig {
+  service_id: string;
+  method: DeliveryFeeMethod;
+  fixed_amount: number | null;
+  distance_base_amount: number | null;
+  distance_per_km_amount: number | null;
+  driver_share_type: DeliveryShareType;
+  driver_share_value: number;
+  enabled: boolean;
+  updated_at: string;
+}
+
+export interface DeliveryFeeZonePrice {
+  id: string;
+  service_id: string;
+  commune_id: number;
+  price: number;
+  updated_at: string;
+}
+
+export const DELIVERY_FEE_METHOD_LABELS: Record<
+  DeliveryFeeMethod | "unconfigured" | "manual_override",
+  string
+> = {
+  fixed: "سعر ثابت",
+  distance: "حسب المسافة",
+  zone: "حسب البلدية",
+  unconfigured: "غير مُهيَّأ (رسم صفري)",
+  manual_override: "تعديل يدوي",
+};
 
 export interface Advertisement {
   id: string;
