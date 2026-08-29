@@ -146,21 +146,42 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        order.paymentStatus == 'collected'
-                            ? 'تم تحصيل المبلغ'
-                            : 'المبلغ المطلوب تحصيله (نقدًا)',
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            order.paymentStatus == 'collected'
+                                ? 'تم تحصيل المبلغ'
+                                : 'المبلغ المطلوب تحصيله (نقدًا)',
+                          ),
+                          Text(
+                            '${order.totalAmount.toStringAsFixed(0)} دج',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        '${order.totalAmount.toStringAsFixed(0)} دج',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
+                      if (order.driverEarningShare > 0) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'نصيبك من رسوم التوصيل',
+                              style: TextStyle(fontSize: 13, color: Colors.black54),
+                            ),
+                            Text(
+                              '${order.driverEarningShare.toStringAsFixed(0)} دج',
+                              style: const TextStyle(fontSize: 13, color: Colors.black54),
+                            ),
+                          ],
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

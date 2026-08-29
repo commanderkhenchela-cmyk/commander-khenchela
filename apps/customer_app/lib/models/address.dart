@@ -8,6 +8,8 @@ class DeliveryAddress {
   final String addressText;
   final String phone;
   final bool isDefault;
+  final double? latitude;
+  final double? longitude;
 
   const DeliveryAddress({
     required this.id,
@@ -16,6 +18,8 @@ class DeliveryAddress {
     required this.addressText,
     required this.phone,
     required this.isDefault,
+    this.latitude,
+    this.longitude,
   });
 
   factory DeliveryAddress.fromMap(Map<String, dynamic> map) {
@@ -26,6 +30,8 @@ class DeliveryAddress {
       addressText: map['address_text'] as String,
       phone: map['phone'] as String? ?? '',
       isDefault: map['is_default'] as bool? ?? false,
+      latitude: (map['latitude'] as num?)?.toDouble(),
+      longitude: (map['longitude'] as num?)?.toDouble(),
     );
   }
 }

@@ -117,6 +117,7 @@
   "reviewConfirmStepTitle": "Review and confirm",
   "checkoutTotalLabel": "Total",
   "deliveryFeeTbdMessage": "Delivery fee will be set later by the admin",
+  "estimatingDeliveryFeeMessage": "Calculating delivery fee...",
   "paymentCodLabel": "Payment: cash on delivery (COD)",
   "confirmOrderAction": "Confirm order",
   "orderSubmitError": "Couldn't submit the order. Try again.",
@@ -254,6 +255,8 @@
   "deliveryContactPhoneLabel": "Contact phone number for delivery",
   "invalidPhoneError": "Enter a valid Algerian phone number",
   "saveAddressAction": "Save address",
+  "useCurrentLocationAction": "Use my current location",
+  "locationCapturedMessage": "Location captured ✅",
 
   "visitAction": "Visit",
   "seeAllAction": "See all",

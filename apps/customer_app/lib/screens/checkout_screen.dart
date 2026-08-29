@@ -26,6 +26,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   bool _isSubmitting = false;
   String? _errorMessage;
 
+  // معاينة رسم التوصيل قبل التأكيد (راجع migration
+  // 20260901000000_delivery_fee_engine) — للعرض فقط، create_order يعيد
+  // الحساب بنفسه من الصفر على السيرفر عند التأكيد الفعلي.
+  double? _deliveryFee;
+  String? _deliveryFeeMethod;
+  bool _isLoadingFee = false;
+
   bool get _isSignedIn => AuthService.isSignedIn;
 
   @override
@@ -65,6 +72,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           (row['communes'] as Map<String, dynamic>)['name'] as String;
       _addressSummary = '$communeName — ${row['address_text']}';
     });
+    _loadDeliveryFeePreview();
+  }
+
+  /// معاينة رسم التوصيل — لا تُستخدَم نتيجتها كمُدخَل لإنشاء الطلب
+  /// إطلاقًا (create_order يحسبها بنفسه من الصفر)، هذه فقط لعرضها
+  /// للعميل قبل التأكيد. فشلها (شبكة، إعداد ناقص) لا يمنع إتمام الطلب
+  /// أبدًا — يبقى النص القديم "تُحدَّد لاحقًا" ظاهرًا كما كان تمامًا.
+  Future<void> _loadDeliveryFeePreview() async {
+    final merchantId = context.read<CartService>().merchantId;
+    if (_addressId == null || merchantId == null) return;
+
+    setState(() {
+      _isLoadingFee = true;
+      _deliveryFee = null;
+      _deliveryFeeMethod = null;
+    });
+
+    try {
+      final result = await Supabase.instance.client.rpc(
+        'preview_delivery_fee',
+        params: {'p_merchant_id': merchantId, 'p_address_id': _addressId},
+      );
+      final row = (result as List).first as Map<String, dynamic>;
+      if (!mounted) return;
+      setState(() {
+        _deliveryFee = (row['fee'] as num).toDouble();
+        _deliveryFeeMethod = row['method_used'] as String;
+      });
+    } catch (_) {
+      // صامت عمدًا — راجع تعليق الدالة أعلاه.
+    } finally {
+      if (mounted) setState(() => _isLoadingFee = false);
+    }
   }
 
   Future<void> _goToLogin() async {
@@ -241,22 +281,52 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                   ),
                   const Divider(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(l10n.checkoutTotalLabel),
-                      Text(
-                        l10n.currencyAmount(cart.subtotal.toStringAsFixed(0)),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    l10n.deliveryFeeTbdMessage,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.black45,
-                    ),
+                  Builder(
+                    builder: (context) {
+                      final hasRealFee = _deliveryFeeMethod != null &&
+                          _deliveryFeeMethod != 'unconfigured' &&
+                          _deliveryFee != null;
+                      final total = cart.subtotal + (hasRealFee ? _deliveryFee! : 0);
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (hasRealFee) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(l10n.deliveryFeeLabel),
+                                Text(
+                                  l10n.currencyAmount(_deliveryFee!.toStringAsFixed(0)),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                          ],
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(l10n.checkoutTotalLabel),
+                              Text(
+                                l10n.currencyAmount(total.toStringAsFixed(0)),
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          if (!hasRealFee) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              _isLoadingFee
+                                  ? l10n.estimatingDeliveryFeeMessage
+                                  : l10n.deliveryFeeTbdMessage,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: Colors.black45,
+                              ),
+                            ),
+                          ],
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(height: 12),
                   Row(

@@ -117,6 +117,7 @@
   "reviewConfirmStepTitle": "Vérification et confirmation",
   "checkoutTotalLabel": "Total",
   "deliveryFeeTbdMessage": "Les frais de livraison seront fixés ultérieurement par l'administration",
+  "estimatingDeliveryFeeMessage": "Calcul des frais de livraison...",
   "paymentCodLabel": "Paiement : à la livraison (COD)",
   "confirmOrderAction": "Confirmer la commande",
   "orderSubmitError": "Impossible d'envoyer la commande. Réessayez.",
@@ -254,6 +255,8 @@
   "deliveryContactPhoneLabel": "Numéro de téléphone de contact pour la livraison",
   "invalidPhoneError": "Entrez un numéro de téléphone algérien valide",
   "saveAddressAction": "Enregistrer l'adresse",
+  "useCurrentLocationAction": "Utiliser ma position actuelle",
+  "locationCapturedMessage": "Position enregistrée ✅",
 
   "visitAction": "Visiter",
   "seeAllAction": "Tout voir",

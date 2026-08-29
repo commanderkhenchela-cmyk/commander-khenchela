@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../l10n/app_localizations.dart';
 import '../models/commune.dart';
 import '../models/address.dart';
+import '../services/location_service.dart';
 import '../widgets/loading_elevated_button.dart';
 
 const int _khenchelaWilayaId = 40;
@@ -27,6 +28,10 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
   List<Commune> _communes = [];
   int? _selectedCommuneId;
 
+  double? _latitude;
+  double? _longitude;
+  bool _isLocating = false;
+
   bool _isLoading = true;
   bool _isSaving = false;
   String? _errorMessage;
@@ -43,6 +48,8 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       text: widget.existingAddress?.phone ?? '',
     );
     _selectedCommuneId = widget.existingAddress?.communeId;
+    _latitude = widget.existingAddress?.latitude;
+    _longitude = widget.existingAddress?.longitude;
     _loadCommunes();
   }
 
@@ -75,6 +82,24 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
     }
   }
 
+  /// إحداثيات اختيارية بحتة — تُستخدَم فقط لو كانت طريقة حساب رسوم
+  /// التوصيل النشطة "حسب المسافة" (راجع migration
+  /// 20260901000000_delivery_fee_engine). LocationService لا يرمي أي
+  /// استثناء أبدًا (نفس فلسفة قسم "الأقرب إليك") — فشل الالتقاط هنا لا
+  /// يمنع حفظ العنوان إطلاقًا، فقط يبقي الإحداثيات فارغة كما كانت.
+  Future<void> _useCurrentLocation() async {
+    setState(() => _isLocating = true);
+    final position = await LocationService.getCurrentPosition();
+    if (!mounted) return;
+    setState(() {
+      _isLocating = false;
+      if (position != null) {
+        _latitude = position.latitude;
+        _longitude = position.longitude;
+      }
+    });
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCommuneId == null) {
@@ -99,6 +124,8 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
         'commune_id': _selectedCommuneId,
         'address_text': _addressTextController.text.trim(),
         'phone': _phoneController.text.trim(),
+        'latitude': _latitude,
+        'longitude': _longitude,
       };
 
       String addressId;
@@ -200,6 +227,26 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                           }
                           return null;
                         },
+                      ),
+                      const SizedBox(height: 16),
+                      OutlinedButton.icon(
+                        onPressed: _isLocating ? null : _useCurrentLocation,
+                        icon: _isLocating
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Icon(
+                                _latitude != null
+                                    ? Icons.check_circle_outline
+                                    : Icons.my_location_outlined,
+                              ),
+                        label: Text(
+                          _latitude != null
+                              ? l10n.locationCapturedMessage
+                              : l10n.useCurrentLocationAction,
+                        ),
                       ),
                       if (_errorMessage != null) ...[
                         const SizedBox(height: 16),

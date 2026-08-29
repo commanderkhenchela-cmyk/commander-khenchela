@@ -6,6 +6,7 @@ class JobOrder {
   final String status;
   final double subtotal;
   final double deliveryFee;
+  final double driverEarningShare;
   final double totalAmount;
   final String paymentStatus;
   final DateTime createdAt;
@@ -20,6 +21,7 @@ class JobOrder {
     required this.status,
     required this.subtotal,
     required this.deliveryFee,
+    required this.driverEarningShare,
     required this.totalAmount,
     required this.paymentStatus,
     required this.createdAt,
@@ -40,6 +42,7 @@ class JobOrder {
       status: map['status'] as String,
       subtotal: (map['subtotal'] as num).toDouble(),
       deliveryFee: (map['delivery_fee'] as num).toDouble(),
+      driverEarningShare: (map['driver_earning_share'] as num?)?.toDouble() ?? 0,
       totalAmount: (map['total_amount'] as num).toDouble(),
       paymentStatus: map['payment_status'] as String,
       createdAt: DateTime.parse(map['created_at'] as String),

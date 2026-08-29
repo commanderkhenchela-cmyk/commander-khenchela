@@ -12,7 +12,7 @@ class OrderService {
   static final SupabaseClient _client = Supabase.instance.client;
 
   static const _jobColumns =
-      'id, status, subtotal, delivery_fee, total_amount, payment_status, '
+      'id, status, subtotal, delivery_fee, driver_earning_share, total_amount, payment_status, '
       'created_at, merchants(store_name, phone, address_text, latitude, longitude)';
 
   /// طلبات جاهزة للاستلام ولم يُعيَّن لها موصّل بعد — أي موصّل موافَق
