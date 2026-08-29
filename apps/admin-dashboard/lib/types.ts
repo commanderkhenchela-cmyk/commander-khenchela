@@ -122,6 +122,7 @@ export interface Driver {
   vehicle_type: "bike";
   status: DriverStatus;
   is_online: boolean;
+  id_card_path: string | null;
   created_at: string;
 }
 

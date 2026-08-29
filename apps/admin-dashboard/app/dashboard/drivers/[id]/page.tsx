@@ -19,12 +19,23 @@ export default async function DriverDetailPage({
   const { data: driver } = await supabase
     .from("drivers")
     .select(
-      "id, user_id, full_name, phone, vehicle_type, status, is_online, created_at",
+      "id, user_id, full_name, phone, vehicle_type, status, is_online, id_card_path, created_at",
     )
     .eq("id", id)
     .maybeSingle();
 
   if (!driver) notFound();
+
+  // رابط مؤقّت (Signed URL) لبطاقة التعريف — bucket خاص (driver-documents)،
+  // لا رابط عام إطلاقًا. صالح ساعة واحدة، يُولَّد من جديد فـ كل تحميل
+  // للصفحة (لا حاجة لتخزينه).
+  let idCardSignedUrl: string | null = null;
+  if (driver.id_card_path) {
+    const { data: signed } = await supabase.storage
+      .from("driver-documents")
+      .createSignedUrl(driver.id_card_path, 3600);
+    idCardSignedUrl = signed?.signedUrl ?? null;
+  }
 
   const { data: account } = await supabase
     .from("users")
@@ -64,6 +75,23 @@ export default async function DriverDetailPage({
               : "—"
           }
         />
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-5 mb-4">
+        <p className="font-semibold mb-3">بطاقة التعريف</p>
+        {idCardSignedUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={idCardSignedUrl}
+            alt="بطاقة تعريف الموصّل"
+            className="w-full max-w-xs rounded-lg border border-border object-cover"
+          />
+        ) : (
+          <p className="text-sm text-black/50">
+            لم يرفع الموصّل صورة بطاقة تعريفه — لا تتم الموافقة على أي
+            موصّل بلا وثيقة هوية.
+          </p>
+        )}
       </div>
 
       <div className="rounded-xl border border-border bg-card p-5 mb-4">
