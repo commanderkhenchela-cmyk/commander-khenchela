@@ -33,6 +33,10 @@ export default async function SettingsPage() {
           يحتفظ بالنسبة وقت إنشائه).
         </p>
         <SettingsForm settingKey="platform_commission_rate" currentValue={commissionRate} unit="%" />
+        <p className="text-xs text-black/40 mt-3">
+          لاستثناء تاجر معيّن بنسبة مختلفة، اذهب لصفحة ذلك المحل — قسم
+          &quot;عمولة هذا المحل&quot;.
+        </p>
       </div>
 
       {/*

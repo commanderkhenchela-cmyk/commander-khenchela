@@ -7,6 +7,7 @@ import MerchantActions from "./merchant-actions";
 import MerchantCategorySelect from "./merchant-category-select";
 import MerchantFeaturedToggle from "./merchant-featured-toggle";
 import WalletTopupForm from "./wallet-topup-form";
+import CommissionOverrideForm from "./commission-override-form";
 import EntityActivityLog from "@/components/entity-activity-log";
 
 export default async function MerchantDetailPage({
@@ -23,7 +24,7 @@ export default async function MerchantDetailPage({
   const { data: merchant } = await supabase
     .from("merchants")
     .select(
-      "id, owner_user_id, store_name, wilaya_id, commune_id, address_text, phone, status, category_id, is_featured, orders_count, created_at, communes(name), merchant_categories(name, icon)",
+      "id, owner_user_id, store_name, wilaya_id, commune_id, address_text, phone, status, category_id, is_featured, orders_count, commission_rate_override, created_at, communes(name), merchant_categories(name, icon)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -51,6 +52,16 @@ export default async function MerchantDetailPage({
 
   const canViewWallet = context.hasCapability("wallet.view");
   const canManageWallet = context.hasCapability("wallet.manage");
+  const canManageCommission = context.hasCapability("settings.manage");
+
+  let defaultCommissionRate = "—";
+  if (canManageCommission) {
+    const { data: settings } = await supabase.rpc("admin_get_settings");
+    const rate = (settings ?? []).find(
+      (s: { key: string; value: string }) => s.key === "platform_commission_rate",
+    );
+    defaultCommissionRate = rate?.value ?? "—";
+  }
 
   let walletTransactions: WalletTransaction[] = [];
   let walletBalance = 0;
@@ -173,6 +184,22 @@ export default async function MerchantDetailPage({
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {canManageCommission && (
+        <div className="rounded-xl border border-border bg-card p-5 mb-4">
+          <p className="font-semibold mb-1">عمولة هذا المحل</p>
+          <p className="text-xs text-black/50 mb-3">
+            {m.commission_rate_override !== null
+              ? `يستخدم نسبة خاصة (${m.commission_rate_override}%) بدل النسبة العامة.`
+              : `يستخدم النسبة العامة حاليًا (${defaultCommissionRate}%). أدخل نسبة أدناه لاستثنائه.`}
+          </p>
+          <CommissionOverrideForm
+            merchantId={m.id}
+            currentOverride={m.commission_rate_override}
+            defaultRate={defaultCommissionRate}
+          />
         </div>
       )}
 

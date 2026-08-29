@@ -17,6 +17,10 @@ export interface Merchant {
   logo_url: string | null;
   cover_url: string | null;
   created_at: string;
+  /** نسبة عمولة خاصة بهذا التاجر — NULL يعني استخدام الإعداد المركزي
+   * العام (platform_commission_rate). راجع migration
+   * 20260830000000_merchant_commission_override. */
+  commission_rate_override: number | null;
   communes?: { name: string } | null;
   merchant_categories?: { name: string; icon: string } | null;
 }
