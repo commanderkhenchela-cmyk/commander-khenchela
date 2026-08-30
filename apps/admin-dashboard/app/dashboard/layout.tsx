@@ -58,7 +58,7 @@ export default async function DashboardLayout({
         <nav className="flex md:flex-col p-3 gap-1 overflow-x-auto">
           {modules.map((module) =>
             module.links.length === 0 ? null : (
-              <div key={module.title} className="md:mb-2">
+              <div key={module.title} className="flex md:block gap-1 md:mb-2">
                 <p className="hidden md:block px-3 pt-2 pb-1 text-[11px] font-bold uppercase tracking-wide text-black/40">
                   {module.title}
                 </p>
