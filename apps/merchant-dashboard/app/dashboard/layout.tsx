@@ -4,6 +4,7 @@ import { getMerchantContext } from "@/lib/merchant-context";
 import LogoutButton from "@/components/logout-button";
 import PushNotificationsSetup from "@/components/push-notifications-setup";
 import { MerchantNav } from "@/components/merchant-nav";
+import { StoreStatusToggle } from "@/components/store-status-toggle";
 import { LogOutIcon, PictureIcon } from "@/components/ui/icons";
 
 export default async function DashboardLayout({
@@ -39,6 +40,12 @@ export default async function DashboardLayout({
             <p className="font-bold text-lg truncate">{context.merchant.store_name}</p>
             <p className="text-xs text-black/50 mt-0.5">لوحة تحكم التاجر</p>
           </div>
+        </div>
+        <div className="p-3 border-b border-border">
+          <StoreStatusToggle
+            merchantId={context.merchant.id}
+            initialIsOpen={context.merchant.is_open}
+          />
         </div>
         <MerchantNav />
         <div className="p-3 mt-auto hidden md:block">

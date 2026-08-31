@@ -15,6 +15,9 @@ export interface Merchant {
   longitude: number | null;
   logo_url: string | null;
   cover_url: string | null;
+  /** تبديل يدوي (migration 20260903000000) — true=لا تقييد يدوي (الحالة
+   * الفعلية من ساعات العمل كما هي دائمًا)، false=مغلق يدويًا الآن. */
+  is_open: boolean;
   created_at: string;
 }
 
