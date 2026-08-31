@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminContext } from "@/lib/admin-context";
 import LogoutButton from "@/components/logout-button";
+import SidebarNav from "./sidebar-nav";
 
 const ROLE_LABELS: Record<string, string> = {
   admin: "مدير عام (صلاحية كاملة)",
@@ -55,20 +55,7 @@ export default async function DashboardLayout({
             {context.role ? ROLE_LABELS[context.role] : ""}
           </p>
         </div>
-        <nav className="flex md:flex-col p-3 gap-1 overflow-x-auto">
-          {modules.map((module) =>
-            module.links.length === 0 ? null : (
-              <div key={module.title} className="flex md:block gap-1 md:mb-2">
-                <p className="hidden md:block px-3 pt-2 pb-1 text-[11px] font-bold uppercase tracking-wide text-black/40">
-                  {module.title}
-                </p>
-                {module.links.map((link) => (
-                  <NavLink key={link.href} href={link.href} label={link.label} />
-                ))}
-              </div>
-            ),
-          )}
-        </nav>
+        <SidebarNav modules={modules} />
         <div className="p-3 mt-auto hidden md:block">
           <LogoutButton className="w-full text-right text-error text-sm px-3 py-2" />
         </div>
@@ -148,15 +135,4 @@ function buildNavModules(context: Awaited<ReturnType<typeof getAdminContext>>): 
         : [],
     },
   ];
-}
-
-function NavLink({ href, label }: { href: string; label: string }) {
-  return (
-    <Link
-      href={href}
-      className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium hover:bg-primary/10 hover:text-primary"
-    >
-      {label}
-    </Link>
-  );
 }
