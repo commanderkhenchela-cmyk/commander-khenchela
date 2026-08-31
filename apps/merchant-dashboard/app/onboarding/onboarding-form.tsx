@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { KHENCHELA_WILAYA_ID, type Commune } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { FieldError, Input, Label, Select } from "@/components/ui/input";
 
 export default function OnboardingForm({ communes }: { communes: Commune[] }) {
   const router = useRouter();
@@ -65,70 +67,58 @@ export default function OnboardingForm({ communes }: { communes: Commune[] }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div>
-        <label className="block text-sm font-medium mb-1">اسم المحل</label>
-        <input
+        <Label>اسم المحل</Label>
+        <Input
           type="text"
           required
           value={storeName}
           onChange={(e) => setStoreName(e.target.value)}
-          className="w-full rounded-lg border border-border px-3 py-2.5 outline-none focus:border-primary"
           placeholder="مثال: بقالة النور"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">البلدية</label>
-        <select
+        <Label>البلدية</Label>
+        <Select
           required
           value={communeId}
           onChange={(e) => setCommuneId(e.target.value)}
-          className="w-full rounded-lg border border-border px-3 py-2.5 outline-none focus:border-primary bg-white"
         >
           {communes.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">
-          العنوان بالتفصيل
-        </label>
-        <input
+        <Label>العنوان بالتفصيل</Label>
+        <Input
           type="text"
           required
           value={addressText}
           onChange={(e) => setAddressText(e.target.value)}
-          className="w-full rounded-lg border border-border px-3 py-2.5 outline-none focus:border-primary"
           placeholder="الحي، الشارع، رقم المحل..."
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">
-          هاتف المحل (يظهر للعملاء عند الحاجة)
-        </label>
-        <input
+        <Label>هاتف المحل (يظهر للعملاء عند الحاجة)</Label>
+        <Input
           type="tel"
           required
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          className="w-full rounded-lg border border-border px-3 py-2.5 outline-none focus:border-primary"
           placeholder="0555xxxxxx"
         />
       </div>
 
-      {error && <p className="text-error text-sm text-center">{error}</p>}
+      <FieldError className="text-center">{error}</FieldError>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-lg bg-primary text-white font-semibold py-3 mt-2 disabled:opacity-60"
-      >
+      <Button type="submit" disabled={loading} className="w-full mt-2">
         {loading ? "جارٍ الإرسال..." : "إرسال للمراجعة"}
-      </button>
+      </Button>
     </form>
   );
 }

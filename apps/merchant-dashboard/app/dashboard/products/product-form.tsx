@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import type { Category, Product } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { FieldError, Input, Label, Select, Textarea } from "@/components/ui/input";
 
 interface ProductFormProps {
   merchantId: string;
@@ -172,72 +174,64 @@ export default function ProductForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-lg">
       <div>
-        <label className="block text-sm font-medium mb-1">اسم المنتج</label>
-        <input
+        <Label>اسم المنتج</Label>
+        <Input
           type="text"
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full rounded-lg border border-border px-3 py-2.5 outline-none focus:border-primary"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">التصنيف</label>
+        <Label>التصنيف</Label>
         {categories.length === 0 ? (
           <p className="text-sm text-warning">
             لا توجد تصنيفات متاحة بعد — تواصل مع الإدارة.
           </p>
         ) : (
-          <select
+          <Select
             required
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
-            className="w-full rounded-lg border border-border px-3 py-2.5 outline-none focus:border-primary bg-white"
           >
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
             ))}
-          </select>
+          </Select>
         )}
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">السعر (دج)</label>
-        <input
+        <Label>السعر (دج)</Label>
+        <Input
           type="number"
           required
           min={0}
           step="0.01"
           value={price}
           onChange={(e) => setPrice(e.target.value)}
-          className="w-full rounded-lg border border-border px-3 py-2.5 outline-none focus:border-primary"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">
-          الوصف (اختياري)
-        </label>
-        <textarea
+        <Label>الوصف (اختياري)</Label>
+        <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          className="w-full rounded-lg border border-border px-3 py-2.5 outline-none focus:border-primary"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">
-          صورة المنتج (اختياري)
-        </label>
+        <Label>صورة المنتج (اختياري)</Label>
         {previewUrl && (
           <div className="mb-2 relative w-24 h-24 rounded-lg overflow-hidden border border-border">
             <Image
               src={previewUrl}
-              alt="معاينة الصورة"
+              alt={name ? `معاينة صورة ${name}` : "معاينة الصورة"}
               fill
               unoptimized
               className="object-cover"
@@ -253,15 +247,11 @@ export default function ProductForm({
         <p className="text-xs text-black/50 mt-1">JPG أو PNG، حتى 5 ميغابايت</p>
       </div>
 
-      {error && <p className="text-error text-sm">{error}</p>}
+      <FieldError>{error}</FieldError>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-lg bg-primary text-white font-semibold py-3 mt-2 disabled:opacity-60"
-      >
+      <Button type="submit" disabled={loading} className="w-full mt-2">
         {loading ? "جارٍ الحفظ..." : isEdit ? "حفظ التعديلات" : "إضافة المنتج"}
-      </button>
+      </Button>
     </form>
   );
 }

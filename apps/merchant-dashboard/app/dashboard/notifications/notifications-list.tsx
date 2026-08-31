@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { AppNotification } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { BellIcon } from "@/components/ui/icons";
 
 /**
  * قائمة الإشعارات — جزء تفاعلي (تعليم كمقروء + استماع لحظي)، منفصل عن
@@ -73,11 +76,17 @@ export default function NotificationsList() {
   }
 
   if (notifications === null) {
-    return <p className="text-black/60">جارِ التحميل...</p>;
+    return (
+      <div className="grid gap-3">
+        {[0, 1, 2].map((i) => (
+          <Skeleton key={i} className="h-16" />
+        ))}
+      </div>
+    );
   }
 
   if (notifications.length === 0) {
-    return <p className="text-black/60">لا توجد إشعارات بعد.</p>;
+    return <EmptyState icon={<BellIcon className="h-8 w-8" />} title="لا توجد إشعارات بعد" />;
   }
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;

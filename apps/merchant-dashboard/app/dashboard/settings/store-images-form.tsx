@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import type { Merchant } from "@/lib/types";
+import { FieldError } from "@/components/ui/input";
+import { PictureIcon } from "@/components/ui/icons";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 ميغابايت — نفس حد صور المنتجات
 
@@ -74,15 +76,17 @@ export default function StoreImagesForm({ merchant }: { merchant: Merchant }) {
           الأفضل خلفية بسيطة وواضحة.
         </p>
         <div className="flex items-center gap-3">
-          <div className="w-16 h-16 rounded-xl overflow-hidden border border-border bg-background shrink-0 relative">
-            {logoUrl && (
+          <div className="w-16 h-16 rounded-xl overflow-hidden border border-border bg-background shrink-0 relative flex items-center justify-center">
+            {logoUrl ? (
               <Image
                 src={logoUrl}
-                alt="شعار المحل"
+                alt={`شعار محل ${merchant.store_name}`}
                 fill
                 unoptimized
                 className="object-cover"
               />
+            ) : (
+              <PictureIcon className="h-6 w-6 text-black/25" />
             )}
           </div>
           <input
@@ -103,15 +107,17 @@ export default function StoreImagesForm({ merchant }: { merchant: Merchant }) {
         <p className="text-xs text-black/50 mb-2">
           تظهر أعلى صفحة محلك عند فتح العميل له. مستطيلة عريضة.
         </p>
-        <div className="w-full aspect-[16/6] rounded-xl overflow-hidden border border-border bg-background relative mb-2">
-          {coverUrl && (
+        <div className="w-full aspect-[16/6] rounded-xl overflow-hidden border border-border bg-background relative mb-2 flex items-center justify-center">
+          {coverUrl ? (
             <Image
               src={coverUrl}
-              alt="صورة الغلاف"
+              alt={`صورة غلاف محل ${merchant.store_name}`}
               fill
               unoptimized
               className="object-cover"
             />
+          ) : (
+            <PictureIcon className="h-8 w-8 text-black/25" />
           )}
         </div>
         <input
@@ -126,10 +132,8 @@ export default function StoreImagesForm({ merchant }: { merchant: Merchant }) {
         />
       </div>
 
-      {uploading && (
-        <p className="text-sm text-black/60">جارٍ رفع الصورة...</p>
-      )}
-      {error && <p className="text-error text-sm">{error}</p>}
+      {uploading && <p className="text-sm text-black/60">جارٍ رفع الصورة...</p>}
+      <FieldError>{error}</FieldError>
     </div>
   );
 }

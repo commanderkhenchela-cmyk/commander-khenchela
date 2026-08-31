@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { AuthCard } from "@/components/ui/auth-card";
+import { Button } from "@/components/ui/button";
+import { FieldError, Input, Label } from "@/components/ui/input";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -59,106 +62,81 @@ export default function SignupPage() {
 
   if (needsConfirmation) {
     return (
-      <main className="flex flex-1 items-center justify-center p-6">
-        <div className="w-full max-w-sm rounded-2xl bg-card border border-border p-8 shadow-sm text-center">
-          <h1 className="text-xl font-bold mb-3">تحقق من بريدك الإلكتروني</h1>
-          <p className="text-black/70">
-            أرسلنا رابط تأكيد إلى بريدك الإلكتروني. افتحه لتفعيل حسابك، ثم عد
-            وسجّل الدخول.
-          </p>
-          <Link
-            href="/login"
-            className="inline-block mt-6 text-primary font-semibold"
-          >
-            الذهاب لتسجيل الدخول
-          </Link>
-        </div>
-      </main>
+      <AuthCard className="text-center">
+        <h1 className="text-xl font-bold mb-3">تحقق من بريدك الإلكتروني</h1>
+        <p className="text-black/70">
+          أرسلنا رابط تأكيد إلى بريدك الإلكتروني. افتحه لتفعيل حسابك، ثم عد
+          وسجّل الدخول.
+        </p>
+        <Link href="/login" className="inline-block mt-6 text-primary font-semibold">
+          الذهاب لتسجيل الدخول
+        </Link>
+      </AuthCard>
     );
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center p-6">
-      <div className="w-full max-w-sm rounded-2xl bg-card border border-border p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-center mb-1">
-          سجّل محلك كتاجر
-        </h1>
-        <p className="text-center text-sm text-black/60 mb-6">
-          Commander Khenchela
-        </p>
+    <AuthCard>
+      <h1 className="text-2xl font-bold text-center mb-1">سجّل محلك كتاجر</h1>
+      <p className="text-center text-sm text-black/60 mb-6">
+        Commander Khenchela
+      </p>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              الاسم الكامل
-            </label>
-            <input
-              type="text"
-              required
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full rounded-lg border border-border px-3 py-2.5 outline-none focus:border-primary"
-            />
-          </div>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div>
+          <Label>الاسم الكامل</Label>
+          <Input
+            type="text"
+            required
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+          />
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              رقم الهاتف
-            </label>
-            <input
-              type="tel"
-              required
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full rounded-lg border border-border px-3 py-2.5 outline-none focus:border-primary"
-              placeholder="0555xxxxxx"
-            />
-          </div>
+        <div>
+          <Label>رقم الهاتف</Label>
+          <Input
+            type="tel"
+            required
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="0555xxxxxx"
+          />
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              البريد الإلكتروني
-            </label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-border px-3 py-2.5 outline-none focus:border-primary"
-            />
-          </div>
+        <div>
+          <Label>البريد الإلكتروني</Label>
+          <Input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              كلمة المرور
-            </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-border px-3 py-2.5 outline-none focus:border-primary"
-            />
-          </div>
+        <div>
+          <Label>كلمة المرور</Label>
+          <Input
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
 
-          {error && <p className="text-error text-sm text-center">{error}</p>}
+        <FieldError className="text-center">{error}</FieldError>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-primary text-white font-semibold py-3 mt-2 disabled:opacity-60"
-          >
-            {loading ? "جارٍ الإنشاء..." : "إنشاء الحساب"}
-          </button>
-        </form>
+        <Button type="submit" disabled={loading} className="w-full mt-2">
+          {loading ? "جارٍ الإنشاء..." : "إنشاء الحساب"}
+        </Button>
+      </form>
 
-        <p className="text-center text-sm mt-6">
-          لديك حساب بالفعل؟{" "}
-          <Link href="/login" className="text-primary font-semibold">
-            سجّل الدخول
-          </Link>
-        </p>
-      </div>
-    </main>
+      <p className="text-center text-sm mt-6">
+        لديك حساب بالفعل؟{" "}
+        <Link href="/login" className="text-primary font-semibold">
+          سجّل الدخول
+        </Link>
+      </p>
+    </AuthCard>
   );
 }

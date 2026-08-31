@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Merchant } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { FieldError, FieldSuccess } from "@/components/ui/input";
 
 export default function LocationForm({ merchant }: { merchant: Merchant }) {
   const router = useRouter();
@@ -69,17 +72,18 @@ export default function LocationForm({ merchant }: { merchant: Merchant }) {
         وأنت داخل المحل فعليًا لأدق نتيجة.
       </p>
 
-      <button
+      <Button
         type="button"
+        variant="outline"
         onClick={captureLocation}
         disabled={locating}
-        className="rounded-lg border border-primary text-primary font-semibold py-2.5 disabled:opacity-60"
+        className="w-full"
       >
         {locating ? "جارٍ تحديد موقعك..." : "استخدم موقعي الحالي"}
-      </button>
+      </Button>
 
       {latitude != null && longitude != null && (
-        <div className="rounded-lg border border-border bg-card p-3 text-sm flex items-center justify-between gap-2">
+        <Card padding="p-3" className="text-sm flex items-center justify-between gap-2">
           <span className="text-black/60">
             {latitude.toFixed(5)}, {longitude.toFixed(5)}
           </span>
@@ -91,20 +95,20 @@ export default function LocationForm({ merchant }: { merchant: Merchant }) {
           >
             تحقّق على الخريطة
           </a>
-        </div>
+        </Card>
       )}
 
-      {error && <p className="text-error text-sm">{error}</p>}
-      {saved && <p className="text-primary text-sm">تم حفظ الموقع بنجاح.</p>}
+      <FieldError>{error}</FieldError>
+      <FieldSuccess>{saved && "تم حفظ الموقع بنجاح."}</FieldSuccess>
 
-      <button
+      <Button
         type="button"
         onClick={saveLocation}
         disabled={saving || latitude == null || longitude == null}
-        className="w-full rounded-lg bg-primary text-white font-semibold py-3 disabled:opacity-60"
+        className="w-full"
       >
         {saving ? "جارٍ الحفظ..." : "حفظ الموقع"}
-      </button>
+      </Button>
     </div>
   );
 }

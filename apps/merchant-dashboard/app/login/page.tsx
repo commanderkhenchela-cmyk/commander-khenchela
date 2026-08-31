@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { AuthCard } from "@/components/ui/auth-card";
+import { Button } from "@/components/ui/button";
+import { FieldError, Input, Label } from "@/components/ui/input";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -38,61 +41,49 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center p-6">
-      <div className="w-full max-w-sm rounded-2xl bg-card border border-border p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-center mb-1">
-          لوحة تحكم التاجر
-        </h1>
-        <p className="text-center text-sm text-black/60 mb-6">
-          Commander Khenchela
-        </p>
+    <AuthCard>
+      <h1 className="text-2xl font-bold text-center mb-1">
+        لوحة تحكم التاجر
+      </h1>
+      <p className="text-center text-sm text-black/60 mb-6">
+        Commander Khenchela
+      </p>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              البريد الإلكتروني
-            </label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-border px-3 py-2.5 outline-none focus:border-primary"
-              placeholder="example@email.com"
-            />
-          </div>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div>
+          <Label>البريد الإلكتروني</Label>
+          <Input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="example@email.com"
+          />
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              كلمة المرور
-            </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-border px-3 py-2.5 outline-none focus:border-primary"
-            />
-          </div>
+        <div>
+          <Label>كلمة المرور</Label>
+          <Input
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
 
-          {error && <p className="text-error text-sm text-center">{error}</p>}
+        <FieldError className="text-center">{error}</FieldError>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-primary text-white font-semibold py-3 mt-2 disabled:opacity-60"
-          >
-            {loading ? "جارٍ الدخول..." : "تسجيل الدخول"}
-          </button>
-        </form>
+        <Button type="submit" disabled={loading} className="w-full mt-2">
+          {loading ? "جارٍ الدخول..." : "تسجيل الدخول"}
+        </Button>
+      </form>
 
-        <p className="text-center text-sm mt-6">
-          ليس لديك حساب تاجر؟{" "}
-          <Link href="/signup" className="text-primary font-semibold">
-            سجّل محلك الآن
-          </Link>
-        </p>
-      </div>
-    </main>
+      <p className="text-center text-sm mt-6">
+        ليس لديك حساب تاجر؟{" "}
+        <Link href="/signup" className="text-primary font-semibold">
+          سجّل محلك الآن
+        </Link>
+      </p>
+    </AuthCard>
   );
 }

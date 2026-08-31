@@ -2,6 +2,7 @@ import { getMerchantContext } from "@/lib/merchant-context";
 import SettingsForm from "./settings-form";
 import LocationForm from "./location-form";
 import StoreImagesForm from "./store-images-form";
+import { Card } from "@/components/ui/card";
 
 export default async function SettingsPage() {
   const context = await getMerchantContext();
@@ -12,15 +13,15 @@ export default async function SettingsPage() {
       <h1 className="text-2xl font-bold mb-6">إعدادات المحل</h1>
       <SettingsForm merchant={merchant} />
 
-      <div className="mt-8 rounded-xl border border-border bg-card p-5">
+      <Card className="mt-8">
         <p className="font-semibold mb-3">صور المحل</p>
         <StoreImagesForm merchant={merchant} />
-      </div>
+      </Card>
 
-      <div className="mt-8 rounded-xl border border-border bg-card p-5">
+      <Card className="mt-8">
         <p className="font-semibold mb-3">الموقع الجغرافي</p>
         <LocationForm merchant={merchant} />
-      </div>
+      </Card>
     </div>
   );
 }

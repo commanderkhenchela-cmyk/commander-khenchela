@@ -2,6 +2,9 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getMerchantContext } from "@/lib/merchant-context";
 import { ORDER_STATUS_LABELS, type MerchantOrder } from "@/lib/types";
+import { ORDER_STATUS_TONE } from "@/lib/order-status";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import OrderActions from "./order-actions";
 
 export default async function OrderDetailPage({
@@ -36,19 +39,19 @@ export default async function OrderDetailPage({
         {new Date(o.created_at).toLocaleString("ar-DZ")}
       </p>
 
-      <div className="rounded-xl border border-border bg-card p-5 mb-4">
-        <p className="font-semibold mb-1">الحالة الحالية</p>
-        <p className="text-primary font-bold">{ORDER_STATUS_LABELS[o.status]}</p>
-      </div>
+      <Card className="mb-4">
+        <p className="font-semibold mb-2">الحالة الحالية</p>
+        <Badge tone={ORDER_STATUS_TONE[o.status]}>{ORDER_STATUS_LABELS[o.status]}</Badge>
+      </Card>
 
-      <div className="rounded-xl border border-border bg-card p-5 mb-4">
+      <Card className="mb-4">
         <p className="font-semibold mb-1">عنوان التوصيل</p>
         <p className="text-black/70">
           {o.addresses?.communes?.name} — {o.addresses?.address_text}
         </p>
-      </div>
+      </Card>
 
-      <div className="rounded-xl border border-border bg-card p-5 mb-4">
+      <Card className="mb-4">
         <p className="font-semibold mb-3">المنتجات</p>
         <div className="flex flex-col gap-2">
           {o.order_items?.map((item) => (
@@ -72,12 +75,12 @@ export default async function OrderDetailPage({
           <span>مستحقّاتك من هذا الطلب</span>
           <span>{o.merchant_amount.toFixed(0)} دج</span>
         </div>
-      </div>
+      </Card>
 
-      <div className="rounded-xl border border-border bg-card p-5">
+      <Card>
         <p className="font-semibold mb-3">الإجراء</p>
         <OrderActions orderId={o.id} status={o.status} />
-      </div>
+      </Card>
     </div>
   );
 }

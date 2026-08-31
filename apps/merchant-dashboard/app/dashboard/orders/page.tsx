@@ -2,6 +2,11 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getMerchantContext } from "@/lib/merchant-context";
 import { ORDER_STATUS_LABELS, type MerchantOrder, type OrderStatus } from "@/lib/types";
+import { ORDER_STATUS_TONE } from "@/lib/order-status";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ClipboardListIcon } from "@/components/ui/icons";
 
 const FILTERS: { value: OrderStatus | "all"; label: string }[] = [
   { value: "all", label: "الكل" },
@@ -58,47 +63,35 @@ export default async function OrdersPage({
       </div>
 
       {items.length === 0 ? (
-        <p className="text-black/60">لا توجد طلبات في هذا التصنيف.</p>
+        <EmptyState
+          icon={<ClipboardListIcon className="h-8 w-8" />}
+          title="لا توجد طلبات في هذا التصنيف"
+        />
       ) : (
         <div className="grid gap-3">
           {items.map((order) => (
-            <Link
-              key={order.id}
-              href={`/dashboard/orders/${order.id}`}
-              className="rounded-xl border border-border bg-card p-4 flex items-center justify-between gap-4"
-            >
-              <div className="min-w-0">
-                <p className="font-semibold">
-                  {new Date(order.created_at).toLocaleString("ar-DZ")}
-                </p>
-                <p className="text-sm text-black/60 truncate">
-                  {order.addresses?.communes?.name} —{" "}
-                  {order.addresses?.address_text}
-                </p>
-              </div>
-              <div className="text-left shrink-0">
-                <p className="font-bold">{order.total_amount.toFixed(0)} دج</p>
-                <StatusBadge status={order.status} />
-              </div>
+            <Link key={order.id} href={`/dashboard/orders/${order.id}`}>
+              <Card padding="p-4" className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="font-semibold">
+                    {new Date(order.created_at).toLocaleString("ar-DZ")}
+                  </p>
+                  <p className="text-sm text-black/60 truncate">
+                    {order.addresses?.communes?.name} —{" "}
+                    {order.addresses?.address_text}
+                  </p>
+                </div>
+                <div className="text-left shrink-0">
+                  <p className="font-bold">{order.total_amount.toFixed(0)} دج</p>
+                  <Badge tone={ORDER_STATUS_TONE[order.status]} className="mt-1">
+                    {ORDER_STATUS_LABELS[order.status]}
+                  </Badge>
+                </div>
+              </Card>
             </Link>
           ))}
         </div>
       )}
     </div>
-  );
-}
-
-function StatusBadge({ status }: { status: OrderStatus }) {
-  const colorClass =
-    status === "delivered"
-      ? "text-primary bg-primary/10"
-      : status === "cancelled" || status === "rejected"
-        ? "text-error bg-error/10"
-        : "text-warning bg-warning/10";
-
-  return (
-    <span className={`inline-block mt-1 rounded-full px-3 py-1 text-xs font-semibold ${colorClass}`}>
-      {ORDER_STATUS_LABELS[status]}
-    </span>
   );
 }

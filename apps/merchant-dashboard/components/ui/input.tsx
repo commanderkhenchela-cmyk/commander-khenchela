@@ -62,12 +62,12 @@ export function Checkbox({
   );
 }
 
-export function FieldError({ children }: { children?: ReactNode }) {
+export function FieldError({ children, className = "" }: { children?: ReactNode; className?: string }) {
   if (!children) return null;
-  return <p className="text-error text-sm">{children}</p>;
+  return <p className={`text-error text-sm ${className}`}>{children}</p>;
 }
 
-export function FieldSuccess({ children }: { children?: ReactNode }) {
+export function FieldSuccess({ children, className = "" }: { children?: ReactNode; className?: string }) {
   if (!children) return null;
-  return <p className="text-primary text-sm">{children}</p>;
+  return <p className={`text-primary text-sm ${className}`}>{children}</p>;
 }

@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { DAY_NAMES, type MerchantBusinessHours } from "@/lib/types";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Checkbox, FieldError, FieldSuccess, Input } from "@/components/ui/input";
 
 interface DayRow {
   dayOfWeek: number;
@@ -87,59 +90,42 @@ export default function HoursForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       {rows.map((row) => (
-        <div
-          key={row.dayOfWeek}
-          className="rounded-xl border border-border bg-card p-4 flex items-center gap-3 flex-wrap"
-        >
-          <span className="font-medium w-20 shrink-0">
-            {DAY_NAMES[row.dayOfWeek]}
-          </span>
+        <Card key={row.dayOfWeek} padding="p-4" className="flex items-center gap-3 flex-wrap">
+          <span className="font-medium w-20 shrink-0">{DAY_NAMES[row.dayOfWeek]}</span>
 
-          <label className="flex items-center gap-1.5 text-sm text-black/60">
-            <input
-              type="checkbox"
-              checked={row.isClosed}
-              onChange={(e) =>
-                updateRow(row.dayOfWeek, { isClosed: e.target.checked })
-              }
-            />
-            مغلق
-          </label>
+          <Checkbox
+            id={`closed-${row.dayOfWeek}`}
+            label="مغلق"
+            checked={row.isClosed}
+            onChange={(e) => updateRow(row.dayOfWeek, { isClosed: e.target.checked })}
+          />
 
           {!row.isClosed && (
             <div className="flex items-center gap-2 mr-auto">
-              <input
+              <Input
                 type="time"
                 value={row.openTime}
-                onChange={(e) =>
-                  updateRow(row.dayOfWeek, { openTime: e.target.value })
-                }
-                className="rounded-lg border border-border px-2 py-1.5 text-sm outline-none focus:border-primary"
+                onChange={(e) => updateRow(row.dayOfWeek, { openTime: e.target.value })}
+                className="w-auto py-1.5 text-sm"
               />
               <span className="text-black/40 text-sm">إلى</span>
-              <input
+              <Input
                 type="time"
                 value={row.closeTime}
-                onChange={(e) =>
-                  updateRow(row.dayOfWeek, { closeTime: e.target.value })
-                }
-                className="rounded-lg border border-border px-2 py-1.5 text-sm outline-none focus:border-primary"
+                onChange={(e) => updateRow(row.dayOfWeek, { closeTime: e.target.value })}
+                className="w-auto py-1.5 text-sm"
               />
             </div>
           )}
-        </div>
+        </Card>
       ))}
 
-      {error && <p className="text-error text-sm">{error}</p>}
-      {saved && <p className="text-primary text-sm">تم الحفظ بنجاح.</p>}
+      <FieldError>{error}</FieldError>
+      <FieldSuccess>{saved && "تم الحفظ بنجاح."}</FieldSuccess>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-lg bg-primary text-white font-semibold py-3 mt-2 disabled:opacity-60"
-      >
+      <Button type="submit" disabled={loading} className="w-full mt-2">
         {loading ? "جارٍ الحفظ..." : "حفظ ساعات العمل"}
-      </button>
+      </Button>
     </form>
   );
 }
