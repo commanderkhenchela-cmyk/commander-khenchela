@@ -3,26 +3,7 @@ import { getMerchantContext } from "@/lib/merchant-context";
 import LogoutButton from "@/components/logout-button";
 import PushNotificationsSetup from "@/components/push-notifications-setup";
 import { MerchantNav } from "@/components/merchant-nav";
-import {
-  BellIcon,
-  ClipboardListIcon,
-  ClockIcon,
-  HomeIcon,
-  LogOutIcon,
-  PackageIcon,
-  SettingsIcon,
-  WalletIcon,
-} from "@/components/ui/icons";
-
-const NAV_LINKS = [
-  { href: "/dashboard", label: "نظرة عامة", icon: HomeIcon },
-  { href: "/dashboard/orders", label: "الطلبات", icon: ClipboardListIcon },
-  { href: "/dashboard/products", label: "المنتجات", icon: PackageIcon },
-  { href: "/dashboard/hours", label: "ساعات العمل", icon: ClockIcon },
-  { href: "/dashboard/wallet", label: "محفظتي", icon: WalletIcon },
-  { href: "/dashboard/notifications", label: "الإشعارات", icon: BellIcon },
-  { href: "/dashboard/settings", label: "إعدادات المحل", icon: SettingsIcon },
-];
+import { LogOutIcon } from "@/components/ui/icons";
 
 export default async function DashboardLayout({
   children,
@@ -43,7 +24,7 @@ export default async function DashboardLayout({
           <p className="font-bold text-lg">{context.merchant.store_name}</p>
           <p className="text-xs text-black/50 mt-0.5">لوحة تحكم التاجر</p>
         </div>
-        <MerchantNav links={NAV_LINKS} />
+        <MerchantNav />
         <div className="p-3 mt-auto hidden md:block">
           <LogoutButton className="flex items-center gap-2.5 w-full text-right text-error text-sm px-3 py-2 rounded-lg hover:bg-error/5">
             <LogOutIcon className="h-5 w-5 shrink-0" />

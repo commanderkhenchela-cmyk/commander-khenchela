@@ -2,22 +2,36 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ComponentType, SVGProps } from "react";
+import {
+  BellIcon,
+  ClipboardListIcon,
+  ClockIcon,
+  HomeIcon,
+  PackageIcon,
+  SettingsIcon,
+  WalletIcon,
+} from "@/components/ui/icons";
 
-interface NavLink {
-  href: string;
-  label: string;
-  icon: ComponentType<SVGProps<SVGSVGElement>>;
-}
+/** نفس روابط dashboard/layout.tsx القديم بالضبط (7 روابط، بلا مجموعات —
+ * الشريط هنا لا يحتاج Accordion كما في admin-dashboard لأنه مسطّح أصلًا
+ * وأكّد المستخدم أنه يبدو مرتّبًا). مُعرَّفة هنا داخل الـClient Component
+ * نفسه (وليست prop قادمة من layout.tsx) لأن مراجع مكوّنات React
+ * (الأيقونات) لا يمكن تمريرها كـ prop عادي من Server Component إلى
+ * Client Component — يسبّب خطأ serialization وقت التنفيذ رغم نجاح
+ * npm run build (لا يُنفَّذ فعليًا أثناء البناء لمسار ديناميكي). */
+const NAV_LINKS = [
+  { href: "/dashboard", label: "نظرة عامة", icon: HomeIcon },
+  { href: "/dashboard/orders", label: "الطلبات", icon: ClipboardListIcon },
+  { href: "/dashboard/products", label: "المنتجات", icon: PackageIcon },
+  { href: "/dashboard/hours", label: "ساعات العمل", icon: ClockIcon },
+  { href: "/dashboard/wallet", label: "محفظتي", icon: WalletIcon },
+  { href: "/dashboard/notifications", label: "الإشعارات", icon: BellIcon },
+  { href: "/dashboard/settings", label: "إعدادات المحل", icon: SettingsIcon },
+];
 
-/** نفس روابط dashboard/layout.tsx بالضبط (7 روابط، بلا مجموعات — الشريط
- * هنا لا يحتاج Accordion كما في admin-dashboard لأنه مسطّح أصلًا وأكّد
- * المستخدم أنه يبدو مرتّبًا). الإضافة الوحيدة: تمييز الرابط النشط عبر
- * usePathname (لم يكن موجودًا إطلاقًا سابقًا في هذا التطبيق) + أيقونة
- * بدل emoji. لذلك هذا الجزء وحده Client Component، بقية layout.tsx يبقى
- * Server Component كما هو. */
-export function MerchantNav({ links }: { links: NavLink[] }) {
+export function MerchantNav() {
   const pathname = usePathname();
+  const links = NAV_LINKS;
 
   function isActive(href: string) {
     if (href === "/dashboard") return pathname === "/dashboard";
