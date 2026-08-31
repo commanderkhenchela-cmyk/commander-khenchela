@@ -1,6 +1,7 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getMerchantContext } from "@/lib/merchant-context";
+import { StatCard } from "@/components/ui/stat-card";
+import { Button } from "@/components/ui/button";
 
 export default async function DashboardOverviewPage() {
   const context = await getMerchantContext();
@@ -40,34 +41,10 @@ export default async function DashboardOverviewPage() {
       </div>
 
       {(pendingCount ?? 0) > 0 && (
-        <Link
-          href="/dashboard/orders?status=pending"
-          className="inline-block rounded-lg bg-primary text-white font-semibold px-5 py-3"
-        >
+        <Button href="/dashboard/orders?status=pending">
           مراجعة الطلبات الجديدة ({pendingCount})
-        </Link>
+        </Button>
       )}
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value: number;
-  highlight?: boolean;
-}) {
-  return (
-    <div
-      className={`rounded-2xl border p-5 ${
-        highlight ? "border-primary bg-primary/5" : "border-border bg-card"
-      }`}
-    >
-      <p className="text-3xl font-bold">{value}</p>
-      <p className="text-sm text-black/60 mt-1">{label}</p>
     </div>
   );
 }
