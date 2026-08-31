@@ -38,12 +38,7 @@ class MerchantMiniCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                MerchantLogo(
-                  url: merchant.logoUrl,
-                  size: 40,
-                  iconSize: 20,
-                  borderRadius: 12,
-                ),
+                _LogoWithStatusDot(merchant: merchant),
                 const SizedBox(height: 8),
                 Expanded(
                   child: Text(
@@ -61,6 +56,49 @@ class MerchantMiniCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// شعار المحل + نقطة حالة صغيرة على زاويته (أخضر=مفتوح، أحمر=مغلق) —
+/// لا تُعرض إلا عندما تُعرَف الحالة فعليًا (merchant.isOpenNow != null)،
+/// تمامًا كنفس شرط OpenStatusBadge. نقطة ثابتة الحجم (لا نص) عمدًا: لا
+/// تضيف أي ارتفاع للعمود (Stack يأخذ حجم الشعار نفسه)، فتبقى البطاقة
+/// آمنة من Overflow عند تكبير خط النظام (راجع merchant_mini_card_test.dart)
+/// بدل إضافة سطر شارة كامل في مساحة 128px الضيقة.
+class _LogoWithStatusDot extends StatelessWidget {
+  final Merchant merchant;
+
+  const _LogoWithStatusDot({required this.merchant});
+
+  @override
+  Widget build(BuildContext context) {
+    final isOpen = merchant.isOpenNow;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        MerchantLogo(
+          url: merchant.logoUrl,
+          size: 40,
+          iconSize: 20,
+          borderRadius: 12,
+        ),
+        if (isOpen != null)
+          Positioned(
+            bottom: -1,
+            left: -1,
+            child: Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: isOpen ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.error,
+                shape: BoxShape.circle,
+                border: Border.all(color: Theme.of(context).colorScheme.surface, width: 2),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

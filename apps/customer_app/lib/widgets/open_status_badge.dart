@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 
-/// شارة صغيرة "مفتوح الآن" / "مغلق الآن" — تُستخدم في بطاقات المحل
-/// (العمودية والأفقية). لا تُعرض أبدًا إلا عندما تُعرَف الحالة فعليًا
-/// (merchant.isOpenNow != null من طرف الشاشة المستدعية)، أبدًا كتخمين.
+/// شارة صغيرة "مفتوح الآن" / "مغلق الآن" — تُستخدم في بطاقة المحل الكاملة
+/// (MerchantCard، القوائم العمودية). لا تُعرض أبدًا إلا عندما تُعرَف
+/// الحالة فعليًا (merchant.isOpenNow != null من طرف الشاشة المستدعية)،
+/// أبدًا كتخمين. البطاقة المصغّرة (MerchantMiniCard، أقسام الصفحة
+/// الرئيسية الأفقية) تستخدم نقطة ملوَّنة صغيرة على الشعار بدل هذه الشارة
+/// كاملة النص — راجع merchant_mini_card.dart، ضيق المساحة هناك (128px)
+/// لا يتسع لنص إضافي بأمان مع تكبير خط النظام.
 class OpenStatusBadge extends StatelessWidget {
   final bool isOpen;
 
@@ -13,7 +17,10 @@ class OpenStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = isOpen ? theme.colorScheme.primary : Colors.grey.shade600;
+    // أحمر لـ"مغلق" (بدل الرمادي المحايد سابقًا) — طُلب صراحةً في ميزة
+    // تبديل حالة المحل اليدوية: أخضر=مفتوح، أحمر=مغلق، بلا تصميم فاقع
+    // (نفس ColorScheme.error المولَّد من fromSeed، يحترم الوضع الليلي).
+    final color = isOpen ? theme.colorScheme.primary : theme.colorScheme.error;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
