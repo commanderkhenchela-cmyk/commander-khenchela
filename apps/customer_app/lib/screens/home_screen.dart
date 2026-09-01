@@ -26,6 +26,7 @@ import 'merchant_products_screen.dart';
 import 'merchants_screen.dart';
 import 'notifications_screen.dart';
 import 'request_anything_screen.dart';
+import 'request_ride_screen.dart';
 import '../features/search/presentation/search_screen.dart';
 
 /// الصفحة الرئيسية الفعلية للتطبيق — Feed ديناميكي متعدد الأقسام، تحلّ
@@ -258,7 +259,12 @@ class _HomeScreenState extends State<HomeScreen> {
   /// قاعدة البيانات (الذي يضبطه الأدمن كـ enabled/disabled). خدمة يفعّلها
   /// الأدمن قبل اكتمال بنائها فعليًا لا يجب أن تفتح شاشة غير موجودة —
   /// راجع تعليق migration 20260824000000_services للسياق الكامل.
-  static const _builtServiceSlugs = {'marketplace', 'restaurants', 'delivery'};
+  static const _builtServiceSlugs = {
+    'marketplace',
+    'restaurants',
+    'delivery',
+    'taxi',
+  };
 
   void _openService(AppService service) {
     if (!_builtServiceSlugs.contains(service.slug)) {
@@ -266,12 +272,19 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    // "التوصيل" (اطلب أي شيء) ليست تصفّح-حسب-تصنيف كباقي الخدمات — لا
-    // تاجر ولا منتجات إطلاقًا، فتفتح شاشة الطلب الحرّ مباشرة (راجع
-    // migration 20260905000000_delivery_requests).
+    // "التوصيل" (اطلب أي شيء) وTaxi ليستا تصفّح-حسب-تصنيف كباقي
+    // الخدمات — لا تاجر ولا منتجات إطلاقًا، فتفتحان شاشة طلب مباشرة
+    // (راجع migration 20260905000000_delivery_requests وmigration
+    // 20260906000000_ride_requests).
     if (service.slug == 'delivery') {
       Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const RequestAnythingScreen()),
+      );
+      return;
+    }
+    if (service.slug == 'taxi') {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const RequestRideScreen()),
       );
       return;
     }

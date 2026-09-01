@@ -291,5 +291,22 @@
   "deliveryRequestStatusDelivered": "Livrée",
   "deliveryRequestStatusCancelled": "Annulée",
   "myDeliveryRequestsTitle": "Mes demandes",
-  "noDeliveryRequestsMessage": "Aucune demande de livraison pour le moment"
+  "noDeliveryRequestsMessage": "Aucune demande de livraison pour le moment",
+
+  "requestRideTitle": "Demander une course",
+  "requestRideIntro": "Demandez une course d'un point de départ à votre destination — un chauffeur acceptera et vous emmènera.",
+  "ridePickupLabel": "Point de départ",
+  "rideDropoffLabel": "Destination",
+  "selectPickupAddressAction": "Choisir le point de départ",
+  "selectDropoffAddressAction": "Choisir la destination",
+  "ridePickupDropoffSameError": "Le point de départ et la destination doivent être différents.",
+  "submitRideRequestAction": "Demander la course",
+  "rideFareLabel": "Tarif",
+  "rideStatusPending": "En attente",
+  "rideStatusAccepted": "Acceptée",
+  "rideStatusInProgress": "Course en cours",
+  "rideStatusCompleted": "Terminée",
+  "rideStatusCancelled": "Annulée",
+  "myRidesTitle": "Mes courses",
+  "noRidesMessage": "Aucune course pour le moment"
 }

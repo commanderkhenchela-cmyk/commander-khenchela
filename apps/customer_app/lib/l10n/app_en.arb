@@ -291,5 +291,22 @@
   "deliveryRequestStatusDelivered": "Delivered",
   "deliveryRequestStatusCancelled": "Cancelled",
   "myDeliveryRequestsTitle": "My requests",
-  "noDeliveryRequestsMessage": "No delivery requests yet"
+  "noDeliveryRequestsMessage": "No delivery requests yet",
+
+  "requestRideTitle": "Request a ride",
+  "requestRideIntro": "Request a ride from a pickup point to your destination — a driver will accept and take you.",
+  "ridePickupLabel": "Pickup point",
+  "rideDropoffLabel": "Destination",
+  "selectPickupAddressAction": "Choose pickup point",
+  "selectDropoffAddressAction": "Choose destination",
+  "ridePickupDropoffSameError": "Pickup and destination must be different.",
+  "submitRideRequestAction": "Request ride",
+  "rideFareLabel": "Fare",
+  "rideStatusPending": "Pending",
+  "rideStatusAccepted": "Accepted",
+  "rideStatusInProgress": "Ride in progress",
+  "rideStatusCompleted": "Completed",
+  "rideStatusCancelled": "Cancelled",
+  "myRidesTitle": "My rides",
+  "noRidesMessage": "No rides yet"
 }
