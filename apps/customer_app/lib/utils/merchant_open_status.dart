@@ -1,8 +1,11 @@
 import '../models/merchant_business_hours.dart';
 
-/// يحسب هل المحل "مفتوح الآن" اعتمادًا على ساعات عمله المحفوظة، بالوقت
-/// المحلي للجهاز (خنشلة على توقيت واحد ثابت طوال السنة UTC+1، بلا
-/// توقيت صيفي، فالوقت المحلي للجهاز كافٍ وصادق هنا).
+/// يحسب هل المحل "مفتوح الآن" اعتمادًا على ساعات عمله المحفوظة، بتوقيت
+/// الجزائر (UTC+1 ثابت طوال السنة، بلا توقيت صيفي منذ 1981). لا نعتمد
+/// على توقيت الجهاز المحلي (كان الافتراض السابق) لأن ذلك يفترض ضمنًا
+/// أن كل جهاز مضبوط فعليًا على توقيت الجزائر — افتراض قد ينكسر مع جهاز
+/// بتوقيت خاطئ أو مسافر؛ بدل ذلك نحسب UTC+1 صراحةً من [DateTime.toUtc]،
+/// فتبقى الحالة صحيحة بصرف النظر عن ضبط الجهاز.
 ///
 /// يُرجع null عندما لا نملك معلومة كافية (التاجر لم يحفظ ساعات عمله
 /// بعد، أو لم يحفظ ساعات لليوم الحالي تحديدًا) — الشاشات يجب أن تُخفي
@@ -10,10 +13,15 @@ import '../models/merchant_business_hours.dart';
 class MerchantOpenStatus {
   const MerchantOpenStatus._();
 
+  static const Duration _algeriaOffset = Duration(hours: 1);
+
+  /// الوقت الحالي بتوقيت الجزائر (UTC+1) — راجع تعليق الصنف أعلاه.
+  static DateTime nowInAlgeria() => DateTime.now().toUtc().add(_algeriaOffset);
+
   static bool? isOpenNow(List<MerchantBusinessHours> hours, {DateTime? now}) {
     if (hours.isEmpty) return null;
 
-    final current = now ?? DateTime.now();
+    final current = now ?? nowInAlgeria();
     final todayIndex = current.weekday % 7; // 0=الأحد...6=السبت
 
     MerchantBusinessHours? today;

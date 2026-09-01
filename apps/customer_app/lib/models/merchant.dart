@@ -15,6 +15,7 @@ class Merchant {
   final double ratingAvg;
   final int ratingCount;
   final bool isManuallyOpen;
+  final DateTime? statusOverriddenAt;
 
   const Merchant({
     required this.id,
@@ -29,32 +30,29 @@ class Merchant {
     this.ratingAvg = 0,
     this.ratingCount = 0,
     this.isManuallyOpen = true,
+    this.statusOverriddenAt,
   });
 
   /// لا نعرض شارة تقييم أبدًا بلا تقييمات حقيقية (0.0 وهمي بلا معنى).
   bool get hasRating => ratingCount > 0;
 
-  /// true = مفتوح الآن، false = مغلق الآن، null = لا معلومة كافية (لم
-  /// يحفظ التاجر ساعات عمله بعد) — يجب إخفاء أي شارة في حالة null.
+  /// true = مفتوح الآن، false = مغلق الآن، null = لا معلومة كافية —
+  /// يجب إخفاء أي شارة في حالة null، لا تخمين "مغلق" ظلمًا بالمحل.
   ///
-  /// isManuallyOpen (عمود merchants.is_open، migration 20260903000000)
-  /// تبديل يدوي من لوحة تحكم التاجر:
-  /// - false → مغلق يدويًا الآن، نتيجة قطعية (مغلق) بغض النظر عن ساعات
-  ///   العمل — التبديل يستطيع دائمًا الإغلاق، حتى أثناء ساعات العمل
-  ///   المصرَّح بها.
-  /// - true (الافتراضي) + التاجر حفظ ساعات عمل فعلية لهذا اليوم → تُحسَب
-  ///   الحالة من ساعات العمل كالمعتاد (نفس MerchantOpenStatus.isOpenNow
-  ///   بلا أي تغيير) — التبديل اليدوي لا يفرض "مفتوح" خارج ساعات مُعلَنة.
-  /// - true + لا ساعات عمل محفوظة إطلاقًا لهذا المحل (الحالة الشائعة
-  ///   لتاجر لم يملأ صفحة "ساعات العمل" بعد) → التبديل اليدوي هو مصدر
-  ///   الحقيقة الوحيد المتاح، فيُعرَض "مفتوح" فعليًا بدل إخفاء الشارة —
-  ///   من غير هذا، ضغط "مفتوح" من لوحة التاجر لن يُظهر أي أثر للعميل
-  ///   على الإطلاق.
+  /// مصدر الحقيقة يُحدَّد بـ statusOverriddenAt (عمود merchants.
+  /// status_overridden_at، migration 20260904000000) — الطابع الزمني
+  /// لآخر ضغطة فعلية على زر التبديل اليدوي في لوحة التاجر:
+  /// - null (لم يُضغَط الزر إطلاقًا) → تلقائي بالكامل حسب ساعات العمل
+  ///   الحقيقية (merchant_business_hours عبر MerchantOpenStatus) — لا
+  ///   افتراض "مفتوح" بلا دليل؛ بلا ساعات محفوظة أيضًا → null (إخفاء).
+  /// - غير null (استُخدم التبديل مرة واحدة على الأقل) → isManuallyOpen
+  ///   وحده هو مصدر الحقيقة من تلك اللحظة، بأولوية *مطلقة* فوق ساعات
+  ///   العمل في الاتجاهين (لا يمكن لساعات العمل نقض "مفتوح" اليدوي، ولا
+  ///   لـ"مغلق" اليدوي أن يُنقَض بساعات عمل جارية) — هذا يحقق حرفيًا
+  ///   "Manual Override له الأولوية على أوقات العمل" كما طُلب صراحةً.
   bool? get isOpenNow {
-    if (!isManuallyOpen) return false;
-    final scheduled = MerchantOpenStatus.isOpenNow(businessHours);
-    if (scheduled == null) return true;
-    return scheduled;
+    if (statusOverriddenAt != null) return isManuallyOpen;
+    return MerchantOpenStatus.isOpenNow(businessHours);
   }
 
   /// true إذا حفظ التاجر موقعه الجغرافي — شرط ظهوره في قسم "الأقرب إليك".
@@ -85,6 +83,9 @@ class Merchant {
       ratingAvg: (map['rating_avg'] as num?)?.toDouble() ?? 0,
       ratingCount: (map['rating_count'] as num?)?.toInt() ?? 0,
       isManuallyOpen: map['is_open'] as bool? ?? true,
+      statusOverriddenAt: map['status_overridden_at'] == null
+          ? null
+          : DateTime.parse(map['status_overridden_at'] as String),
     );
   }
 }

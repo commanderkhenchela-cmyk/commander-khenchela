@@ -18,7 +18,7 @@ import 'merchant_products_screen.dart';
 
 const _merchantColumns =
     'id, store_name, phone, communes(name), latitude, longitude, '
-    'logo_url, cover_url, rating_avg, rating_count, is_open, '
+    'logo_url, cover_url, rating_avg, rating_count, is_open, status_overridden_at, '
     'merchant_business_hours(day_of_week, open_time, close_time, is_closed)';
 
 /// شاشة قائمة المحلات — تُفتح من HomeScreen أو AllCategoriesScreen، إما
