@@ -130,6 +130,67 @@ export interface Driver {
   created_at: string;
 }
 
+export type CraftsmanRequestStatus =
+  | "pending"
+  | "assigned"
+  | "completed"
+  | "cancelled";
+
+export const CRAFTSMAN_REQUEST_STATUS_LABELS: Record<
+  CraftsmanRequestStatus,
+  string
+> = {
+  pending: "قيد المراجعة",
+  assigned: "تم الربط بحرفي",
+  completed: "مكتمل",
+  cancelled: "ملغى",
+};
+
+export type CraftType =
+  | "plumber"
+  | "electrician"
+  | "painter"
+  | "carpenter"
+  | "locksmith"
+  | "ac_technician"
+  | "general";
+
+export const CRAFT_TYPE_LABELS: Record<CraftType, string> = {
+  plumber: "سبّاك",
+  electrician: "كهربائي",
+  painter: "دهّان",
+  carpenter: "نجّار",
+  locksmith: "قفّال",
+  ac_technician: "فنّي تكييف",
+  general: "عام",
+};
+
+/**
+ * "حرفيون" V1 — راجع تعليق migration 20260907000000_craftsman_requests:
+ * لا جدول حرفيين بعد، assigned_craftsman_name/phone نص حرّ تكتبه
+ * الإدارة يدويًا عند الربط (admin_assign_craftsman_request)، وليس
+ * مرجعًا لسجلّ. مطابق تمامًا لطريقة V1 التوصيل قبل driver_app.
+ */
+export interface CraftsmanRequest {
+  id: string;
+  customer_id: string;
+  craft_type: CraftType;
+  description: string;
+  status: CraftsmanRequestStatus;
+  assigned_craftsman_name: string | null;
+  assigned_craftsman_phone: string | null;
+  admin_notes: string | null;
+  created_at: string;
+  assigned_at: string | null;
+  completed_at: string | null;
+  addresses?: {
+    address_text: string;
+    phone: string | null;
+    communes: { name: string } | null;
+  } | null;
+  users?: { full_name: string; phone: string | null } | null;
+}
+
 export interface Setting {
   key: string;
   value: string;
@@ -166,6 +227,9 @@ const TABLE_LABELS: Record<string, string> = {
   users: "دور مستخدم",
   home_sections: "قسم الصفحة الرئيسية",
   services: "خدمة",
+  delivery_requests: "طلب اطلب أي شيء",
+  ride_requests: "طلب رحلة Taxi",
+  craftsman_requests: "طلب حرفي",
 };
 
 export function tableLabel(tableName: string): string {
