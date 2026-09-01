@@ -16,6 +16,12 @@ import { createClient } from "@/lib/supabase/client";
  * الألوان بنفس أصناف tone الموجودة في components/ui/badge.tsx
  * (primary=أخضر، error=أحمر) — نفس لغة الألوان في كل التطبيق، فقط بحجم
  * أوضح (زر لا شارة صغيرة) لأنه عنصر تحكّم فعلي وليس مجرد عرض حالة.
+ *
+ * كل ضغطة تسجّل أيضًا status_overridden_at (migration
+ * 20260904000000) — منذ أول ضغطة فعلية، is_open يصبح مصدر الحقيقة
+ * المطلق للعميل، بأولوية فوق ساعات العمل في الاتجاهين (لا يعود ساعات
+ * العمل قادرة على نقض "مفتوح" اليدوي كما كان سابقًا) — الواجهة هنا
+ * نفسها بلا أي تغيير، فقط الحقل الإضافي المُسجَّل مع كل تحديث.
  */
 export function StoreStatusToggle({
   merchantId,
@@ -37,7 +43,7 @@ export function StoreStatusToggle({
     const supabase = createClient();
     const { error: updateError } = await supabase
       .from("merchants")
-      .update({ is_open: next })
+      .update({ is_open: next, status_overridden_at: new Date().toISOString() })
       .eq("id", merchantId);
 
     setLoading(false);
