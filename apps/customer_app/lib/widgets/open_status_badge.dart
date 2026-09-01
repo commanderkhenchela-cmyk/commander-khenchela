@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
+import '../theme/design_tokens.dart';
 
 /// شارة صغيرة "مفتوح الآن" / "مغلق الآن" — تُستخدم في بطاقة المحل الكاملة
 /// (MerchantCard، القوائم العمودية). لا تُعرض أبدًا إلا عندما تُعرَف
@@ -17,10 +18,14 @@ class OpenStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // أحمر لـ"مغلق" (بدل الرمادي المحايد سابقًا) — طُلب صراحةً في ميزة
-    // تبديل حالة المحل اليدوية: أخضر=مفتوح، أحمر=مغلق، بلا تصميم فاقع
-    // (نفس ColorScheme.error المولَّد من fromSeed، يحترم الوضع الليلي).
-    final color = isOpen ? theme.colorScheme.primary : theme.colorScheme.error;
+    // أخضر/أحمر دلاليان ثابتان (AppColorsX.success/danger) — وليس
+    // colorScheme.primary/error: كلاهما قابل لتخصيص الأدمن ديناميكيًا عبر
+    // BrandingService (لون العلامة التجارية الفعلي لهذا التطبيق أحمر/وردي
+    // في الإنتاج الحالي!) — استخدامهما كان يجعل "مفتوح" يظهر بلون العلامة
+    // التجارية الأحمر بدل أخضر حقيقي، وهو بالضبط الخلل الذي رآه المستخدم.
+    // هذه الشارة يجب أن تبقى أخضر/أحمر عالميًا مفهومَين بصرف النظر عن
+    // هوية العلامة التجارية.
+    final color = isOpen ? theme.colorScheme.success : theme.colorScheme.danger;
 
     return Row(
       mainAxisSize: MainAxisSize.min,

@@ -52,6 +52,15 @@ extension AppColorsX on ColorScheme {
       ? const Color(0xFFE0A94A)
       : const Color(0xFFB26A00);
 
+  /// أحمر دلالي ثابت — لا يتبع colorScheme.error (القابل للتخصيص عبر
+  /// BrandingService.errorColor من لوحة الإدارة، تمامًا كـprimary). يُستخدم
+  /// حصرًا حين يجب أن يبقى اللون أحمر فعليًا بصرف النظر عن هوية العلامة
+  /// التجارية (مثل شارة "مغلق الآن" — راجع open_status_badge.dart) — نفس
+  /// سبب وجود [success] بدل الاعتماد على primary المتحرّك.
+  Color get danger => brightness == Brightness.dark
+      ? const Color(0xFFE57373)
+      : const Color(0xFFB3261E);
+
   Color get muted => onSurface.withValues(alpha: 0.6);
   Color get border => onSurface.withValues(alpha: 0.12);
 }

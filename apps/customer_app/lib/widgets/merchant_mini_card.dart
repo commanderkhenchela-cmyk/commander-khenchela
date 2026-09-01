@@ -92,7 +92,12 @@ class _LogoWithStatusDot extends StatelessWidget {
               width: 12,
               height: 12,
               decoration: BoxDecoration(
-                color: isOpen ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.error,
+                // أخضر/أحمر دلاليان ثابتان (AppColorsX.success/danger)،
+                // وليس colorScheme.primary/error — راجع التعليق في
+                // open_status_badge.dart لسبب هذا التحديد تحديدًا.
+                color: isOpen
+                    ? Theme.of(context).colorScheme.success
+                    : Theme.of(context).colorScheme.danger,
                 shape: BoxShape.circle,
                 border: Border.all(color: Theme.of(context).colorScheme.surface, width: 2),
               ),
