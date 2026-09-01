@@ -28,6 +28,9 @@
 //     محدَّد وقت الإنشاء يُخطَر — الموصّلون يتصفّحون المجمّع بأنفسهم،
 //     نفس فلسفة orders_select_driver_pool بلا إشعار فردي).
 //   - ride_requests     (Taxi): نفس فلسفة delivery_requests بالحرف.
+//   - craftsman_requests (حرفيون): نفس الفلسفة، لكن هنا "assigned" (لا
+//     "accepted") هو الحدث المهم — الإدارة تربط الطلب يدويًا، لا موصّل
+//     يقبله بنفسه.
 //
 // حماية بديلة عن التحقق التلقائي من JWT (verify_jwt) — الدالة مَنشورة
 // بـ --no-verify-jwt (لأن مفتاح anon الحديث بصيغة sb_publishable_ ليس
@@ -73,6 +76,12 @@ const RIDE_REQUEST_STATUS_LABELS: Record<string, string> = {
   cancelled: "تم إلغاء رحلتك",
 };
 
+const CRAFTSMAN_REQUEST_STATUS_LABELS: Record<string, string> = {
+  assigned: "تم ربط طلبك بحرفي، سيتواصل معك قريبًا",
+  completed: "تم إتمام طلبك",
+  cancelled: "تم إلغاء طلبك",
+};
+
 // deno-lint-ignore no-explicit-any
 type Row = Record<string, any>;
 
@@ -108,6 +117,8 @@ Deno.serve(async (req) => {
       await handleDeliveryRequests(supabase, payload);
     } else if (payload.table === "ride_requests") {
       await handleRideRequests(supabase, payload);
+    } else if (payload.table === "craftsman_requests") {
+      await handleCraftsmanRequests(supabase, payload);
     } else {
       return new Response(`ignored: unhandled table ${payload.table}`, { status: 200 });
     }
@@ -283,6 +294,30 @@ async function handleRideRequests(supabase: SupabaseClient, payload: WebhookPayl
       RIDE_REQUEST_STATUS_LABELS[newStatus],
       `ride_request_${newStatus}`,
       "ride_request",
+      payload.record.id,
+    );
+  }
+}
+
+// ---------------------------------------------------------------
+// craftsman_requests (حرفيون): تغيّر حالة → إشعار الزبون فقط. لا فرع
+// INSERT (لا مُرسِل محدَّد وقت الإنشاء — طاقم الإدارة يراجع الطابور
+// بنفسه، نفس فلسفة delivery_requests/ride_requests).
+// ---------------------------------------------------------------
+async function handleCraftsmanRequests(supabase: SupabaseClient, payload: WebhookPayload) {
+  if (payload.type !== "UPDATE") return;
+
+  const oldStatus = payload.old_record?.status;
+  const newStatus = payload.record.status;
+
+  if (oldStatus && oldStatus !== newStatus && CRAFTSMAN_REQUEST_STATUS_LABELS[newStatus]) {
+    await notifyUser(
+      supabase,
+      payload.record.customer_id,
+      "تحديث طلبك",
+      CRAFTSMAN_REQUEST_STATUS_LABELS[newStatus],
+      `craftsman_request_${newStatus}`,
+      "craftsman_request",
       payload.record.id,
     );
   }
