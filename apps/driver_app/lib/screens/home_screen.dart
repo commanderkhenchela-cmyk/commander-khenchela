@@ -13,6 +13,7 @@ import 'account_screen.dart';
 import 'delivery_requests_home_screen.dart';
 import 'job_detail_screen.dart';
 import 'notifications_screen.dart';
+import 'ride_requests_home_screen.dart';
 
 /// الشاشة الرئيسية للموصّل المعتمَد: مفتاح متصل/غير متصل، وتبويبان
 /// ("الطلبات المتاحة" و"طلباتي"). لا استماع لحظي هنا عمدًا (تفاديًا
@@ -124,6 +125,17 @@ class _HomeScreenState extends State<HomeScreen>
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const DeliveryRequestsHomeScreen(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.local_taxi_outlined),
+            tooltip: 'رحلات Taxi',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const RideRequestsHomeScreen(),
                 ),
               );
             },
