@@ -21,9 +21,13 @@
 //
 // جداول مُغطّاة حاليًا (كل جدول = فرع مستقل داخل هذه الدالة نفسها،
 // حتى لا يتكرّر منطق "اكتب في notifications ثم حاول Push"):
-//   - orders    (PHASE 11 الأصلية): تغيّر حالة → الزبون، طلب جديد → التاجر
-//   - merchants (شبكة الإشعارات): تسجيل جديد → كل الإدارة، موافقة/رفض → التاجر
-//   - drivers   (المرحلة 1): تسجيل جديد → كل الإدارة، موافقة/رفض → الموصّل نفسه
+//   - orders           (PHASE 11 الأصلية): تغيّر حالة → الزبون، طلب جديد → التاجر
+//   - merchants        (شبكة الإشعارات): تسجيل جديد → كل الإدارة، موافقة/رفض → التاجر
+//   - drivers          (المرحلة 1): تسجيل جديد → كل الإدارة، موافقة/رفض → الموصّل نفسه
+//   - delivery_requests (اطلب أي شيء): تغيّر حالة → الزبون فقط (لا مُرسِل
+//     محدَّد وقت الإنشاء يُخطَر — الموصّلون يتصفّحون المجمّع بأنفسهم،
+//     نفس فلسفة orders_select_driver_pool بلا إشعار فردي).
+//   - ride_requests     (Taxi): نفس فلسفة delivery_requests بالحرف.
 //
 // حماية بديلة عن التحقق التلقائي من JWT (verify_jwt) — الدالة مَنشورة
 // بـ --no-verify-jwt (لأن مفتاح anon الحديث بصيغة sb_publishable_ ليس
@@ -54,6 +58,19 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
   delivered: "تم تسليم طلبك، بالهناء والشفاء",
   cancelled: "تم إلغاء طلبك",
   rejected: "لم يوافق التاجر على طلبك",
+};
+
+const DELIVERY_REQUEST_STATUS_LABELS: Record<string, string> = {
+  accepted: "قبِل أحد الموصّلين طلبك، هو فـ الطريق إليك",
+  delivered: "تم تسليم طلبك، بالهناء والشفاء",
+  cancelled: "تم إلغاء طلبك",
+};
+
+const RIDE_REQUEST_STATUS_LABELS: Record<string, string> = {
+  accepted: "قبِل أحد الموصّلين رحلتك، هو فـ الطريق إليك",
+  in_progress: "انطلقت رحلتك",
+  completed: "وصلت رحلتك، بالسلامة",
+  cancelled: "تم إلغاء رحلتك",
 };
 
 // deno-lint-ignore no-explicit-any
@@ -87,6 +104,10 @@ Deno.serve(async (req) => {
       await handleMerchants(supabase, payload);
     } else if (payload.table === "drivers") {
       await handleDrivers(supabase, payload);
+    } else if (payload.table === "delivery_requests") {
+      await handleDeliveryRequests(supabase, payload);
+    } else if (payload.table === "ride_requests") {
+      await handleRideRequests(supabase, payload);
     } else {
       return new Response(`ignored: unhandled table ${payload.table}`, { status: 200 });
     }
@@ -218,6 +239,52 @@ async function handleDrivers(supabase: SupabaseClient, payload: WebhookPayload) 
         );
       }
     }
+  }
+}
+
+// ---------------------------------------------------------------
+// delivery_requests (اطلب أي شيء): تغيّر حالة → إشعار الزبون فقط. لا
+// فرع INSERT — لا مُرسِل محدَّد وقت الإنشاء (pending بلا driver_id)،
+// الموصّلون يتصفّحون المجمّع بأنفسهم، نفس فلسفة orders_select_driver_pool.
+// ---------------------------------------------------------------
+async function handleDeliveryRequests(supabase: SupabaseClient, payload: WebhookPayload) {
+  if (payload.type !== "UPDATE") return;
+
+  const oldStatus = payload.old_record?.status;
+  const newStatus = payload.record.status;
+
+  if (oldStatus && oldStatus !== newStatus && DELIVERY_REQUEST_STATUS_LABELS[newStatus]) {
+    await notifyUser(
+      supabase,
+      payload.record.customer_id,
+      "تحديث طلبك",
+      DELIVERY_REQUEST_STATUS_LABELS[newStatus],
+      `delivery_request_${newStatus}`,
+      "delivery_request",
+      payload.record.id,
+    );
+  }
+}
+
+// ---------------------------------------------------------------
+// ride_requests (Taxi): نفس فلسفة delivery_requests بالحرف.
+// ---------------------------------------------------------------
+async function handleRideRequests(supabase: SupabaseClient, payload: WebhookPayload) {
+  if (payload.type !== "UPDATE") return;
+
+  const oldStatus = payload.old_record?.status;
+  const newStatus = payload.record.status;
+
+  if (oldStatus && oldStatus !== newStatus && RIDE_REQUEST_STATUS_LABELS[newStatus]) {
+    await notifyUser(
+      supabase,
+      payload.record.customer_id,
+      "تحديث رحلتك",
+      RIDE_REQUEST_STATUS_LABELS[newStatus],
+      `ride_request_${newStatus}`,
+      "ride_request",
+      payload.record.id,
+    );
   }
 }
 

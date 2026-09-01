@@ -3,7 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/notification_item.dart';
+import 'delivery_request_detail_screen.dart';
 import 'order_detail_screen.dart';
+import 'ride_detail_screen.dart';
 
 /// شاشة "إشعاراتي" — تعرض إشعارات المستخدم الحالي فقط (RLS تحميها تلقائيًا).
 /// تُملأ هذه القائمة من طرف Edge Function عند تغيّر حالة الطلب (Phase 11).
@@ -87,20 +89,37 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   /// عند الضغط على إشعار: يُعلَّم كمقروء دائمًا كما كان، ثم — إن كان
-  /// مرتبطًا بطلب فعليًا (entity_type='order') — ينتقل مباشرة لتفاصيله.
-  /// أنواع أخرى من entity_type (merchant/driver) لا شاشة مكافئة لها في
-  /// تطبيق الزبون (هذه الإشعارات أصلًا لا تصل لحساب عميل)، فتبقى بلا
-  /// تنقّل، بلا أي خطأ.
+  /// مرتبطًا بكيان له شاشة تفاصيل فـ تطبيق الزبون (order/delivery_request/
+  /// ride_request) — ينتقل مباشرة إليها. أنواع أخرى من entity_type
+  /// (merchant/driver) لا شاشة مكافئة لها في تطبيق الزبون (هذه
+  /// الإشعارات أصلًا لا تصل لحساب عميل)، فتبقى بلا تنقّل، بلا أي خطأ.
   Future<void> _handleTap(NotificationItem notification) async {
     await _markAsRead(notification);
 
     if (!mounted) return;
-    if (notification.entityType == 'order' && notification.entityId != null) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => OrderDetailScreen(orderId: notification.entityId!),
-        ),
-      );
+    final entityId = notification.entityId;
+    if (entityId == null) return;
+
+    switch (notification.entityType) {
+      case 'order':
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => OrderDetailScreen(orderId: entityId),
+          ),
+        );
+        break;
+      case 'delivery_request':
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => DeliveryRequestDetailScreen(requestId: entityId),
+          ),
+        );
+        break;
+      case 'ride_request':
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => RideDetailScreen(rideId: entityId)),
+        );
+        break;
     }
   }
 
