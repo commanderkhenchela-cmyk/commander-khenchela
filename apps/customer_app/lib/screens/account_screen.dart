@@ -7,6 +7,7 @@ import '../features/settings/presentation/settings_screen.dart';
 import 'address_list_screen.dart';
 import 'favorites_screen.dart';
 import 'login_screen.dart';
+import 'my_delivery_requests_screen.dart';
 import 'my_orders_screen.dart';
 import 'notifications_screen.dart';
 import 'support_screen.dart';
@@ -152,6 +153,11 @@ class _AccountScreenState extends State<AccountScreen> {
               icon: Icons.receipt_long_outlined,
               label: l10n.myOrdersTitle,
               onTap: () => _push(const MyOrdersScreen()),
+            ),
+            _MenuTile(
+              icon: Icons.local_shipping_outlined,
+              label: l10n.myDeliveryRequestsTitle,
+              onTap: () => _push(const MyDeliveryRequestsScreen()),
             ),
             _MenuTile(
               icon: Icons.favorite_border_rounded,

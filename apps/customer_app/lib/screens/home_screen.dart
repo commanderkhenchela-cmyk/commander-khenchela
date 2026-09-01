@@ -25,6 +25,7 @@ import 'all_categories_screen.dart';
 import 'merchant_products_screen.dart';
 import 'merchants_screen.dart';
 import 'notifications_screen.dart';
+import 'request_anything_screen.dart';
 import '../features/search/presentation/search_screen.dart';
 
 /// الصفحة الرئيسية الفعلية للتطبيق — Feed ديناميكي متعدد الأقسام، تحلّ
@@ -257,7 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
   /// قاعدة البيانات (الذي يضبطه الأدمن كـ enabled/disabled). خدمة يفعّلها
   /// الأدمن قبل اكتمال بنائها فعليًا لا يجب أن تفتح شاشة غير موجودة —
   /// راجع تعليق migration 20260824000000_services للسياق الكامل.
-  static const _builtServiceSlugs = {'marketplace', 'restaurants'};
+  static const _builtServiceSlugs = {'marketplace', 'restaurants', 'delivery'};
 
   void _openService(AppService service) {
     if (!_builtServiceSlugs.contains(service.slug)) {
@@ -265,11 +266,22 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    // كل خدمة مبنية تفتح "تصفّح حسب التصنيف" الخاص بها فقط — Service !=
-    // Category (راجع migration 20260824010000_service_categories):
-    // Shopping يعرض تصنيفات جذر (بقالة/ملابس/إلكترونيات...)، Restaurants
-    // يعرض التصنيفات الفرعية تحت "مطاعم" تحديدًا (بيتزا/مشاوي...) —
-    // القرار مبني على service_id بقاعدة البيانات، لا اسم مطابَق بالكود.
+    // "التوصيل" (اطلب أي شيء) ليست تصفّح-حسب-تصنيف كباقي الخدمات — لا
+    // تاجر ولا منتجات إطلاقًا، فتفتح شاشة الطلب الحرّ مباشرة (راجع
+    // migration 20260905000000_delivery_requests).
+    if (service.slug == 'delivery') {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const RequestAnythingScreen()),
+      );
+      return;
+    }
+
+    // كل خدمة مبنية أخرى تفتح "تصفّح حسب التصنيف" الخاص بها فقط —
+    // Service != Category (راجع migration
+    // 20260824010000_service_categories): Shopping يعرض تصنيفات جذر
+    // (بقالة/ملابس/إلكترونيات...)، Restaurants يعرض التصنيفات الفرعية
+    // تحت "مطاعم" تحديدًا (بيتزا/مشاوي...) — القرار مبني على service_id
+    // بقاعدة البيانات، لا اسم مطابَق بالكود.
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => AllCategoriesScreen(

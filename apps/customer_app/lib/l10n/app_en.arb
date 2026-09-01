@@ -277,5 +277,19 @@
   "unknownInitial": "?",
 
   "loadMoreAction": "Load more",
-  "loadMoreError": "Couldn't load more results. Try again."
+  "loadMoreError": "Couldn't load more results. Try again.",
+
+  "requestAnythingTitle": "Request Anything",
+  "requestAnythingIntro": "Request delivery for anything you need — a driver will accept your request and bring it to you.",
+  "deliveryRequestDescriptionLabel": "What do you need?",
+  "deliveryRequestDescriptionHint": "e.g. medicine from the pharmacy, a package from the post office...",
+  "submitDeliveryRequestAction": "Send request",
+  "deliveryRequestEmptyDescriptionError": "Describe what you want first.",
+  "deliveryRequestPendingMessage": "Waiting for a driver to accept...",
+  "deliveryRequestStatusPending": "Pending",
+  "deliveryRequestStatusAccepted": "Accepted",
+  "deliveryRequestStatusDelivered": "Delivered",
+  "deliveryRequestStatusCancelled": "Cancelled",
+  "myDeliveryRequestsTitle": "My requests",
+  "noDeliveryRequestsMessage": "No delivery requests yet"
 }

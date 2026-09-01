@@ -277,5 +277,19 @@
   "unknownInitial": "?",
 
   "loadMoreAction": "Charger plus",
-  "loadMoreError": "Impossible de charger plus de résultats. Réessayez."
+  "loadMoreError": "Impossible de charger plus de résultats. Réessayez.",
+
+  "requestAnythingTitle": "Demander n'importe quoi",
+  "requestAnythingIntro": "Demandez la livraison de tout ce dont vous avez besoin — un livreur acceptera votre demande et vous l'apportera.",
+  "deliveryRequestDescriptionLabel": "De quoi avez-vous besoin ?",
+  "deliveryRequestDescriptionHint": "ex. : médicaments de la pharmacie, un colis du bureau de poste...",
+  "submitDeliveryRequestAction": "Envoyer la demande",
+  "deliveryRequestEmptyDescriptionError": "Décrivez d'abord ce que vous voulez.",
+  "deliveryRequestPendingMessage": "En attente qu'un livreur accepte...",
+  "deliveryRequestStatusPending": "En attente",
+  "deliveryRequestStatusAccepted": "Acceptée",
+  "deliveryRequestStatusDelivered": "Livrée",
+  "deliveryRequestStatusCancelled": "Annulée",
+  "myDeliveryRequestsTitle": "Mes demandes",
+  "noDeliveryRequestsMessage": "Aucune demande de livraison pour le moment"
 }
