@@ -10,6 +10,7 @@ import '../services/location_service.dart';
 import '../services/order_service.dart';
 import '../utils/distance.dart';
 import 'account_screen.dart';
+import 'delivery_requests_home_screen.dart';
 import 'job_detail_screen.dart';
 import 'notifications_screen.dart';
 
@@ -116,6 +117,17 @@ class _HomeScreenState extends State<HomeScreen>
       appBar: AppBar(
         title: const Text('الطلبات'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.local_shipping_outlined),
+            tooltip: 'طلبات عامة (اطلب أي شيء)',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const DeliveryRequestsHomeScreen(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.notifications_none_rounded),
             tooltip: 'الإشعارات',
