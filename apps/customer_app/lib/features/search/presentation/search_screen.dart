@@ -236,6 +236,7 @@ class _SearchScreenState extends State<SearchScreen> {
           storeName: merchant.storeName,
           logoUrl: merchant.logoUrl,
           coverUrl: merchant.coverUrl,
+          isOpenNow: merchant.isOpenNow,
         ),
       ),
     );

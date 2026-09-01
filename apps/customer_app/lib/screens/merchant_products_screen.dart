@@ -8,20 +8,24 @@ import '../models/product.dart';
 import '../services/cart_service.dart';
 import '../services/merchant_views_service.dart';
 import '../widgets/merchant_logo.dart';
+import '../widgets/open_status_badge.dart';
 import 'cart_screen.dart';
 import 'product_detail_screen.dart';
 
 /// شاشة منتجات محل واحد، مرتّبة، بسيطة، بدون تعقيد.
 ///
-/// logoUrl/coverUrl اختياريان، يُمرَّران من الشاشة المستدعية (التي تملك
-/// أصلًا كائن Merchant الكامل) — بدون أي استعلام إضافي هنا لجلبهما. عند
-/// غيابهما (لم يرفع التاجر صورًا بعد) لا تظهر لافتة الغلاف إطلاقًا، بدل
-/// عرض شكل احتياطي فارغ.
+/// logoUrl/coverUrl/isOpenNow اختيارية، تُمرَّر من الشاشة المستدعية (التي
+/// تملك أصلًا كائن Merchant الكامل، بما فيه isOpenNow المحسوبة) — بدون
+/// أي استعلام إضافي هنا لجلبها. عند غياب logoUrl/coverUrl (لم يرفع
+/// التاجر صورًا بعد) لا تظهر لافتة الغلاف إطلاقًا، بدل عرض شكل احتياطي
+/// فارغ. نفس المنطق لـisOpenNow: null يعني "لا معلومة كافية" فتُخفى شارة
+/// الحالة تمامًا، أبدًا كتخمين — راجع OpenStatusBadge/Merchant.isOpenNow.
 class MerchantProductsScreen extends StatefulWidget {
   final String merchantId;
   final String storeName;
   final String? logoUrl;
   final String? coverUrl;
+  final bool? isOpenNow;
 
   const MerchantProductsScreen({
     super.key,
@@ -29,6 +33,7 @@ class MerchantProductsScreen extends StatefulWidget {
     required this.storeName,
     this.logoUrl,
     this.coverUrl,
+    this.isOpenNow,
   });
 
   @override
@@ -183,6 +188,14 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
       ),
       body: Column(
         children: [
+          if (widget.isOpenNow != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: OpenStatusBadge(isOpen: widget.isOpenNow!),
+              ),
+            ),
           _StoreCoverBanner(logoUrl: widget.logoUrl, coverUrl: widget.coverUrl),
           Expanded(
             child: FutureBuilder<List<Product>>(

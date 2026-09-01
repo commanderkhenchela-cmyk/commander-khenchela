@@ -257,6 +257,7 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
           storeName: merchant.storeName,
           logoUrl: merchant.logoUrl,
           coverUrl: merchant.coverUrl,
+          isOpenNow: merchant.isOpenNow,
         ),
       ),
     );

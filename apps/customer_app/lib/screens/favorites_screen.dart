@@ -52,6 +52,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           storeName: merchant.storeName,
           logoUrl: merchant.logoUrl,
           coverUrl: merchant.coverUrl,
+          isOpenNow: merchant.isOpenNow,
         ),
       ),
     );

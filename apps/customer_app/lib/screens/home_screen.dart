@@ -222,6 +222,7 @@ class _HomeScreenState extends State<HomeScreen> {
           storeName: merchant.storeName,
           logoUrl: merchant.logoUrl,
           coverUrl: merchant.coverUrl,
+          isOpenNow: merchant.isOpenNow,
         ),
       ),
     );
