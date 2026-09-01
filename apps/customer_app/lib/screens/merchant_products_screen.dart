@@ -7,8 +7,8 @@ import '../l10n/app_localizations.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
 import '../services/merchant_views_service.dart';
+import '../theme/design_tokens.dart';
 import '../widgets/merchant_logo.dart';
-import '../widgets/open_status_badge.dart';
 import 'cart_screen.dart';
 import 'product_detail_screen.dart';
 
@@ -19,7 +19,10 @@ import 'product_detail_screen.dart';
 /// أي استعلام إضافي هنا لجلبها. عند غياب logoUrl/coverUrl (لم يرفع
 /// التاجر صورًا بعد) لا تظهر لافتة الغلاف إطلاقًا، بدل عرض شكل احتياطي
 /// فارغ. نفس المنطق لـisOpenNow: null يعني "لا معلومة كافية" فتُخفى شارة
-/// الحالة تمامًا، أبدًا كتخمين — راجع OpenStatusBadge/Merchant.isOpenNow.
+/// الحالة تمامًا، أبدًا كتخمين — راجع Merchant.isOpenNow. تُعرَض هنا
+/// كشريط كامل العرض (_StoreStatusBanner) لا شارة صغيرة كما في البطاقات
+/// (OpenStatusBadge) — هذه الشاشة نقطة تركيز واحدة، تحتمل عنصرًا أوضح
+/// وأكبر.
 class MerchantProductsScreen extends StatefulWidget {
   final String merchantId;
   final String storeName;
@@ -189,13 +192,7 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
       body: Column(
         children: [
           if (widget.isOpenNow != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-              child: Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: OpenStatusBadge(isOpen: widget.isOpenNow!),
-              ),
-            ),
+            _StoreStatusBanner(isOpen: widget.isOpenNow!),
           _StoreCoverBanner(logoUrl: widget.logoUrl, coverUrl: widget.coverUrl),
           Expanded(
             child: FutureBuilder<List<Product>>(
@@ -381,6 +378,49 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
                   },
                 );
               },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// شريط كامل العرض أعلى صفحة المحل يوضّح "مفتوح الآن"/"مغلق الآن" —
+/// بديل OpenStatusBadge الصغير هنا تحديدًا: هذه نقطة تركيز واحدة على
+/// الشاشة (لا بطاقة صغيرة بين عناصر أخرى)، فتحتمل نصًا أكبر ووضوحًا
+/// أعلى (خلفية مصبوغة كاملة العرض بدل نقطة+نص صغيرين). نفس ألوان
+/// success/danger الثابتة (لا colorScheme.primary/error القابلة
+/// لتخصيص العلامة التجارية) لنفس السبب الموثَّق في open_status_badge.dart.
+class _StoreStatusBanner extends StatelessWidget {
+  final bool isOpen;
+
+  const _StoreStatusBanner({required this.isOpen});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final color = isOpen ? theme.colorScheme.success : theme.colorScheme.danger;
+
+    return Container(
+      width: double.infinity,
+      color: color.withValues(alpha: 0.12),
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 9,
+            height: 9,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            isOpen ? l10n.openNowSectionTitle : l10n.closedNowLabel,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
