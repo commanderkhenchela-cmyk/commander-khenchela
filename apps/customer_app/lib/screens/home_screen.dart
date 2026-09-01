@@ -26,6 +26,7 @@ import 'merchant_products_screen.dart';
 import 'merchants_screen.dart';
 import 'notifications_screen.dart';
 import 'request_anything_screen.dart';
+import 'request_craftsman_screen.dart';
 import 'request_ride_screen.dart';
 import '../features/search/presentation/search_screen.dart';
 
@@ -264,6 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
     'restaurants',
     'delivery',
     'taxi',
+    'craftsmen',
   };
 
   void _openService(AppService service) {
@@ -272,10 +274,10 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    // "التوصيل" (اطلب أي شيء) وTaxi ليستا تصفّح-حسب-تصنيف كباقي
-    // الخدمات — لا تاجر ولا منتجات إطلاقًا، فتفتحان شاشة طلب مباشرة
-    // (راجع migration 20260905000000_delivery_requests وmigration
-    // 20260906000000_ride_requests).
+    // "التوصيل" (اطلب أي شيء) وTaxi وحرفيون ليست تصفّح-حسب-تصنيف كباقي
+    // الخدمات — لا تاجر ولا منتجات إطلاقًا، فتفتح شاشة طلب مباشرة
+    // (راجع migrations 20260905000000_delivery_requests،
+    // 20260906000000_ride_requests، 20260907000000_craftsman_requests).
     if (service.slug == 'delivery') {
       Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const RequestAnythingScreen()),
@@ -285,6 +287,12 @@ class _HomeScreenState extends State<HomeScreen> {
     if (service.slug == 'taxi') {
       Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const RequestRideScreen()),
+      );
+      return;
+    }
+    if (service.slug == 'craftsmen') {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const RequestCraftsmanScreen()),
       );
       return;
     }

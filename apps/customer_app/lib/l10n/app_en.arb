@@ -308,5 +308,25 @@
   "rideStatusCompleted": "Completed",
   "rideStatusCancelled": "Cancelled",
   "myRidesTitle": "My rides",
-  "noRidesMessage": "No rides yet"
+  "noRidesMessage": "No rides yet",
+
+  "requestCraftsmanTitle": "Request a craftsman",
+  "requestCraftsmanIntro": "Request a craftsman (plumber, electrician, painter...) — our team reviews it and connects you with a suitable one by phone.",
+  "craftTypeLabel": "Craft type",
+  "craftTypePlumber": "Plumber",
+  "craftTypeElectrician": "Electrician",
+  "craftTypePainter": "Painter",
+  "craftTypeCarpenter": "Carpenter",
+  "craftTypeLocksmith": "Locksmith",
+  "craftTypeAcTechnician": "AC technician",
+  "craftTypeGeneral": "General",
+  "craftsmanDescriptionHint": "e.g. water leak in the kitchen, install a light switch...",
+  "craftsmanRequestStatusPending": "Under review",
+  "craftsmanRequestStatusAssigned": "Matched with a craftsman",
+  "craftsmanRequestStatusCompleted": "Completed",
+  "craftsmanRequestStatusCancelled": "Cancelled",
+  "craftsmanRequestPendingMessage": "Your request is under review — you'll be notified once matched with a craftsman.",
+  "assignedCraftsmanLabel": "Assigned craftsman",
+  "myCraftsmanRequestsTitle": "Craftsman requests",
+  "noCraftsmanRequestsMessage": "No craftsman requests yet"
 }

@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/notification_item.dart';
+import 'craftsman_request_detail_screen.dart';
 import 'delivery_request_detail_screen.dart';
 import 'order_detail_screen.dart';
 import 'ride_detail_screen.dart';
@@ -118,6 +119,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       case 'ride_request':
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => RideDetailScreen(rideId: entityId)),
+        );
+        break;
+      case 'craftsman_request':
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                CraftsmanRequestDetailScreen(requestId: entityId),
+          ),
         );
         break;
     }

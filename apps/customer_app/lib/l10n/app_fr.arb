@@ -308,5 +308,25 @@
   "rideStatusCompleted": "Terminée",
   "rideStatusCancelled": "Annulée",
   "myRidesTitle": "Mes courses",
-  "noRidesMessage": "Aucune course pour le moment"
+  "noRidesMessage": "Aucune course pour le moment",
+
+  "requestCraftsmanTitle": "Demander un artisan",
+  "requestCraftsmanIntro": "Demandez un artisan (plombier, électricien, peintre...) — notre équipe examine et vous met en relation par téléphone.",
+  "craftTypeLabel": "Type de métier",
+  "craftTypePlumber": "Plombier",
+  "craftTypeElectrician": "Électricien",
+  "craftTypePainter": "Peintre",
+  "craftTypeCarpenter": "Menuisier",
+  "craftTypeLocksmith": "Serrurier",
+  "craftTypeAcTechnician": "Technicien climatisation",
+  "craftTypeGeneral": "Général",
+  "craftsmanDescriptionHint": "ex. : fuite d'eau dans la cuisine, installer un interrupteur...",
+  "craftsmanRequestStatusPending": "En cours d'examen",
+  "craftsmanRequestStatusAssigned": "Artisan trouvé",
+  "craftsmanRequestStatusCompleted": "Terminée",
+  "craftsmanRequestStatusCancelled": "Annulée",
+  "craftsmanRequestPendingMessage": "Votre demande est en cours d'examen — vous serez notifié dès qu'un artisan sera trouvé.",
+  "assignedCraftsmanLabel": "Artisan assigné",
+  "myCraftsmanRequestsTitle": "Demandes d'artisans",
+  "noCraftsmanRequestsMessage": "Aucune demande d'artisan pour le moment"
 }

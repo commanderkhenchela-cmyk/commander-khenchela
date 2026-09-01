@@ -7,6 +7,7 @@ import '../features/settings/presentation/settings_screen.dart';
 import 'address_list_screen.dart';
 import 'favorites_screen.dart';
 import 'login_screen.dart';
+import 'my_craftsman_requests_screen.dart';
 import 'my_delivery_requests_screen.dart';
 import 'my_orders_screen.dart';
 import 'my_rides_screen.dart';
@@ -164,6 +165,11 @@ class _AccountScreenState extends State<AccountScreen> {
               icon: Icons.local_taxi_outlined,
               label: l10n.myRidesTitle,
               onTap: () => _push(const MyRidesScreen()),
+            ),
+            _MenuTile(
+              icon: Icons.handyman_outlined,
+              label: l10n.myCraftsmanRequestsTitle,
+              onTap: () => _push(const MyCraftsmanRequestsScreen()),
             ),
             _MenuTile(
               icon: Icons.favorite_border_rounded,
