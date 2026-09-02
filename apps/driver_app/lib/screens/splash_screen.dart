@@ -56,8 +56,18 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!mounted) return;
 
-    Navigator.of(context)
-        .pushReplacement(MaterialPageRoute(builder: (_) => next));
+    // تأجيل التنقّل لما بعد اكتمال أول إطار (بدل استدعاء
+    // pushReplacement فورًا من initState) — لمستخدم غير مسجَّل دخوله
+    // تحديدًا، هذه الدالة تصل لهذه النقطة شبه فوريًا (بلا أي await قبلها)،
+    // فقد يسبق حتى انتهاء أول Route Transition الذي يُنشئه Flutter تلقائيًا
+    // عند بدء التطبيق — تصادم داخلي معروف يسبّب استثناء
+    // '!navigator._debugLocked' فـ بعض نسخ Flutter. addPostFrameCallback
+    // يضمن اكتمال ذلك أولًا قبل أي pushReplacement من جهتنا.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context)
+          .pushReplacement(MaterialPageRoute(builder: (_) => next));
+    });
   }
 
   @override
