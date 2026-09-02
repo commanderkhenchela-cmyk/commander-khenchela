@@ -33,13 +33,17 @@ class DeliveryRequestService {
         .toList();
   }
 
-  /// الطلبات التي قبِلها هذا الموصّل ولم تُسلَّم بعد.
+  /// الطلبات التي قبِلها هذا الموصّل ولم تُسلَّم بعد. delivered وcancelled
+  /// معًا مستبعدان (بخلاف orders حيث cancelled بعد التعيين مستحيلة
+  /// أصلًا) — الإدارة تقدر تُلغي طلب delivery_request مقبولًا فعليًا
+  /// (راجع validate_delivery_request_status_transition)، فبلا استبعاد
+  /// cancelled هنا كانت تبقى عالقة للأبد فـ "طلباتي".
   static Future<List<DeliveryRequestJob>> fetchMine() async {
     final rows = await _client
         .from('delivery_requests')
         .select(_detailColumns)
         .not('driver_id', 'is', null)
-        .neq('status', 'delivered')
+        .not('status', 'in', '(delivered,cancelled)')
         .order('created_at');
 
     return (rows as List)

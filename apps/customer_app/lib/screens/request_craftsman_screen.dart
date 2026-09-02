@@ -5,6 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../models/craftsman_request.dart';
 import '../services/auth_service.dart';
 import '../widgets/loading_elevated_button.dart';
+import '../widgets/step_card.dart';
 import 'address_list_screen.dart';
 import 'craftsman_request_detail_screen.dart';
 import 'login_screen.dart';
@@ -168,7 +169,7 @@ class _RequestCraftsmanScreenState extends State<RequestCraftsmanScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            _StepCard(
+            StepCard(
               stepNumber: 1,
               title: l10n.loginStepTitle,
               isDone: _isSignedIn,
@@ -180,7 +181,7 @@ class _RequestCraftsmanScreenState extends State<RequestCraftsmanScreen> {
                     ),
             ),
             const SizedBox(height: 12),
-            _StepCard(
+            StepCard(
               stepNumber: 2,
               title: l10n.craftTypeLabel,
               isDone: _craftType != null,
@@ -200,7 +201,7 @@ class _RequestCraftsmanScreenState extends State<RequestCraftsmanScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            _StepCard(
+            StepCard(
               stepNumber: 3,
               title: l10n.deliveryAddressLabel,
               isDone: _addressId != null,
@@ -231,7 +232,7 @@ class _RequestCraftsmanScreenState extends State<RequestCraftsmanScreen> {
                     ),
             ),
             const SizedBox(height: 12),
-            _StepCard(
+            StepCard(
               stepNumber: 4,
               title: l10n.deliveryRequestDescriptionLabel,
               isDone: _descriptionController.text.trim().isNotEmpty,
@@ -260,55 +261,6 @@ class _RequestCraftsmanScreenState extends State<RequestCraftsmanScreen> {
               onPressed: canSubmit ? _submit : null,
               child: Text(l10n.submitDeliveryRequestAction),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// نفس _StepCard المتكرِّرة فـ الشاشات المشابهة بالحرف.
-class _StepCard extends StatelessWidget {
-  final int stepNumber;
-  final String title;
-  final bool isDone;
-  final Widget child;
-
-  const _StepCard({
-    required this.stepNumber,
-    required this.title,
-    required this.isDone,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 14,
-                  backgroundColor: isDone
-                      ? theme.colorScheme.primary
-                      : Colors.black26,
-                  child: Text(
-                    '$stepNumber',
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(title, style: theme.textTheme.titleLarge),
-              ],
-            ),
-            const SizedBox(height: 12),
-            child,
           ],
         ),
       ),

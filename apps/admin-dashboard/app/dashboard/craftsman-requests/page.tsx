@@ -89,13 +89,30 @@ export default async function CraftsmanRequestsPage({
                   {r.description}
                 </p>
               </div>
-              <span className="shrink-0 rounded-full px-3 py-1 text-xs font-semibold text-warning bg-warning/10">
-                {CRAFTSMAN_REQUEST_STATUS_LABELS[r.status]}
-              </span>
+              <StatusBadge status={r.status} />
             </Link>
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+/// نفس نمط StatusBadge فـ orders/page.tsx — لون يتبع الحالة الفعلية
+/// بدل لون واحد ثابت (warning) لكل الحالات.
+function StatusBadge({ status }: { status: CraftsmanRequestStatus }) {
+  const colorClass =
+    status === "completed"
+      ? "text-primary bg-primary/10"
+      : status === "cancelled"
+        ? "text-error bg-error/10"
+        : "text-warning bg-warning/10";
+
+  return (
+    <span
+      className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${colorClass}`}
+    >
+      {CRAFTSMAN_REQUEST_STATUS_LABELS[status]}
+    </span>
   );
 }

@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../widgets/loading_elevated_button.dart';
+import '../widgets/step_card.dart';
 import 'address_list_screen.dart';
 import 'delivery_request_detail_screen.dart';
 import 'login_screen.dart';
@@ -167,7 +168,7 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            _StepCard(
+            StepCard(
               stepNumber: 1,
               title: l10n.loginStepTitle,
               isDone: _isSignedIn,
@@ -179,7 +180,7 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
                     ),
             ),
             const SizedBox(height: 12),
-            _StepCard(
+            StepCard(
               stepNumber: 2,
               title: l10n.deliveryAddressLabel,
               isDone: _addressId != null,
@@ -210,7 +211,7 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
                     ),
             ),
             const SizedBox(height: 12),
-            _StepCard(
+            StepCard(
               stepNumber: 3,
               title: l10n.deliveryRequestDescriptionLabel,
               isDone: _descriptionController.text.trim().isNotEmpty,
@@ -239,56 +240,6 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
               onPressed: canSubmit ? _submit : null,
               child: Text(l10n.submitDeliveryRequestAction),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// نفس _StepCard فـ checkout_screen.dart بالحرف — لا استيراد مباشر
-/// لأنها private هناك، فنسخة محلية مطابقة تمامًا.
-class _StepCard extends StatelessWidget {
-  final int stepNumber;
-  final String title;
-  final bool isDone;
-  final Widget child;
-
-  const _StepCard({
-    required this.stepNumber,
-    required this.title,
-    required this.isDone,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 14,
-                  backgroundColor: isDone
-                      ? theme.colorScheme.primary
-                      : Colors.black26,
-                  child: Text(
-                    '$stepNumber',
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(title, style: theme.textTheme.titleLarge),
-              ],
-            ),
-            const SizedBox(height: 12),
-            child,
           ],
         ),
       ),
