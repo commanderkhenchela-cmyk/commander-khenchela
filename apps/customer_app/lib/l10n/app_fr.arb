@@ -328,5 +328,13 @@
   "craftsmanRequestPendingMessage": "Votre demande est en cours d'examen — vous serez notifié dès qu'un artisan sera trouvé.",
   "assignedCraftsmanLabel": "Artisan assigné",
   "myCraftsmanRequestsTitle": "Demandes d'artisans",
-  "noCraftsmanRequestsMessage": "Aucune demande d'artisan pour le moment"
+  "noCraftsmanRequestsMessage": "Aucune demande d'artisan pour le moment",
+
+  "deliveryRequestTypeSend": "Envoyer un colis",
+  "deliveryRequestTypeReceive": "Recevoir un colis",
+  "deliveryRequestPickupLabel": "Où faut-il le récupérer ?",
+  "deliveryRequestDestinationLabel": "Destination de la livraison",
+  "deliveryRequestDestinationHint": "Nom, adresse et numéro de téléphone du destinataire",
+  "deliveryRequestSendDescriptionHint": "ex. : un petit colis, un sac de vêtements, une enveloppe de documents...",
+  "deliveryRequestEmptyDestinationError": "Précisez d'abord la destination de la livraison."
 }

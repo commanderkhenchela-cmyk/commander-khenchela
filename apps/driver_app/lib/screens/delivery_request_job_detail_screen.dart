@@ -93,6 +93,8 @@ class _DeliveryRequestJobDetailScreenState
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              _TypeBadge(request: request),
+              const SizedBox(height: 12),
               _SectionCard(
                 icon: Icons.description_outlined,
                 title: 'ماذا يريد العميل',
@@ -101,7 +103,7 @@ class _DeliveryRequestJobDetailScreenState
               const SizedBox(height: 12),
               _SectionCard(
                 icon: Icons.person_pin_circle_rounded,
-                title: 'التسليم للعميل',
+                title: request.isSend ? 'نقطة الاستلام من العميل' : 'التسليم للعميل',
                 lines: [
                   if (request.communeName != null &&
                       request.addressText != null)
@@ -109,6 +111,14 @@ class _DeliveryRequestJobDetailScreenState
                   if (request.customerPhone != null) request.customerPhone!,
                 ],
               ),
+              if (request.isSend && request.destinationText != null) ...[
+                const SizedBox(height: 12),
+                _SectionCard(
+                  icon: Icons.call_made_rounded,
+                  title: 'الوجهة (إلى من/أين يُرسَل)',
+                  lines: [request.destinationText!],
+                ),
+              ],
               const SizedBox(height: 12),
               Card(
                 child: Padding(
@@ -153,6 +163,43 @@ class _DeliveryRequestJobDetailScreenState
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _TypeBadge extends StatelessWidget {
+  final DeliveryRequestJob request;
+
+  const _TypeBadge({required this.request});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              request.isSend
+                  ? Icons.call_made_rounded
+                  : Icons.call_received_rounded,
+              size: 14,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              DeliveryRequestJob.requestTypeLabel(request.requestType),
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
       ),
     );
   }

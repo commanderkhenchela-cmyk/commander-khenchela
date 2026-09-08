@@ -26,6 +26,12 @@ class RequestAnythingScreen extends StatefulWidget {
 
 class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
   final _descriptionController = TextEditingController();
+  final _destinationController = TextEditingController();
+
+  // 'receive' = العميل يريد استلام غرض (السلوك الأصلي). 'send' = العميل
+  // يملك الغرض ويريد إيصاله لمكان/شخص آخر — راجع تعليق migration
+  // 20260908000000_delivery_request_send_receive لمعنى كل حقل فـ كل حالة.
+  String _requestType = 'receive';
 
   String? _addressId;
   String? _addressSummary;
@@ -34,6 +40,7 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
   String? _errorMessage;
 
   bool get _isSignedIn => AuthService.isSignedIn;
+  bool get _isSend => _requestType == 'send';
 
   @override
   void initState() {
@@ -44,6 +51,7 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
   @override
   void dispose() {
     _descriptionController.dispose();
+    _destinationController.dispose();
     super.dispose();
   }
 
@@ -111,6 +119,8 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
         params: {
           'p_address_id': _addressId,
           'p_description': _descriptionController.text.trim(),
+          'p_request_type': _requestType,
+          if (_isSend) 'p_destination_text': _destinationController.text.trim(),
         },
       );
 
@@ -143,6 +153,8 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
         return l10n.orderInvalidAddressError;
       case 'صف ما تريد طلبه أولًا':
         return l10n.deliveryRequestEmptyDescriptionError;
+      case 'حدّد وجهة التسليم أولًا':
+        return l10n.deliveryRequestEmptyDestinationError;
       default:
         return l10n.orderSubmitError;
     }
@@ -154,7 +166,8 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
     final l10n = AppLocalizations.of(context);
     final canSubmit = _isSignedIn &&
         _addressId != null &&
-        _descriptionController.text.trim().isNotEmpty;
+        _descriptionController.text.trim().isNotEmpty &&
+        (!_isSend || _destinationController.text.trim().isNotEmpty);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.requestAnythingTitle)),
@@ -167,6 +180,26 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
               text: l10n.requestAnythingIntro,
             ),
             const SizedBox(height: 20),
+            // اختيار الاتجاه أولًا — يغيّر معنى الخطوات التالية بالكامل
+            // (راجع تعليق migration 20260908000000 لمعنى كل حقل فـ كل حالة).
+            SegmentedButton<String>(
+              segments: [
+                ButtonSegment(
+                  value: 'receive',
+                  label: Text(l10n.deliveryRequestTypeReceive),
+                  icon: const Icon(Icons.call_received_rounded),
+                ),
+                ButtonSegment(
+                  value: 'send',
+                  label: Text(l10n.deliveryRequestTypeSend),
+                  icon: const Icon(Icons.call_made_rounded),
+                ),
+              ],
+              selected: {_requestType},
+              onSelectionChanged: (selection) =>
+                  setState(() => _requestType = selection.first),
+            ),
+            const SizedBox(height: 16),
             StepCard(
               stepNumber: 1,
               title: l10n.loginStepTitle,
@@ -181,7 +214,9 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
             const SizedBox(height: 12),
             StepCard(
               stepNumber: 2,
-              title: l10n.deliveryAddressLabel,
+              title: _isSend
+                  ? l10n.deliveryRequestPickupLabel
+                  : l10n.deliveryAddressLabel,
               isDone: _addressId != null,
               child: !_isSignedIn
                   ? Text(
@@ -209,9 +244,27 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
                       child: Text(l10n.selectDeliveryAddressAction),
                     ),
             ),
+            if (_isSend) ...[
+              const SizedBox(height: 12),
+              StepCard(
+                stepNumber: 3,
+                title: l10n.deliveryRequestDestinationLabel,
+                isDone: _destinationController.text.trim().isNotEmpty,
+                child: TextField(
+                  controller: _destinationController,
+                  maxLines: 3,
+                  maxLength: 200,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    hintText: l10n.deliveryRequestDestinationHint,
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             StepCard(
-              stepNumber: 3,
+              stepNumber: _isSend ? 4 : 3,
               title: l10n.deliveryRequestDescriptionLabel,
               isDone: _descriptionController.text.trim().isNotEmpty,
               child: TextField(
@@ -220,7 +273,9 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
                 maxLength: 300,
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
-                  hintText: l10n.deliveryRequestDescriptionHint,
+                  hintText: _isSend
+                      ? l10n.deliveryRequestSendDescriptionHint
+                      : l10n.deliveryRequestDescriptionHint,
                   border: const OutlineInputBorder(),
                 ),
               ),

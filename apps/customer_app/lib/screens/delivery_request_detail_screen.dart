@@ -5,8 +5,8 @@ import '../l10n/app_localizations.dart';
 import '../models/delivery_request.dart';
 
 const _requestColumns =
-    'id, description, status, delivery_fee, delivery_fee_method, created_at, '
-    'accepted_at, addresses(address_text, communes(name))';
+    'id, description, status, request_type, destination_text, delivery_fee, '
+    'delivery_fee_method, created_at, accepted_at, addresses(address_text, communes(name))';
 
 /// شاشة تفاصيل طلب "اطلب أي شيء" واحد — نفس فلسفة OrderDetailScreen
 /// (Realtime لهذا الطلب بالذات + إلغاء ذاتي طالما pending فقط)، لكن
@@ -147,29 +147,66 @@ class _DeliveryRequestDetailScreenState
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.circle, size: 10, color: statusColor),
-                      const SizedBox(width: 8),
-                      Text(
-                        DeliveryRequest.statusLabel(request.status, l10n),
-                        style: TextStyle(
-                          color: statusColor,
-                          fontWeight: FontWeight.w700,
-                        ),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
                       ),
-                    ],
-                  ),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.circle, size: 10, color: statusColor),
+                          const SizedBox(width: 8),
+                          Text(
+                            DeliveryRequest.statusLabel(request.status, l10n),
+                            style: TextStyle(
+                              color: statusColor,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.08,
+                        ),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            request.isSend
+                                ? Icons.call_made_rounded
+                                : Icons.call_received_rounded,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            DeliveryRequest.requestTypeLabel(
+                              request.requestType,
+                              l10n,
+                            ),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 if (request.status == 'pending')
@@ -197,13 +234,25 @@ class _DeliveryRequestDetailScreenState
                         if (request.addressText != null) ...[
                           const Divider(height: 28),
                           Text(
-                            l10n.deliveryAddressLabel,
+                            request.isSend
+                                ? l10n.deliveryRequestPickupLabel
+                                : l10n.deliveryAddressLabel,
                             style: theme.textTheme.labelLarge,
                           ),
                           const SizedBox(height: 6),
                           Text(
                             '${request.communeName ?? ''} — ${request.addressText}',
                           ),
+                        ],
+                        if (request.isSend &&
+                            request.destinationText != null) ...[
+                          const Divider(height: 28),
+                          Text(
+                            l10n.deliveryRequestDestinationLabel,
+                            style: theme.textTheme.labelLarge,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(request.destinationText!),
                         ],
                         if (request.status != 'pending') ...[
                           const Divider(height: 28),

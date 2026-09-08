@@ -789,5 +789,20 @@
   "myCraftsmanRequestsTitle": "طلبات الحرفيين",
   "@myCraftsmanRequestsTitle": {"description": "عنوان شاشة/زر قائمة طلبات الحرفيين الخاصة بالعميل"},
   "noCraftsmanRequestsMessage": "لا توجد طلبات حرفيين بعد",
-  "@noCraftsmanRequestsMessage": {"description": "رسالة القائمة الفارغة فـ طلبات الحرفيين"}
+  "@noCraftsmanRequestsMessage": {"description": "رسالة القائمة الفارغة فـ طلبات الحرفيين"},
+
+  "deliveryRequestTypeSend": "إرسال طلبية",
+  "@deliveryRequestTypeSend": {"description": "اتجاه طلب اطلب أي شيء: العميل يملك الغرض ويرسله"},
+  "deliveryRequestTypeReceive": "استقبال طلبية",
+  "@deliveryRequestTypeReceive": {"description": "اتجاه طلب اطلب أي شيء: العميل يستلم غرضًا"},
+  "deliveryRequestPickupLabel": "من أين نستلم الغرض؟",
+  "@deliveryRequestPickupLabel": {"description": "تسمية عنوان الاستلام فـ وضع الإرسال"},
+  "deliveryRequestDestinationLabel": "وجهة التسليم",
+  "@deliveryRequestDestinationLabel": {"description": "تسمية حقل وجهة التسليم النصّي فـ وضع الإرسال"},
+  "deliveryRequestDestinationHint": "اسم المستلِم، عنوانه، ورقم هاتفه",
+  "@deliveryRequestDestinationHint": {"description": "نص توضيحي داخل حقل وجهة التسليم"},
+  "deliveryRequestSendDescriptionHint": "مثال: طرد صغير، كيس ملابس، ظرف مستندات...",
+  "@deliveryRequestSendDescriptionHint": {"description": "نص توضيحي داخل حقل وصف الغرض المُرسَل"},
+  "deliveryRequestEmptyDestinationError": "حدّد وجهة التسليم أولًا.",
+  "@deliveryRequestEmptyDestinationError": {"description": "رسالة خطأ create_delivery_request: وجهة التسليم فارغة فـ وضع الإرسال"}
 }

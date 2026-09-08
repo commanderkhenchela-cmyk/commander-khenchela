@@ -7,7 +7,8 @@ import '../widgets/empty_list_message.dart';
 import 'delivery_request_detail_screen.dart';
 
 const _listColumns =
-    'id, description, status, delivery_fee, delivery_fee_method, created_at, accepted_at';
+    'id, description, status, request_type, destination_text, delivery_fee, '
+    'delivery_fee_method, created_at, accepted_at';
 
 /// شاشة "طلباتي الحرة" — قائمة طلبات "اطلب أي شيء" الخاصة بالعميل
 /// الحالي فقط (RLS delivery_requests_select_own_customer). قائمة واحدة
@@ -189,6 +190,30 @@ class _RequestCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                children: [
+                  Icon(
+                    request.isSend
+                        ? Icons.call_made_rounded
+                        : Icons.call_received_rounded,
+                    size: 14,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    DeliveryRequest.requestTypeLabel(
+                      request.requestType,
+                      l10n,
+                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
               Text(
                 request.description,
                 maxLines: 2,

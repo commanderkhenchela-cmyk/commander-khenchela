@@ -196,11 +196,19 @@ class _RequestsListState extends State<_RequestsList> {
             separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final request = requests[index];
+              final typeLabel = DeliveryRequestJob.requestTypeLabel(
+                request.requestType,
+              );
               return Card(
                 child: ListTile(
                   onTap: widget.available
                       ? null
                       : () => widget.onOpen?.call(request.id),
+                  leading: Icon(
+                    request.isSend
+                        ? Icons.call_made_rounded
+                        : Icons.call_received_rounded,
+                  ),
                   title: Text(
                     request.description,
                     maxLines: 2,
@@ -209,8 +217,12 @@ class _RequestsListState extends State<_RequestsList> {
                   ),
                   subtitle: Text(
                     widget.available
-                        ? DeliveryRequestJob.statusLabel(request.status)
+                        ? [
+                            typeLabel,
+                            DeliveryRequestJob.statusLabel(request.status),
+                          ].join(' — ')
                         : [
+                            typeLabel,
                             DeliveryRequestJob.statusLabel(request.status),
                             if (request.driverEarningShare > 0)
                               '${request.driverEarningShare.toStringAsFixed(0)} دج',

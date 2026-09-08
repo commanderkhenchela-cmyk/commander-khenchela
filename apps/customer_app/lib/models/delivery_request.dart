@@ -9,6 +9,8 @@ class DeliveryRequest {
   final String id;
   final String description;
   final String status;
+  final String requestType;
+  final String? destinationText;
   final double deliveryFee;
   final String deliveryFeeMethod;
   final DateTime createdAt;
@@ -20,13 +22,17 @@ class DeliveryRequest {
     required this.id,
     required this.description,
     required this.status,
+    required this.requestType,
     required this.deliveryFee,
     required this.deliveryFeeMethod,
     required this.createdAt,
+    this.destinationText,
     this.acceptedAt,
     this.addressText,
     this.communeName,
   });
+
+  bool get isSend => requestType == 'send';
 
   /// رسم توصيل حقيقي قابل للعرض؟ 'unconfigured' يعني لا إعداد فعّال بعد
   /// (راجع calculate_delivery_fee) — نفس منطق hasRealFee فـ checkout_screen.
@@ -40,6 +46,8 @@ class DeliveryRequest {
       id: map['id'] as String,
       description: map['description'] as String,
       status: map['status'] as String,
+      requestType: map['request_type'] as String? ?? 'receive',
+      destinationText: map['destination_text'] as String?,
       deliveryFee: (map['delivery_fee'] as num?)?.toDouble() ?? 0,
       deliveryFeeMethod: map['delivery_fee_method'] as String? ?? 'unconfigured',
       createdAt: DateTime.parse(map['created_at'] as String),
@@ -49,6 +57,12 @@ class DeliveryRequest {
       addressText: addressRow?['address_text'] as String?,
       communeName: communeRow?['name'] as String?,
     );
+  }
+
+  static String requestTypeLabel(String requestType, AppLocalizations l10n) {
+    return requestType == 'send'
+        ? l10n.deliveryRequestTypeSend
+        : l10n.deliveryRequestTypeReceive;
   }
 
   static String statusLabel(String status, AppLocalizations l10n) {

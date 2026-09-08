@@ -15,7 +15,8 @@ class DeliveryRequestService {
   static final SupabaseClient _client = Supabase.instance.client;
 
   static const _baseColumns =
-      'id, description, status, delivery_fee, driver_earning_share, created_at, accepted_at';
+      'id, description, status, request_type, destination_text, delivery_fee, '
+      'driver_earning_share, created_at, accepted_at';
   static const _detailColumns =
       '$_baseColumns, addresses(address_text, phone, communes(name))';
 

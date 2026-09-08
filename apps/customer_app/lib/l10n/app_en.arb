@@ -328,5 +328,13 @@
   "craftsmanRequestPendingMessage": "Your request is under review — you'll be notified once matched with a craftsman.",
   "assignedCraftsmanLabel": "Assigned craftsman",
   "myCraftsmanRequestsTitle": "Craftsman requests",
-  "noCraftsmanRequestsMessage": "No craftsman requests yet"
+  "noCraftsmanRequestsMessage": "No craftsman requests yet",
+
+  "deliveryRequestTypeSend": "Send a package",
+  "deliveryRequestTypeReceive": "Receive a package",
+  "deliveryRequestPickupLabel": "Where should we pick it up from?",
+  "deliveryRequestDestinationLabel": "Delivery destination",
+  "deliveryRequestDestinationHint": "Recipient's name, address, and phone number",
+  "deliveryRequestSendDescriptionHint": "e.g. a small package, a bag of clothes, a document envelope...",
+  "deliveryRequestEmptyDestinationError": "Specify the delivery destination first."
 }

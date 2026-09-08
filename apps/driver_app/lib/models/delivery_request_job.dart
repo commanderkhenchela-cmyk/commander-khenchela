@@ -7,6 +7,8 @@ class DeliveryRequestJob {
   final String id;
   final String description;
   final String status;
+  final String requestType;
+  final String? destinationText;
   final double deliveryFee;
   final double driverEarningShare;
   final DateTime createdAt;
@@ -19,14 +21,18 @@ class DeliveryRequestJob {
     required this.id,
     required this.description,
     required this.status,
+    required this.requestType,
     required this.deliveryFee,
     required this.driverEarningShare,
     required this.createdAt,
+    this.destinationText,
     this.acceptedAt,
     this.addressText,
     this.communeName,
     this.customerPhone,
   });
+
+  bool get isSend => requestType == 'send';
 
   factory DeliveryRequestJob.fromMap(Map<String, dynamic> map) {
     final address = map['addresses'] as Map<String, dynamic>?;
@@ -36,6 +42,8 @@ class DeliveryRequestJob {
       id: map['id'] as String,
       description: map['description'] as String,
       status: map['status'] as String,
+      requestType: map['request_type'] as String? ?? 'receive',
+      destinationText: map['destination_text'] as String?,
       deliveryFee: (map['delivery_fee'] as num?)?.toDouble() ?? 0,
       driverEarningShare:
           (map['driver_earning_share'] as num?)?.toDouble() ?? 0,
@@ -47,6 +55,10 @@ class DeliveryRequestJob {
       communeName: commune?['name'] as String?,
       customerPhone: address?['phone'] as String?,
     );
+  }
+
+  static String requestTypeLabel(String requestType) {
+    return requestType == 'send' ? 'إرسال طلبية' : 'استقبال طلبية';
   }
 
   static String statusLabel(String status) {
