@@ -246,6 +246,54 @@ export interface DeliveryRequest {
   drivers?: { full_name: string; phone: string | null } | null;
 }
 
+export type RideRequestStatus =
+  | "pending"
+  | "accepted"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
+
+export const RIDE_REQUEST_STATUS_LABELS: Record<RideRequestStatus, string> = {
+  pending: "قيد الانتظار",
+  accepted: "مقبولة",
+  in_progress: "جارية الآن",
+  completed: "مكتملة",
+  cancelled: "ملغاة",
+};
+
+/**
+ * "الطاكسي" (Taxi) كما تراها الإدارة — راجع migration
+ * 20260906000000_ride_requests. بخلاف اطلب أي شيء: نقطتا الانطلاق
+ * (pickup) والوصول (dropoff) معروفتان كلتاهما منذ الإنشاء (الأجرة
+ * تُحسَب فورًا)، فالعمودان addresses منفصلان هنا فعليًا — الاستعلام
+ * يحتاج alias لكل منهما (pickup:addresses!..., dropoff:addresses!...)
+ * لأن PostgREST لا يميّز تلقائيًا أي FK يُقصَد عند وجود أكثر من واحد
+ * لنفس الجدول.
+ */
+export interface RideRequest {
+  id: string;
+  customer_id: string;
+  status: RideRequestStatus;
+  fare: number;
+  driver_earning_share: number;
+  created_at: string;
+  accepted_at: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  pickup_address?: {
+    address_text: string;
+    phone: string | null;
+    communes: { name: string } | null;
+  } | null;
+  dropoff_address?: {
+    address_text: string;
+    phone: string | null;
+    communes: { name: string } | null;
+  } | null;
+  users?: { full_name: string; phone: string | null } | null;
+  drivers?: { full_name: string; phone: string | null } | null;
+}
+
 export interface Setting {
   key: string;
   value: string;

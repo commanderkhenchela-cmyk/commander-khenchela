@@ -108,6 +108,7 @@ function buildNavModules(context: Awaited<ReturnType<typeof getAdminContext>>): 
       links: context.hasCapability("order.view")
         ? [
             { href: "/dashboard/orders", label: "الطلبات" },
+            { href: "/dashboard/ride-requests", label: "الطاكسي" },
             { href: "/dashboard/delivery-requests", label: "اطلب أي شيء" },
             { href: "/dashboard/craftsman-requests", label: "طلبات الحرفيين" },
           ]
