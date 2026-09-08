@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/driver.dart';
 import '../models/job_order.dart';
@@ -9,6 +10,7 @@ import '../services/driver_service.dart';
 import '../services/location_service.dart';
 import '../services/order_service.dart';
 import '../utils/distance.dart';
+import '../widgets/suspended_account_banner.dart';
 import 'account_screen.dart';
 import 'delivery_requests_home_screen.dart';
 import 'job_detail_screen.dart';
@@ -169,6 +171,7 @@ class _HomeScreenState extends State<HomeScreen>
       ),
       body: Column(
         children: [
+          const SuspendedAccountBanner(),
           _OnlineToggle(
             isOnline: _driver?.isOnline ?? false,
             isLoading: _isTogglingOnline,
@@ -316,7 +319,23 @@ class _JobsListState extends State<_JobsList> {
       await OrderService.claimJob(job.id);
       if (!mounted) return;
       widget.onOpen(job.id);
-    } catch (e) {
+    } on PostgrestException catch (e) {
+      if (!mounted) return;
+      // نفس نمط _accept فـ delivery_requests_home_screen.dart: رسالة
+      // السيرفر الحقيقية أولًا (مثلًا "حسابك موقوف، يرجى التواصل مع
+      // الإدارة") — كانت مستبدَلة هنا برسالة عامة مضلِّلة دائمًا،
+      // بغضّ النظر عن السبب الفعلي للرفض.
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.message.trim().isNotEmpty
+                ? e.message
+                : 'تعذّر استلام الطلب — قد يكون استلمه موصّل آخر.',
+          ),
+        ),
+      );
+      await _refresh();
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

@@ -105,6 +105,8 @@ class _RequestRideScreenState extends State<RequestRideScreen> {
     switch (message) {
       case 'يجب تسجيل الدخول لطلب رحلة':
         return l10n.orderNotSignedInError;
+      case 'حسابك موقوف، يرجى التواصل مع الإدارة':
+        return l10n.accountSuspendedError;
       case 'عنوان الانطلاق غير صالح أو لا يخصك':
       case 'عنوان الوجهة غير صالح أو لا يخصك':
         return l10n.orderInvalidAddressError;

@@ -20,6 +20,7 @@ import '../widgets/home/home_search_bar.dart';
 import '../widgets/home/home_services_section.dart';
 import '../widgets/home/home_state_message.dart';
 import '../widgets/merchant_smart_section.dart';
+import '../widgets/suspended_account_banner.dart';
 import 'account_screen.dart';
 import 'all_categories_screen.dart';
 import 'merchant_products_screen.dart';
@@ -468,6 +469,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onRefresh: () async => _refresh(),
               child: CustomScrollView(
                 slivers: [
+                  const SliverToBoxAdapter(child: SuspendedAccountBanner()),
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                     sliver: SliverToBoxAdapter(

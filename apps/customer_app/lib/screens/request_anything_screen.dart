@@ -149,6 +149,8 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
     switch (message) {
       case 'يجب تسجيل الدخول لإنشاء طلب':
         return l10n.orderNotSignedInError;
+      case 'حسابك موقوف، يرجى التواصل مع الإدارة':
+        return l10n.accountSuspendedError;
       case 'العنوان غير صالح أو لا يخصك':
         return l10n.orderInvalidAddressError;
       case 'صف ما تريد طلبه أولًا':

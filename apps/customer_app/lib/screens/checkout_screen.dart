@@ -184,6 +184,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     switch (message) {
       case 'يجب تسجيل الدخول لإنشاء طلب':
         return l10n.orderNotSignedInError;
+      case 'حسابك موقوف، يرجى التواصل مع الإدارة':
+        return l10n.accountSuspendedError;
       case 'المحل غير موجود أو غير موافَق عليه بعد':
         return l10n.orderMerchantNotApprovedError;
       case 'العنوان غير صالح أو لا يخصك':
