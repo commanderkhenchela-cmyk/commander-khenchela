@@ -191,6 +191,61 @@ export interface CraftsmanRequest {
   users?: { full_name: string; phone: string | null } | null;
 }
 
+export type DeliveryRequestStatus =
+  | "pending"
+  | "accepted"
+  | "delivered"
+  | "cancelled";
+
+export const DELIVERY_REQUEST_STATUS_LABELS: Record<
+  DeliveryRequestStatus,
+  string
+> = {
+  pending: "قيد الانتظار",
+  accepted: "مقبول",
+  delivered: "تم التسليم",
+  cancelled: "ملغى",
+};
+
+export type DeliveryRequestType = "send" | "receive";
+
+export const DELIVERY_REQUEST_TYPE_LABELS: Record<
+  DeliveryRequestType,
+  string
+> = {
+  send: "إرسال طلبية",
+  receive: "استقبال طلبية",
+};
+
+/**
+ * "اطلب أي شيء" كما تراها الإدارة — صفحة عرض فقط (لا تعيين يدوي كـ
+ * حرفيون: الموصّل يقبل الطلب بنفسه من المجمع). request_type/
+ * destination_text راجع migration 20260908000000 — العمود address_id
+ * (addresses هنا) يمثّل نقطة استلام العميل فـ send، ونقطة تسليمه فـ
+ * receive؛ destination_text (نص حرّ) هو وجهة الإرسال النهائية فـ send
+ * فقط. عرض الكل للإدارة بلا استثناء ينفّذ مبدأ "كل معلومة تخرج لجميع
+ * الأطراف" الذي طلبه صاحب المنصّة.
+ */
+export interface DeliveryRequest {
+  id: string;
+  customer_id: string;
+  description: string;
+  status: DeliveryRequestStatus;
+  request_type: DeliveryRequestType;
+  destination_text: string | null;
+  delivery_fee: number;
+  driver_earning_share: number;
+  created_at: string;
+  accepted_at: string | null;
+  addresses?: {
+    address_text: string;
+    phone: string | null;
+    communes: { name: string } | null;
+  } | null;
+  users?: { full_name: string; phone: string | null } | null;
+  drivers?: { full_name: string; phone: string | null } | null;
+}
+
 export interface Setting {
   key: string;
   value: string;
