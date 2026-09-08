@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/craftsman_request.dart';
+import '../utils/craft_type_icon.dart';
+import '../widgets/empty_list_message.dart';
 import 'craftsman_request_detail_screen.dart';
 
 const _listColumns =
@@ -109,13 +111,9 @@ class _MyCraftsmanRequestsScreenState
                 onRefresh: () async => _refresh(),
                 child: ListView(
                   children: [
-                    const SizedBox(height: 80),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Text(
-                        l10n.noCraftsmanRequestsMessage,
-                        textAlign: TextAlign.center,
-                      ),
+                    EmptyListMessage(
+                      icon: Icons.handyman_outlined,
+                      message: l10n.noCraftsmanRequestsMessage,
                     ),
                   ],
                 ),
@@ -191,11 +189,31 @@ class _RequestCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                CraftsmanRequest.craftTypeLabel(request.craftType, l10n),
-                style: theme.textTheme.titleMedium,
+              Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      CraftTypeIcon.iconFor(request.craftType),
+                      size: 18,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      CraftsmanRequest.craftTypeLabel(request.craftType, l10n),
+                      style: theme.textTheme.titleMedium,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 6),
               Text(
                 request.description,
                 maxLines: 1,

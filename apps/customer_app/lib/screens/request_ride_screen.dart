@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../widgets/loading_elevated_button.dart';
+import '../widgets/request_intro_header.dart';
 import '../widgets/step_card.dart';
 import 'address_list_screen.dart';
 import 'login_screen.dart';
@@ -129,13 +130,11 @@ class _RequestRideScreenState extends State<RequestRideScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text(
-              l10n.requestRideIntro,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
+            RequestIntroHeader(
+              icon: Icons.local_taxi_outlined,
+              text: l10n.requestRideIntro,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             StepCard(
               stepNumber: 1,
               title: l10n.loginStepTitle,

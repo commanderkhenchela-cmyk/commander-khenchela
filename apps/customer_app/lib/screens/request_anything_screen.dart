@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../widgets/loading_elevated_button.dart';
+import '../widgets/request_intro_header.dart';
 import '../widgets/step_card.dart';
 import 'address_list_screen.dart';
 import 'delivery_request_detail_screen.dart';
@@ -161,13 +162,11 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text(
-              l10n.requestAnythingIntro,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
+            RequestIntroHeader(
+              icon: Icons.local_shipping_outlined,
+              text: l10n.requestAnythingIntro,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             StepCard(
               stepNumber: 1,
               title: l10n.loginStepTitle,

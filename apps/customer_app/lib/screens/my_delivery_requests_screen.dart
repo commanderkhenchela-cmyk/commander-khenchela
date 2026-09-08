@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/delivery_request.dart';
+import '../widgets/empty_list_message.dart';
 import 'delivery_request_detail_screen.dart';
 
 const _listColumns =
@@ -110,13 +111,9 @@ class _MyDeliveryRequestsScreenState extends State<MyDeliveryRequestsScreen> {
                 onRefresh: () async => _refresh(),
                 child: ListView(
                   children: [
-                    const SizedBox(height: 80),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Text(
-                        l10n.noDeliveryRequestsMessage,
-                        textAlign: TextAlign.center,
-                      ),
+                    EmptyListMessage(
+                      icon: Icons.local_shipping_outlined,
+                      message: l10n.noDeliveryRequestsMessage,
                     ),
                   ],
                 ),

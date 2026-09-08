@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/craftsman_request.dart';
+import '../utils/craft_type_icon.dart';
 
 const _requestColumns =
     'id, craft_type, description, status, assigned_craftsman_name, '
@@ -195,11 +196,21 @@ class _CraftsmanRequestDetailScreenState
                           style: theme.textTheme.labelLarge,
                         ),
                         const SizedBox(height: 6),
-                        Text(
-                          CraftsmanRequest.craftTypeLabel(
-                            request.craftType,
-                            l10n,
-                          ),
+                        Row(
+                          children: [
+                            Icon(
+                              CraftTypeIcon.iconFor(request.craftType),
+                              size: 18,
+                              color: theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              CraftsmanRequest.craftTypeLabel(
+                                request.craftType,
+                                l10n,
+                              ),
+                            ),
+                          ],
                         ),
                         const Divider(height: 28),
                         Text(

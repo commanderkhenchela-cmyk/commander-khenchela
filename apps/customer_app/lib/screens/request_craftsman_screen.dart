@@ -4,7 +4,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../l10n/app_localizations.dart';
 import '../models/craftsman_request.dart';
 import '../services/auth_service.dart';
+import '../utils/craft_type_icon.dart';
 import '../widgets/loading_elevated_button.dart';
+import '../widgets/request_intro_header.dart';
 import '../widgets/step_card.dart';
 import 'address_list_screen.dart';
 import 'craftsman_request_detail_screen.dart';
@@ -162,13 +164,11 @@ class _RequestCraftsmanScreenState extends State<RequestCraftsmanScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text(
-              l10n.requestCraftsmanIntro,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
+            RequestIntroHeader(
+              icon: Icons.handyman_outlined,
+              text: l10n.requestCraftsmanIntro,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             StepCard(
               stepNumber: 1,
               title: l10n.loginStepTitle,
@@ -191,6 +191,7 @@ class _RequestCraftsmanScreenState extends State<RequestCraftsmanScreen> {
                 children: [
                   for (final type in CraftsmanRequest.craftTypes)
                     ChoiceChip(
+                      avatar: Icon(CraftTypeIcon.iconFor(type), size: 18),
                       label: Text(
                         CraftsmanRequest.craftTypeLabel(type, l10n),
                       ),

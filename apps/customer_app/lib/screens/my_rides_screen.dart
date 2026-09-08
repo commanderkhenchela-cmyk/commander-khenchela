@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/ride_request.dart';
+import '../widgets/empty_list_message.dart';
 import 'ride_detail_screen.dart';
 
 const _listColumns =
@@ -109,13 +110,9 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
                 onRefresh: () async => _refresh(),
                 child: ListView(
                   children: [
-                    const SizedBox(height: 80),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Text(
-                        l10n.noRidesMessage,
-                        textAlign: TextAlign.center,
-                      ),
+                    EmptyListMessage(
+                      icon: Icons.local_taxi_outlined,
+                      message: l10n.noRidesMessage,
                     ),
                   ],
                 ),
