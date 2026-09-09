@@ -7,11 +7,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/driver_service.dart';
 import 'splash_screen.dart';
 
-/// نموذج بيانات الموصّل الأولى (اسم + هاتف + صورة بطاقة التعريف —
-/// إلزامية، لا تفعيل بلا وثيقة هوية) — نوع المركبة "دراجة" ضمنيًا،
-/// بدون حقل اختيار (المرحلة 1 دراجات فقط). بعد الإرسال يُرسَل الحساب
-/// بحالة "pending" إجباريًا (RLS drivers_insert_own تفرضها حتى لو
-/// أُرسلت قيمة أخرى)، ثم شاشة "قيد المراجعة".
+/// نموذج بيانات الموصّل الأولى (اسم + هاتف + نوع المركبة + صورة بطاقة
+/// التعريف — إلزامية، لا تفعيل بلا وثيقة هوية). نوع المركبة يحدّد أي
+/// مجمّع طلبات يراه الحساب لاحقًا (bike → orders+اطلب أي شيء، car →
+/// Taxi، truck → لا مجمّع بعد، خدمة مستقبلية محجوزة الاسم فقط — راجع
+/// migration 20260910000000_driver_vehicle_types) وغير قابل للتعديل
+/// الذاتي بعد الإرسال. بعد الإرسال يُرسَل الحساب بحالة "pending"
+/// إجباريًا (RLS drivers_insert_own تفرضها حتى لو أُرسلت قيمة أخرى)،
+/// ثم شاشة "قيد المراجعة".
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -24,6 +27,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
 
+  String _vehicleType = 'bike';
   File? _idCardImage;
   bool _isLoading = false;
   String? _errorMessage;
@@ -63,6 +67,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       await DriverService.submitOnboarding(
         fullName: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
+        vehicleType: _vehicleType,
         idCardImage: _idCardImage!,
       );
 
@@ -111,8 +116,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   'أدخل بياناتك — سيراجعها فريق الإدارة قبل تفعيل حسابك.',
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
-                const _VehicleBadge(),
+                const SizedBox(height: 16),
+                _VehicleTypeSelector(
+                  value: _vehicleType,
+                  onChanged: (value) => setState(() => _vehicleType = value),
+                ),
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: _nameController,
@@ -239,35 +247,76 @@ class _IdCardPicker extends StatelessWidget {
   }
 }
 
-class _VehicleBadge extends StatelessWidget {
-  const _VehicleBadge();
+/// اختيار نوع المركبة — يحدّد أي مجمّع طلبات يرى هذا الحساب لاحقًا
+/// (راجع تعليق الملف أعلاه). غير قابل للتعديل الذاتي بعد الإرسال —
+/// هذه الشاشة هي الفرصة الوحيدة لاختياره بحرّية.
+class _VehicleTypeSelector extends StatelessWidget {
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  const _VehicleTypeSelector({required this.value, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.pedal_bike_rounded,
-            size: 18,
-            color: theme.colorScheme.primary,
-          ),
-          const SizedBox(width: 6),
-          Text(
-            'التوصيل بالدراجة',
-            style: TextStyle(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w600,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'نوع المركبة',
+          style: theme.textTheme.labelLarge,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        SegmentedButton<String>(
+          segments: const [
+            ButtonSegment(
+              value: 'bike',
+              label: Text('دراجة'),
+              icon: Icon(Icons.pedal_bike_rounded),
             ),
+            ButtonSegment(
+              value: 'car',
+              label: Text('طاكسي'),
+              icon: Icon(Icons.local_taxi_outlined),
+            ),
+            ButtonSegment(
+              value: 'truck',
+              label: Text('شاحنة'),
+              icon: Icon(Icons.local_shipping_outlined),
+            ),
+          ],
+          selected: {value},
+          onSelectionChanged: (selection) => onChanged(selection.first),
+        ),
+        if (value == 'bike')
+          const _VehicleHint(text: 'توصيل الطلبات و"اطلب أي شيء" بالدراجة.'),
+        if (value == 'car')
+          const _VehicleHint(text: 'رحلات الطاكسي (نقل الركّاب).'),
+        if (value == 'truck')
+          const _VehicleHint(
+            text:
+                'خدمة التوصيل بالشاحنات قادمة قريبًا — تسجيلك الآن يحجز '
+                'مكانك، لن تصلك طلبات قبل إطلاق الخدمة.',
           ),
-        ],
+      ],
+    );
+  }
+}
+
+class _VehicleHint extends StatelessWidget {
+  final String text;
+
+  const _VehicleHint({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: TextStyle(color: Colors.black.withValues(alpha: 0.55), fontSize: 13),
       ),
     );
   }

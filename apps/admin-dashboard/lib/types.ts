@@ -118,12 +118,31 @@ export interface AdminOrder {
 /// المباشر، ربطها بجدول orders عبر driver_id).
 export type DriverStatus = "pending" | "approved" | "rejected";
 
+/**
+ * راجع migration 20260910000000_driver_vehicle_types — bike/car يفلتران
+ * مجمّعات orders/اطلب أي شيء وTaxi على التوالي عبر RLS. truck حجز اسم
+ * لخدمة مستقبلية غير مبنية بعد، لا مجمّع طلبات لها اليوم.
+ */
+export type DriverVehicleType = "bike" | "car" | "truck";
+
+export const DRIVER_VEHICLE_TYPE_LABELS: Record<DriverVehicleType, string> = {
+  bike: "دراجة",
+  car: "طاكسي",
+  truck: "شاحنة (قريبًا)",
+};
+
+export const DRIVER_VEHICLE_TYPE_ICONS: Record<DriverVehicleType, string> = {
+  bike: "🏍️",
+  car: "🚕",
+  truck: "🚛",
+};
+
 export interface Driver {
   id: string;
   user_id: string;
   full_name: string;
   phone: string;
-  vehicle_type: "bike";
+  vehicle_type: DriverVehicleType;
   status: DriverStatus;
   is_online: boolean;
   id_card_path: string | null;

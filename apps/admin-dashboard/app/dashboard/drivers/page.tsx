@@ -3,6 +3,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminContext } from "@/lib/admin-context";
 import type { Driver, DriverStatus } from "@/lib/types";
+import {
+  DRIVER_VEHICLE_TYPE_ICONS,
+  DRIVER_VEHICLE_TYPE_LABELS,
+} from "@/lib/types";
 
 const FILTERS: { value: DriverStatus | "all"; label: string }[] = [
   { value: "pending", label: "بانتظار الموافقة" },
@@ -72,11 +76,13 @@ export default async function DriversPage({
               className="rounded-xl border border-border bg-card p-4 flex items-center gap-4"
             >
               <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-lg">
-                🏍️
+                {DRIVER_VEHICLE_TYPE_ICONS[d.vehicle_type]}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-semibold truncate">{d.full_name}</p>
-                <p className="text-sm text-black/60 truncate">{d.phone}</p>
+                <p className="text-sm text-black/60 truncate">
+                  {DRIVER_VEHICLE_TYPE_LABELS[d.vehicle_type]} — {d.phone}
+                </p>
               </div>
               {d.is_online && (
                 <span className="shrink-0 rounded-full px-3 py-1 text-xs font-semibold text-primary bg-primary/10">

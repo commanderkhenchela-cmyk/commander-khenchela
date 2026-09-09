@@ -37,6 +37,7 @@ class DriverService {
   static Future<void> submitOnboarding({
     required String fullName,
     required String phone,
+    required String vehicleType,
     required File idCardImage,
   }) async {
     final inserted = await _client
@@ -45,9 +46,13 @@ class DriverService {
           'user_id': _client.auth.currentUser!.id,
           'full_name': fullName,
           'phone': phone,
-          // status/vehicle_type يُتركان لقيمهما الافتراضية (pending/bike) —
-          // نفس نمط merchants_insert_own، RLS تفرض status = 'pending' على
-          // أي حال حتى لو أرسل العميل قيمة مختلفة.
+          'vehicle_type': vehicleType,
+          // status يُترك لقيمته الافتراضية (pending) — نفس نمط
+          // merchants_insert_own، RLS تفرض status = 'pending' على أي حال
+          // حتى لو أُرسلت قيمة أخرى. vehicle_type نفسه غير محمي وقت
+          // الإنشاء (protect_driver_status يحمي فقط UPDATE لاحقًا)، فهو
+          // اختيار المستخدم الحرّ هنا فقط، ثم يصبح غير قابل للتعديل
+          // الذاتي بعدها — راجع migration 20260910000000.
         })
         .select('id')
         .single();

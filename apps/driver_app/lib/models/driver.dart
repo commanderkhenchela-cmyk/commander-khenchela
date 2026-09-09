@@ -31,4 +31,11 @@ class Driver {
   bool get isPending => status == 'pending';
   bool get isApproved => status == 'approved';
   bool get isRejected => status == 'rejected';
+
+  /// راجع migration 20260910000000_driver_vehicle_types — نوع المركبة
+  /// يحدّد أي مجمّع طلبات يراه هذا الحساب (RLS)، الواجهة هنا تعكس نفس
+  /// الفصل فقط، لا تفرضه (الفرض الفعلي فـ القاعدة).
+  bool get isBike => vehicleType == 'bike';
+  bool get isCar => vehicleType == 'car';
+  bool get isTruck => vehicleType == 'truck';
 }

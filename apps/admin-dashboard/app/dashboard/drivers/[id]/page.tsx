@@ -2,6 +2,10 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminContext } from "@/lib/admin-context";
 import type { Driver } from "@/lib/types";
+import {
+  DRIVER_VEHICLE_TYPE_ICONS,
+  DRIVER_VEHICLE_TYPE_LABELS,
+} from "@/lib/types";
 import DriverActions from "./driver-actions";
 import EntityActivityLog from "@/components/entity-activity-log";
 
@@ -61,7 +65,10 @@ export default async function DriverDetailPage({
       <div className="rounded-xl border border-border bg-card p-5 mb-4">
         <p className="font-semibold mb-3">بيانات الموصّل</p>
         <InfoRow label="الهاتف" value={d.phone} />
-        <InfoRow label="نوع المركبة" value="🏍️ دراجة" />
+        <InfoRow
+          label="نوع المركبة"
+          value={`${DRIVER_VEHICLE_TYPE_ICONS[d.vehicle_type]} ${DRIVER_VEHICLE_TYPE_LABELS[d.vehicle_type]}`}
+        />
         <InfoRow label="متصل الآن" value={d.is_online ? "نعم" : "لا"} />
         <InfoRow
           label="طلبات قيد التنفيذ حاليًا"

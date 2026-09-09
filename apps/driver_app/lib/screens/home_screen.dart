@@ -114,34 +114,39 @@ class _HomeScreenState extends State<HomeScreen>
         .then((_) => setState(() {})); // يعيد بناء القوائم عند الرجوع
   }
 
+  /// راجع migration 20260910000000_driver_vehicle_types: bike يرى
+  /// orders + اطلب أي شيء، car يرى Taxi فقط، truck لا مجمّع له بعد
+  /// (خدمة مستقبلية). قبل تحميل صفّ الموصّل (_driver == null) نعرض
+  /// حالة تحميل بدل الافتراض الخاطئ لنوع معيَّن، تفاديًا لومضة محتوى
+  /// خاطئ ثم تصحيحه.
   @override
   Widget build(BuildContext context) {
+    final isBike = _driver?.isBike ?? false;
+    final isCar = _driver?.isCar ?? false;
+    final isTruck = _driver?.isTruck ?? false;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الطلبات'),
+        title: Text(
+          isCar
+              ? 'رحلات Taxi'
+              : isTruck
+              ? 'شحن البضائع'
+              : 'الطلبات',
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.local_shipping_outlined),
-            tooltip: 'طلبات عامة (اطلب أي شيء)',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const DeliveryRequestsHomeScreen(),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.local_taxi_outlined),
-            tooltip: 'رحلات Taxi',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const RideRequestsHomeScreen(),
-                ),
-              );
-            },
-          ),
+          if (isBike)
+            IconButton(
+              icon: const Icon(Icons.local_shipping_outlined),
+              tooltip: 'طلبات عامة (اطلب أي شيء)',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const DeliveryRequestsHomeScreen(),
+                  ),
+                );
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.notifications_none_rounded),
             tooltip: 'الإشعارات',
@@ -161,13 +166,15 @@ class _HomeScreenState extends State<HomeScreen>
             },
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'الطلبات المتاحة'),
-            Tab(text: 'طلباتي'),
-          ],
-        ),
+        bottom: isBike
+            ? TabBar(
+                controller: _tabController,
+                tabs: const [
+                  Tab(text: 'الطلبات المتاحة'),
+                  Tab(text: 'طلباتي'),
+                ],
+              )
+            : null,
       ),
       body: Column(
         children: [
@@ -177,30 +184,125 @@ class _HomeScreenState extends State<HomeScreen>
             isLoading: _isTogglingOnline,
             onChanged: _toggleOnline,
           ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _JobsList(
-                  key: ValueKey('available-${_driver?.isOnline}'),
-                  fetcher: OrderService.fetchAvailableJobs,
-                  emptyMessage: 'لا توجد طلبات متاحة حاليًا.',
-                  onOpen: _openJob,
-                  claimable: true,
-                  showDistance: true,
-                ),
-                _JobsList(
-                  key: ValueKey('mine-${_driver?.isOnline}'),
-                  fetcher: OrderService.fetchMyJobs,
-                  emptyMessage: 'لا توجد طلبات لديك حاليًا.',
-                  onOpen: _openJob,
-                  claimable: false,
-                  showDistance: false,
-                ),
-              ],
-            ),
-          ),
+          Expanded(child: _buildBody(isBike: isBike, isCar: isCar, isTruck: isTruck)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBody({
+    required bool isBike,
+    required bool isCar,
+    required bool isTruck,
+  }) {
+    if (_driver == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (isCar) {
+      return _VehicleTypeRedirect(
+        icon: Icons.local_taxi_outlined,
+        message: 'رحلات Taxi المتاحة تظهر فـ شاشة منفصلة.',
+        buttonLabel: 'فتح رحلات Taxi',
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const RideRequestsHomeScreen()),
+          );
+        },
+      );
+    }
+
+    if (isTruck) {
+      return const _ComingSoonMessage(
+        icon: Icons.local_shipping_outlined,
+        message:
+            'خدمة التوصيل بالشاحنات قادمة قريبًا. حسابك مسجَّل ومحجوز '
+            'مسبقًا — ستصلك إشعار فور إطلاق الخدمة.',
+      );
+    }
+
+    // bike (أو حساب لم يُحدَّد نوعه بعد — حالة قديمة نادرة، نفس السلوك
+    // الافتراضي الأصلي قبل هذه الـmigration).
+    return TabBarView(
+      controller: _tabController,
+      children: [
+        _JobsList(
+          key: ValueKey('available-${_driver?.isOnline}'),
+          fetcher: OrderService.fetchAvailableJobs,
+          emptyMessage: 'لا توجد طلبات متاحة حاليًا.',
+          onOpen: _openJob,
+          claimable: true,
+          showDistance: true,
+        ),
+        _JobsList(
+          key: ValueKey('mine-${_driver?.isOnline}'),
+          fetcher: OrderService.fetchMyJobs,
+          emptyMessage: 'لا توجد طلبات لديك حاليًا.',
+          onOpen: _openJob,
+          claimable: false,
+          showDistance: false,
+        ),
+      ],
+    );
+  }
+}
+
+/// رسالة + زر توجيه لموصّلي Taxi — بدل عرض تبويبات orders الفارغة
+/// (لا معنى لها لسائق سيارة، RLS ترجع فارغًا دائمًا لهذا النوع).
+class _VehicleTypeRedirect extends StatelessWidget {
+  final IconData icon;
+  final String message;
+  final String buttonLabel;
+  final VoidCallback onPressed;
+
+  const _VehicleTypeRedirect({
+    required this.icon,
+    required this.message,
+    required this.buttonLabel,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 48, color: theme.colorScheme.primary),
+            const SizedBox(height: 16),
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: 20),
+            ElevatedButton(onPressed: onPressed, child: Text(buttonLabel)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// رسالة "قادمة قريبًا" لأنواع مركبات بلا مجمّع طلبات بعد (truck).
+class _ComingSoonMessage extends StatelessWidget {
+  final IconData icon;
+  final String message;
+
+  const _ComingSoonMessage({required this.icon, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 48, color: Colors.black38),
+            const SizedBox(height: 16),
+            Text(message, textAlign: TextAlign.center),
+          ],
+        ),
       ),
     );
   }
