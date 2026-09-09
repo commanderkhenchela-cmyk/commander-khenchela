@@ -46,3 +46,14 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# مفتاح توقيع نسخة Release + بياناته — سرّ خاص بك وحدك، لا يُرفع لـ
+# GitHub إطلاقًا (فقده يعني عدم القدرة على نشر أي تحديث مستقبلي لنفس
+# التطبيق). أنشئه محليًا فقط، راجع android/key.properties.example.
+# نفس النمط بالحرف المستخدَم فـ customer_app/.gitignore — android/
+# .gitignore يستثنيه أصلًا أيضًا، هذا فقط طبقة حماية إضافية.
+android/key.properties
+android/*.jks
+android/*.keystore
+*.jks
+*.keystore
