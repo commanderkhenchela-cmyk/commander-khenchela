@@ -36,3 +36,16 @@ String formatDistance(double km, AppLocalizations l10n) {
   }
   return l10n.distanceKm(km.toStringAsFixed(1));
 }
+
+/// تقدير وقت الوصول (بالدقائق) من مسافة خطّ مستقيم — سرعة افتراضية
+/// 30 كم/سا (متوسط قيادة داخل مدينة صغيرة كخنشلة، لا ازدحام حقيقي
+/// يُحتسَب). هذا **تقريب صريح**، ليس مسار طريق فعلي (لا مزوّد Routing
+/// عندنا — راجع فلسفة "لا اعتماد على مزوّد خرائط مدفوع" فـ هذا
+/// المشروع) — يُعرَض بكلمة "تقريبًا" فـ الترجمة عمدًا لعدم الإيحاء
+/// بدقّة أكبر مما هي عليه فعليًا. حد أدنى دقيقة واحدة (بدل "0 دقيقة"
+/// المربكة حين يكون الموصّل قريبًا جدًا).
+int estimateEtaMinutes(double km) {
+  const assumedSpeedKmh = 30.0;
+  final minutes = (km / assumedSpeedKmh * 60).round();
+  return minutes < 1 ? 1 : minutes;
+}

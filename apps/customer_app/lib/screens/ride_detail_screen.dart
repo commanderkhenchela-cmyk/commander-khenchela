@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/ride_request.dart';
+import '../utils/distance.dart';
 import '../widgets/live_tracking_map.dart';
 
 const _rideColumns =
@@ -239,13 +240,48 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
     );
   }
 
-  Widget _buildDriverCard(ThemeData theme) {
+  /// وقت الوصول المتوقَّع للموصّل — للوجهة المناسبة حسب مرحلة الرحلة:
+  /// accepted (فـ طريقه إليك) → نقطة الانطلاق، in_progress (أنت معه فـ
+  /// السيارة) → نقطة الوصول. تقريب صريح من المسافة فقط (راجع تعليق
+  /// estimateEtaMinutes) — null بصمت إن نقصت أي إحداثية.
+  String? _etaTextFor(
+    RideRequest ride,
+    Map<String, dynamic> driverRow,
+    AppLocalizations l10n,
+  ) {
+    final driverLat = driverRow['current_lat'] as num?;
+    final driverLng = driverRow['current_lng'] as num?;
+    if (driverLat == null || driverLng == null) return null;
+
+    final targetLat = ride.status == 'in_progress'
+        ? ride.dropoffLat
+        : ride.pickupLat;
+    final targetLng = ride.status == 'in_progress'
+        ? ride.dropoffLng
+        : ride.pickupLng;
+    if (targetLat == null || targetLng == null) return null;
+
+    final km = haversineKm(
+      driverLat.toDouble(),
+      driverLng.toDouble(),
+      targetLat,
+      targetLng,
+    );
+    return l10n.etaMinutesLabel('${estimateEtaMinutes(km)}');
+  }
+
+  Widget _buildDriverCard(
+    ThemeData theme,
+    RideRequest ride,
+    AppLocalizations l10n,
+  ) {
     final row = _driverRow;
     if (row == null) return const SizedBox.shrink();
 
     final name = row['full_name'] as String?;
     final phone = row['phone'] as String?;
     final plateNumber = row['plate_number'] as String?;
+    final etaText = _etaTextFor(ride, row, l10n);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -279,6 +315,28 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
                           color: theme.colorScheme.onSurface.withValues(
                             alpha: 0.6,
                           ),
+                        ),
+                      ),
+                    if (etaText != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.schedule_rounded,
+                              size: 14,
+                              color: theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              etaText,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     if (plateNumber != null && plateNumber.isNotEmpty)
@@ -373,7 +431,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
                 ),
                 const SizedBox(height: 16),
                 _buildMap(ride),
-                _buildDriverCard(theme),
+                _buildDriverCard(theme, ride, l10n),
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),

@@ -272,6 +272,7 @@
 
   "distanceMeters": "{meters} m",
   "distanceKm": "{km} km",
+  "etaMinutesLabel": "About {minutes} min away",
 
   "closedNowLabel": "Closed now",
   "removeFavoriteTooltip": "Remove from favorites",

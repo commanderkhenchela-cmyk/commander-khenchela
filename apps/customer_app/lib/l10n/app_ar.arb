@@ -676,6 +676,13 @@
       "km": {"type": "String"}
     }
   },
+  "etaMinutesLabel": "{minutes} دقيقة تقريبًا",
+  "@etaMinutesLabel": {
+    "description": "وقت الوصول المتوقَّع للموصّل بالدقائق (تقدير تقريبي من المسافة)",
+    "placeholders": {
+      "minutes": {"type": "String"}
+    }
+  },
 
   "closedNowLabel": "مغلق الآن",
   "@closedNowLabel": {"description": "شارة محل مغلق حاليًا"},
