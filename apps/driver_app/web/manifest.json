@@ -4,7 +4,7 @@
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FAFAFA",
-    "theme_color": "#D90115",
+    "theme_color": "#0B2545",
     "description": "Commander Khenchela - تطبيق الموصّل",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
