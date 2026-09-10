@@ -31,14 +31,14 @@ void main() {
     );
 
     // شاشة البداية تظهر أولًا (تحمل اسم التطبيق أيضًا)
-    expect(find.text('كوموندور خنشلة'), findsOneWidget);
+    expect(find.text('كوموندي خنشلة'), findsOneWidget);
 
     // ننتظر مدة عرض شاشة البداية (حد أدنى ~1.1 ثانية + حركة الشعار) قبل
     // الانتقال لشاشة الترحيب — راجع splash_screen.dart.
     await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
 
-    expect(find.text('كوموندور خنشلة'), findsOneWidget);
+    expect(find.text('كوموندي خنشلة'), findsOneWidget);
     expect(find.text('ابدأ'), findsOneWidget);
   });
 }

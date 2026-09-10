@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 class AppTheme {
   AppTheme._();
 
-  static const Color primary = Color(0xFFC1272D); // أحمر العلامة التجارية
+  // أحمر العلامة التجارية — مُستخرَج مباشرة من بكسلات الشعار الرسمي.
+  static const Color primary = Color(0xFFD90115);
   static const Color background = Color(0xFFFAFAFA);
   static const Color textPrimary = Color(0xFF1A1A1A);
   // برتقالي/كهرماني — لا أحمر، حتى لا يتشابه بصريًا مع [primary] الأحمر

@@ -10,8 +10,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class BrandingService {
   BrandingService._();
 
-  static const _defaultAppName = 'كوموندور خنشلة';
-  static const _defaultPrimary = Color(0xFFC1272D);
+  static const _defaultAppName = 'كوموندي خنشلة';
+  static const _defaultPrimary = Color(0xFFD90115);
   static const _defaultError = Color(0xFFB26A00);
 
   static String appName = _defaultAppName;

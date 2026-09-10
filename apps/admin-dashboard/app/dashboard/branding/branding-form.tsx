@@ -44,7 +44,7 @@ export default function BrandingForm({ branding }: { branding: AppBranding }) {
 
     const hexPattern = /^#[0-9a-fA-F]{6}$/;
     if (!hexPattern.test(primaryColor) || !hexPattern.test(errorColor)) {
-      setError('الألوان يجب أن تكون بصيغة "#C1272D" (6 خانات بعد #).');
+      setError('الألوان يجب أن تكون بصيغة "#D90115" (6 خانات بعد #).');
       setLoading(false);
       return;
     }
@@ -157,7 +157,7 @@ export default function BrandingForm({ branding }: { branding: AppBranding }) {
             value={primaryColor}
             onChange={(e) => setPrimaryColor(e.target.value)}
             className="flex-1 rounded-lg border border-border px-3 py-2.5 outline-none focus:border-primary font-mono text-sm"
-            placeholder="#C1272D"
+            placeholder="#D90115"
           />
         </div>
         <p className="text-xs text-black/50 mt-1">
