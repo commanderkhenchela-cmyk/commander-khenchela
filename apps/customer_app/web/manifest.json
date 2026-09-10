@@ -1,10 +1,10 @@
 {
-    "name": "كوموندور خنشلة",
+    "name": "كوموندي خنشلة",
     "short_name": "Commander Khenchela",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#1B7A3D",
-    "theme_color": "#1B7A3D",
+    "background_color": "#FAFAFA",
+    "theme_color": "#D90115",
     "description": "اطلب من محلات خنشلة، ووصّلها لباب دارك",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
