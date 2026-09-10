@@ -260,6 +260,9 @@
   "saveAddressAction": "Enregistrer l'adresse",
   "useCurrentLocationAction": "Utiliser ma position actuelle",
   "locationCapturedMessage": "Position enregistrée ✅",
+  "chooseOnMapAction": "Choisir un point sur la carte",
+  "locationPickerTitle": "Choisir l'emplacement sur la carte",
+  "confirmLocationAction": "Confirmer cet emplacement",
 
   "visitAction": "Visiter",
   "seeAllAction": "Tout voir",

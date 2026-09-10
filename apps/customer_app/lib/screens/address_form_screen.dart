@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/app_localizations.dart';
@@ -6,6 +7,7 @@ import '../models/commune.dart';
 import '../models/address.dart';
 import '../services/location_service.dart';
 import '../widgets/loading_elevated_button.dart';
+import 'location_picker_screen.dart';
 
 const int _khenchelaWilayaId = 40;
 
@@ -97,6 +99,23 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
         _latitude = position.latitude;
         _longitude = position.longitude;
       }
+    });
+  }
+
+  /// بديل "موقعي الحالي" — يفتح خريطة تفاعلية يحرّكها المستخدم بنفسه
+  /// لأي نقطة يريدها (عنوان ليس واقفًا عنده الآن). راجع
+  /// location_picker_screen.dart لتفاصيل نمط "الدبّوس الثابت".
+  Future<void> _chooseOnMap() async {
+    final picked = await Navigator.of(context).push<LatLng>(
+      MaterialPageRoute(
+        builder: (_) =>
+            LocationPickerScreen(initialLat: _latitude, initialLng: _longitude),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _latitude = picked.latitude;
+      _longitude = picked.longitude;
     });
   }
 
@@ -247,6 +266,12 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                               ? l10n.locationCapturedMessage
                               : l10n.useCurrentLocationAction,
                         ),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: _chooseOnMap,
+                        icon: const Icon(Icons.map_outlined),
+                        label: Text(l10n.chooseOnMapAction),
                       ),
                       if (_errorMessage != null) ...[
                         const SizedBox(height: 16),

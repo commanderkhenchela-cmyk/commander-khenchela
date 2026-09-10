@@ -640,6 +640,12 @@
   "@useCurrentLocationAction": {"description": "زر التقاط إحداثيات الموقع الحالي فـ نموذج العنوان (اختياري)"},
   "locationCapturedMessage": "تم تحديد الموقع ✅",
   "@locationCapturedMessage": {"description": "تأكيد نجاح التقاط الموقع فـ نموذج العنوان"},
+  "chooseOnMapAction": "اختيار نقطة على الخريطة",
+  "@chooseOnMapAction": {"description": "زر يفتح شاشة اختيار موقع حرّ على الخريطة، بديل عن موقعي الحالي"},
+  "locationPickerTitle": "اختر الموقع على الخريطة",
+  "@locationPickerTitle": {"description": "عنوان شاشة اختيار نقطة حرّة على الخريطة"},
+  "confirmLocationAction": "تأكيد هذا الموقع",
+  "@confirmLocationAction": {"description": "زر تأكيد النقطة المختارة فـ شاشة اختيار الموقع"},
 
   "visitAction": "زيارة",
   "@visitAction": {"description": "زر زيارة إعلان أو رابط خارجي"},
