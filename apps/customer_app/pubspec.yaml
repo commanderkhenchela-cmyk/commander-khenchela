@@ -46,6 +46,10 @@ dependencies:
   firebase_core: ^4.13.0
   firebase_messaging: ^16.5.0
   cached_network_image: ^3.4.1
+  # خرائط OpenStreetMap (مجانية بالكامل، بلا مفتاح API ولا حساب Billing)
+  # — عرض عناوين/تتبّع حيّ لموقع الموصّل. لا اعتماد على أي مزوّد مدفوع.
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
 
 dev_dependencies:
   flutter_test:

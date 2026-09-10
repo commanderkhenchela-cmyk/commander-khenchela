@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/ride_request.dart';
+import '../widgets/live_tracking_map.dart';
 
 const _rideColumns =
-    'id, status, fare, fare_method, created_at, accepted_at, started_at, completed_at, '
-    'pickup_address:addresses!pickup_address_id(address_text, communes(name)), '
-    'dropoff_address:addresses!dropoff_address_id(address_text, communes(name))';
+    'id, status, fare, fare_method, created_at, accepted_at, started_at, completed_at, driver_id, '
+    'pickup_address:addresses!pickup_address_id(address_text, communes(name), latitude, longitude), '
+    'dropoff_address:addresses!dropoff_address_id(address_text, communes(name), latitude, longitude)';
 
 /// شاشة تفاصيل رحلة Taxi واحدة — نفس فلسفة DeliveryRequestDetailScreen
 /// (Realtime لهذه الرحلة بالذات + إلغاء ذاتي طالما لم تبدأ فعليًا).
@@ -25,10 +28,20 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
   bool _isCancelling = false;
   RealtimeChannel? _channel;
 
+  // تتبّع الموصّل الحيّ — راجع migration 20260911000000 لسبب اقتصار
+  // هذا على accepted/in_progress بالضبط (RLS drivers_select_via_
+  // assigned_ride تفرض نفس الشرط، فلا داعي حتى لمحاولة الجلب خارجه).
+  RealtimeChannel? _driverChannel;
+  String? _trackedDriverId;
+  Map<String, dynamic>? _driverRow;
+
   @override
   void initState() {
     super.initState();
-    _future = _fetch();
+    _future = _fetch().then((ride) {
+      if (ride.canTrackDriverLive) _ensureDriverTracking(ride.driverId!);
+      return ride;
+    });
     _subscribeToChanges();
   }
 
@@ -37,7 +50,56 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
     if (_channel != null) {
       Supabase.instance.client.removeChannel(_channel!);
     }
+    if (_driverChannel != null) {
+      Supabase.instance.client.removeChannel(_driverChannel!);
+    }
     super.dispose();
+  }
+
+  /// يجلب صفّ الموصّل مرّة، ثم يشترك فـ Realtime لتحديث موقعه حيًّا —
+  /// مرّة واحدة فقط لكل driverId (تغيّر الحالة إلى in_progress بعد
+  /// accepted لا يستلزم اشتراكًا جديدًا، نفس الموصّل).
+  Future<void> _ensureDriverTracking(String driverId) async {
+    if (_trackedDriverId == driverId) return;
+    _trackedDriverId = driverId;
+
+    try {
+      final row = await Supabase.instance.client
+          .from('drivers')
+          .select('id, full_name, phone, current_lat, current_lng')
+          .eq('id', driverId)
+          .maybeSingle();
+      if (mounted && row != null) setState(() => _driverRow = row);
+    } catch (_) {
+      // بصمت — غياب بطاقة الموصّل لا يجب أن يكسر بقية الشاشة (نفس
+      // فلسفة كل استعلامات "إضافية" فـ هذا المشروع).
+    }
+
+    _driverChannel = Supabase.instance.client
+        .channel('customer-driver-position-$driverId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'drivers',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'id',
+            value: driverId,
+          ),
+          // نفس نمط كل الاشتراكات الأخرى فـ هذا الملف/المشروع: إعادة
+          // جلب صريحة بدل الثقة بشكل payload.newRecord مباشرة — أبسط
+          // وأكثر اتساقًا، والتكلفة (استعلام صغير إضافي كل تحديث موقع)
+          // مقبولة تمامًا لهذا الاستخدام.
+          callback: (_) async {
+            final row = await Supabase.instance.client
+                .from('drivers')
+                .select('id, full_name, phone, current_lat, current_lng')
+                .eq('id', driverId)
+                .maybeSingle();
+            if (mounted && row != null) setState(() => _driverRow = row);
+          },
+        )
+        .subscribe();
   }
 
   void _subscribeToChanges() {
@@ -53,7 +115,16 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
             value: widget.rideId,
           ),
           callback: (_) {
-            if (mounted) setState(() => _future = _fetch());
+            if (mounted) {
+              setState(() {
+                _future = _fetch().then((ride) {
+                  if (ride.canTrackDriverLive) {
+                    _ensureDriverTracking(ride.driverId!);
+                  }
+                  return ride;
+                });
+              });
+            }
           },
         )
         .subscribe();
@@ -123,6 +194,111 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
     }
   }
 
+  /// خريطة العنوانين + موقع الموصّل الحيّ إن توفّر — تبقى فارغة (لا
+  /// شيء) بصمت إن لم تتوفر إحداثيات إطلاقًا (عنوان قديم بلا موقع محفوظ)،
+  /// نفس فلسفة كل الحالات "الإضافية غير الحرجة" فـ هذا المشروع.
+  Widget _buildMap(RideRequest ride) {
+    final markers = <TrackingMarker>[];
+
+    if (ride.pickupLat != null && ride.pickupLng != null) {
+      markers.add(
+        TrackingMarker(
+          point: LatLng(ride.pickupLat!, ride.pickupLng!),
+          icon: Icons.trip_origin_rounded,
+          color: Colors.green.shade700,
+        ),
+      );
+    }
+    if (ride.dropoffLat != null && ride.dropoffLng != null) {
+      markers.add(
+        TrackingMarker(
+          point: LatLng(ride.dropoffLat!, ride.dropoffLng!),
+          icon: Icons.location_on_rounded,
+          color: Colors.red.shade700,
+        ),
+      );
+    }
+
+    final driverLat = _driverRow?['current_lat'] as num?;
+    final driverLng = _driverRow?['current_lng'] as num?;
+    if (ride.canTrackDriverLive && driverLat != null && driverLng != null) {
+      markers.add(
+        TrackingMarker(
+          point: LatLng(driverLat.toDouble(), driverLng.toDouble()),
+          icon: Icons.two_wheeler_rounded,
+          color: Colors.blue.shade700,
+        ),
+      );
+    }
+
+    if (markers.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: LiveTrackingMap(markers: markers),
+    );
+  }
+
+  Widget _buildDriverCard(ThemeData theme) {
+    final row = _driverRow;
+    if (row == null) return const SizedBox.shrink();
+
+    final name = row['full_name'] as String?;
+    final phone = row['phone'] as String?;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.1,
+                ),
+                child: Icon(
+                  Icons.local_taxi_outlined,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name ?? '',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    if (phone != null)
+                      Text(
+                        phone,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (phone != null)
+                IconButton(
+                  icon: const Icon(Icons.call_outlined),
+                  onPressed: () => _call(phone),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _call(String phone) async {
+    await launchUrl(Uri.parse('tel:$phone'));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -172,6 +348,8 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                _buildMap(ride),
+                _buildDriverCard(theme),
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),

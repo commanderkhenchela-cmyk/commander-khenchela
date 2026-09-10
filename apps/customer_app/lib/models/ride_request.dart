@@ -14,10 +14,15 @@ class RideRequest {
   final DateTime? acceptedAt;
   final DateTime? startedAt;
   final DateTime? completedAt;
+  final String? driverId;
   final String? pickupAddressText;
   final String? pickupCommuneName;
+  final double? pickupLat;
+  final double? pickupLng;
   final String? dropoffAddressText;
   final String? dropoffCommuneName;
+  final double? dropoffLat;
+  final double? dropoffLng;
 
   const RideRequest({
     required this.id,
@@ -28,11 +33,23 @@ class RideRequest {
     this.acceptedAt,
     this.startedAt,
     this.completedAt,
+    this.driverId,
     this.pickupAddressText,
     this.pickupCommuneName,
+    this.pickupLat,
+    this.pickupLng,
     this.dropoffAddressText,
     this.dropoffCommuneName,
+    this.dropoffLat,
+    this.dropoffLng,
   });
+
+  /// موقع الموصّل الحيّ ذو معنى فقط أثناء هاتين المرحلتين — نفس شرط
+  /// RLS drivers_select_via_assigned_ride بالضبط (migration
+  /// 20260911000000)، لا داعي لطلب صفّ الموصّل خارجهما، RLS سترفضه
+  /// أصلًا.
+  bool get canTrackDriverLive =>
+      driverId != null && (status == 'accepted' || status == 'in_progress');
 
   /// أجرة حقيقية قابلة للعرض؟ 'unconfigured' يعني لا إعداد فعّال بعد
   /// لخدمة taxi (راجع calculate_delivery_fee)، أو أحد العنوانين بلا
@@ -67,10 +84,15 @@ class RideRequest {
       completedAt: map['completed_at'] == null
           ? null
           : DateTime.parse(map['completed_at'] as String),
+      driverId: map['driver_id'] as String?,
       pickupAddressText: pickup?['address_text'] as String?,
       pickupCommuneName: communeOf(pickup),
+      pickupLat: (pickup?['latitude'] as num?)?.toDouble(),
+      pickupLng: (pickup?['longitude'] as num?)?.toDouble(),
       dropoffAddressText: dropoff?['address_text'] as String?,
       dropoffCommuneName: communeOf(dropoff),
+      dropoffLat: (dropoff?['latitude'] as num?)?.toDouble(),
+      dropoffLng: (dropoff?['longitude'] as num?)?.toDouble(),
     );
   }
 
