@@ -3,11 +3,13 @@
 :root {
   --background: #f7f8f7;
   --foreground: #171717;
-  --primary: #1b7a3d;
-  --primary-dark: #145c2e;
+  --primary: #c1272d;
+  --primary-dark: #8f1a1e;
   --card: #ffffff;
   --border: #e2e5e2;
-  --error: #c62828;
+  /* برتقالي/كهرماني — لا أحمر، حتى لا يتشابه بصريًا مع --primary الأحمر
+     الآن (نفس --warning عمدًا، راجع customer_app/lib/theme/app_theme.dart). */
+  --error: #b26a00;
   --warning: #b26a00;
 }
 

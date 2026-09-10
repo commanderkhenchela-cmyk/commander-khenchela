@@ -11,11 +11,16 @@ import 'design_tokens.dart';
 class AppTheme {
   AppTheme._();
 
-  static const Color primary = Color(0xFF1B7A3D); // أخضر هادئ، احترافي
-  static const Color primaryDark = Color(0xFF0F5C2B);
+  static const Color primary = Color(0xFFC1272D); // أحمر العلامة التجارية
+  static const Color primaryDark = Color(0xFF8F1A1E);
   static const Color background = Color(0xFFFAFAFA);
   static const Color textPrimary = Color(0xFF1A1A1A);
-  static const Color error = Color(0xFFB3261E);
+  // برتقالي/كهرماني — لا أحمر، حتى لا يتشابه بصريًا مع [primary] الأحمر
+  // الآن (زر عادي مقابل زر خطر). نفس قيمة AppColorsX.warning تمامًا
+  // (design_tokens.dart) عمدًا — لون واحد لمفهوم واحد، بدل قيمتين
+  // منفصلتين للمعنى نفسه. "خطر حقيقي بصرف النظر عن العلامة" (كشارة
+  // "مغلق الآن") يبقى عبر AppColorsX.danger المنفصلة، غير المتأثرة هنا.
+  static const Color error = Color(0xFFB26A00);
 
   static ThemeData light({Color? primaryColor, Color? errorColor}) {
     final seed = primaryColor ?? primary;

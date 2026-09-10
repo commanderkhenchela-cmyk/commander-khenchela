@@ -11,8 +11,8 @@ class BrandingService {
   BrandingService._();
 
   static const _defaultAppName = 'كوموندور خنشلة';
-  static const _defaultPrimary = Color(0xFF1B7A3D);
-  static const _defaultError = Color(0xFFB3261E);
+  static const _defaultPrimary = Color(0xFFC1272D);
+  static const _defaultError = Color(0xFFB26A00);
 
   static String appName = _defaultAppName;
   static String? logoUrl;

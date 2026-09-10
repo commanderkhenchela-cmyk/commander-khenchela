@@ -6,10 +6,12 @@ import 'package:flutter/material.dart';
 class AppTheme {
   AppTheme._();
 
-  static const Color primary = Color(0xFF1B7A3D);
+  static const Color primary = Color(0xFFC1272D); // أحمر العلامة التجارية
   static const Color background = Color(0xFFFAFAFA);
   static const Color textPrimary = Color(0xFF1A1A1A);
-  static const Color error = Color(0xFFB3261E);
+  // برتقالي/كهرماني — لا أحمر، حتى لا يتشابه بصريًا مع [primary] الأحمر
+  // (نفس القرار المطبَّق فـ customer_app/lib/theme/app_theme.dart).
+  static const Color error = Color(0xFFB26A00);
 
   static ThemeData light() {
     return ThemeData(
