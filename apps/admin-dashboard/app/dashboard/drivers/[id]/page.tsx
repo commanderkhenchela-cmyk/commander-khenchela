@@ -23,7 +23,7 @@ export default async function DriverDetailPage({
   const { data: driver } = await supabase
     .from("drivers")
     .select(
-      "id, user_id, full_name, phone, vehicle_type, status, is_online, id_card_path, created_at",
+      "id, user_id, full_name, phone, vehicle_type, plate_number, status, is_online, id_card_path, created_at",
     )
     .eq("id", id)
     .maybeSingle();
@@ -69,6 +69,7 @@ export default async function DriverDetailPage({
           label="نوع المركبة"
           value={`${DRIVER_VEHICLE_TYPE_ICONS[d.vehicle_type]} ${DRIVER_VEHICLE_TYPE_LABELS[d.vehicle_type]}`}
         />
+        <InfoRow label="رقم اللوحة" value={d.plate_number ?? "—"} />
         <InfoRow label="متصل الآن" value={d.is_online ? "نعم" : "لا"} />
         <InfoRow
           label="طلبات قيد التنفيذ حاليًا"

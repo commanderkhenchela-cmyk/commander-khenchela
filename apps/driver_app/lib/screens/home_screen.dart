@@ -96,6 +96,7 @@ class _HomeScreenState extends State<HomeScreen>
           fullName: _driver!.fullName,
           phone: _driver!.phone,
           vehicleType: _driver!.vehicleType,
+          plateNumber: _driver!.plateNumber,
           status: _driver!.status,
           isOnline: value,
         );

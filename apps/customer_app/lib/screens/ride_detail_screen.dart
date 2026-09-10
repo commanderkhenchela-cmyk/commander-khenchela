@@ -66,7 +66,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
     try {
       final row = await Supabase.instance.client
           .from('drivers')
-          .select('id, full_name, phone, current_lat, current_lng')
+          .select('id, full_name, phone, vehicle_type, plate_number, current_lat, current_lng')
           .eq('id', driverId)
           .maybeSingle();
       if (mounted && row != null) setState(() => _driverRow = row);
@@ -93,7 +93,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
           callback: (_) async {
             final row = await Supabase.instance.client
                 .from('drivers')
-                .select('id, full_name, phone, current_lat, current_lng')
+                .select('id, full_name, phone, vehicle_type, plate_number, current_lat, current_lng')
                 .eq('id', driverId)
                 .maybeSingle();
             if (mounted && row != null) setState(() => _driverRow = row);
@@ -245,6 +245,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
 
     final name = row['full_name'] as String?;
     final phone = row['phone'] as String?;
+    final plateNumber = row['plate_number'] as String?;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -277,6 +278,29 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface.withValues(
                             alpha: 0.6,
+                          ),
+                        ),
+                      ),
+                    if (plateNumber != null && plateNumber.isNotEmpty)
+                      Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.25,
+                            ),
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          plateNumber,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1,
                           ),
                         ),
                       ),

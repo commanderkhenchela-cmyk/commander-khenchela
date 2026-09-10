@@ -21,7 +21,9 @@ class DriverService {
   static Future<Driver?> fetchOwnDriver() async {
     final row = await _client
         .from('drivers')
-        .select('id, full_name, phone, vehicle_type, status, is_online')
+        .select(
+          'id, full_name, phone, vehicle_type, plate_number, status, is_online',
+        )
         .eq('user_id', _client.auth.currentUser!.id)
         .maybeSingle();
 
@@ -39,6 +41,7 @@ class DriverService {
     required String phone,
     required String vehicleType,
     required File idCardImage,
+    String? plateNumber,
   }) async {
     final inserted = await _client
         .from('drivers')
@@ -47,6 +50,8 @@ class DriverService {
           'full_name': fullName,
           'phone': phone,
           'vehicle_type': vehicleType,
+          if (plateNumber != null && plateNumber.trim().isNotEmpty)
+            'plate_number': plateNumber.trim(),
           // status يُترك لقيمته الافتراضية (pending) — نفس نمط
           // merchants_insert_own، RLS تفرض status = 'pending' على أي حال
           // حتى لو أُرسلت قيمة أخرى. vehicle_type نفسه غير محمي وقت

@@ -143,6 +143,7 @@ export interface Driver {
   full_name: string;
   phone: string;
   vehicle_type: DriverVehicleType;
+  plate_number: string | null;
   status: DriverStatus;
   is_online: boolean;
   id_card_path: string | null;

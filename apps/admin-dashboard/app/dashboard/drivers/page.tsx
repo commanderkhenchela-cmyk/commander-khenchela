@@ -35,7 +35,9 @@ export default async function DriversPage({
   const supabase = await createClient();
   let query = supabase
     .from("drivers")
-    .select("id, full_name, phone, vehicle_type, status, is_online, created_at")
+    .select(
+      "id, full_name, phone, vehicle_type, plate_number, status, is_online, created_at",
+    )
     .order("created_at", { ascending: false });
 
   if (activeFilter !== "all") {
@@ -81,7 +83,8 @@ export default async function DriversPage({
               <div className="min-w-0 flex-1">
                 <p className="font-semibold truncate">{d.full_name}</p>
                 <p className="text-sm text-black/60 truncate">
-                  {DRIVER_VEHICLE_TYPE_LABELS[d.vehicle_type]} — {d.phone}
+                  {DRIVER_VEHICLE_TYPE_LABELS[d.vehicle_type]}
+                  {d.plate_number ? ` (${d.plate_number})` : ""} — {d.phone}
                 </p>
               </div>
               {d.is_online && (

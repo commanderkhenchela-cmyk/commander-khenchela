@@ -5,6 +5,7 @@ class Driver {
   final String fullName;
   final String phone;
   final String vehicleType;
+  final String? plateNumber;
   final String status;
   final bool isOnline;
 
@@ -15,6 +16,7 @@ class Driver {
     required this.vehicleType,
     required this.status,
     required this.isOnline,
+    this.plateNumber,
   });
 
   factory Driver.fromMap(Map<String, dynamic> map) {
@@ -23,6 +25,7 @@ class Driver {
       fullName: map['full_name'] as String,
       phone: map['phone'] as String,
       vehicleType: map['vehicle_type'] as String,
+      plateNumber: map['plate_number'] as String?,
       status: map['status'] as String,
       isOnline: map['is_online'] as bool,
     );

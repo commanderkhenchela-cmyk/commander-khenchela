@@ -26,16 +26,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _plateController = TextEditingController();
 
   String _vehicleType = 'bike';
   File? _idCardImage;
   bool _isLoading = false;
   String? _errorMessage;
 
+  bool get _plateRequired => _vehicleType != 'bike';
+
   @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _plateController.dispose();
     super.dispose();
   }
 
@@ -68,6 +72,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         fullName: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
         vehicleType: _vehicleType,
+        plateNumber: _plateController.text.trim(),
         idCardImage: _idCardImage!,
       );
 
@@ -121,6 +126,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   value: _vehicleType,
                   onChanged: (value) => setState(() => _vehicleType = value),
                 ),
+                if (_plateRequired) ...[
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _plateController,
+                    decoration: const InputDecoration(
+                      labelText: 'رقم لوحة السيارة',
+                      hintText: 'مثال: 12345-115-16',
+                    ),
+                    textInputAction: TextInputAction.next,
+                    // إعادة تشغيل التحقّق فور تبديل نوع المركبة (وليس فقط
+                    // عند الإرسال) — لو بدّل المستخدم من "سيارة" (وكتب
+                    // رقمًا) إلى "دراجة" ثم رجع لـ"سيارة"، الحقل يبقى
+                    // فارغًا ويحتاج يُنبَّه فورًا لا فقط عند الضغط "إرسال".
+                    validator: (value) {
+                      if (!_plateRequired) return null;
+                      if (value == null || value.trim().isEmpty) {
+                        return 'رقم اللوحة مطلوب لهذا النوع من المركبات';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: _nameController,
