@@ -316,6 +316,7 @@
   "rideStatusCancelled": "Cancelled",
   "myRidesTitle": "My rides",
   "noRidesMessage": "No rides yet",
+  "reviewDriverPromptMessage": "How was your experience with the driver?",
 
   "requestCraftsmanTitle": "Request a craftsman",
   "requestCraftsmanIntro": "Request a craftsman (plumber, electrician, painter...) — our team reviews it and connects you with a suitable one by phone.",

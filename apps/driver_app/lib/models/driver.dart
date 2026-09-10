@@ -8,6 +8,8 @@ class Driver {
   final String? plateNumber;
   final String status;
   final bool isOnline;
+  final double ratingAvg;
+  final int ratingCount;
 
   const Driver({
     required this.id,
@@ -17,6 +19,8 @@ class Driver {
     required this.status,
     required this.isOnline,
     this.plateNumber,
+    this.ratingAvg = 0,
+    this.ratingCount = 0,
   });
 
   factory Driver.fromMap(Map<String, dynamic> map) {
@@ -28,6 +32,8 @@ class Driver {
       plateNumber: map['plate_number'] as String?,
       status: map['status'] as String,
       isOnline: map['is_online'] as bool,
+      ratingAvg: (map['rating_avg'] as num?)?.toDouble() ?? 0,
+      ratingCount: (map['rating_count'] as num?)?.toInt() ?? 0,
     );
   }
 

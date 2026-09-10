@@ -22,7 +22,8 @@ class DriverService {
     final row = await _client
         .from('drivers')
         .select(
-          'id, full_name, phone, vehicle_type, plate_number, status, is_online',
+          'id, full_name, phone, vehicle_type, plate_number, status, '
+          'is_online, rating_avg, rating_count',
         )
         .eq('user_id', _client.auth.currentUser!.id)
         .maybeSingle();

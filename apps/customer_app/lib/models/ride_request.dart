@@ -60,6 +60,12 @@ class RideRequest {
   /// validate_ride_request_status_transition.
   bool get canBeCancelled => status == 'pending' || status == 'accepted';
 
+  /// التقييم مسموح فقط لرحلة اكتملت فعليًا — نفس الشرط المطبَّق فـ RLS
+  /// على جدول driver_reviews (راجع migration driver_reviews)، حتى لا
+  /// يظهر زر تقييم يفشل عند الضغط عليه. status == 'completed' يستلزم
+  /// driver_id غير null دائمًا (لا انتقال لـ completed بلا موصّل مُعيَّن).
+  bool get canBeReviewed => status == 'completed';
+
   factory RideRequest.fromMap(Map<String, dynamic> map) {
     Map<String, dynamic>? addressOf(String key) =>
         map[key] as Map<String, dynamic>?;
@@ -111,5 +117,24 @@ class RideRequest {
       default:
         return status;
     }
+  }
+}
+
+/// تقييم عميل واحد لرحلة مكتملة — قد لا يوجد بعد لرحلة معيَّنة (المستدعي
+/// يتعامل مع null كـ "لم تُقيَّم بعد"). نفس بنية CustomerReview
+/// (order_detail.dart) بالحرف، لكن على driver_reviews بدل reviews.
+class DriverReview {
+  final String id;
+  final int rating;
+  final String? comment;
+
+  const DriverReview({required this.id, required this.rating, this.comment});
+
+  factory DriverReview.fromMap(Map<String, dynamic> map) {
+    return DriverReview(
+      id: map['id'] as String,
+      rating: (map['rating'] as num).toInt(),
+      comment: map['comment'] as String?,
+    );
   }
 }

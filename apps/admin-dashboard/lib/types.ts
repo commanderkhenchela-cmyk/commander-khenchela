@@ -148,6 +148,9 @@ export interface Driver {
   is_online: boolean;
   id_card_path: string | null;
   created_at: string;
+  /** محسوبان تلقائيًا من driver_reviews (راجع migration driver_reviews) — لا يُعدَّلان مباشرة أبدًا. */
+  rating_avg: number;
+  rating_count: number;
 }
 
 export type CraftsmanRequestStatus =

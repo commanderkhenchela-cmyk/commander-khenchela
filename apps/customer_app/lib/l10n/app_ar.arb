@@ -770,6 +770,8 @@
   "@myRidesTitle": {"description": "عنوان شاشة/زر قائمة رحلات Taxi الخاصة بالعميل"},
   "noRidesMessage": "لا توجد رحلات بعد",
   "@noRidesMessage": {"description": "رسالة القائمة الفارغة فـ رحلاتي"},
+  "reviewDriverPromptMessage": "كيف كانت تجربتك مع السائق؟",
+  "@reviewDriverPromptMessage": {"description": "سؤال يدعو العميل لتقييم السائق بعد اكتمال الرحلة"},
 
   "requestCraftsmanTitle": "طلب حرفي",
   "@requestCraftsmanTitle": {"description": "عنوان خدمة/شاشة طلب حرفيين"},

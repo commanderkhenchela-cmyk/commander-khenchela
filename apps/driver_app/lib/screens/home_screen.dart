@@ -99,6 +99,8 @@ class _HomeScreenState extends State<HomeScreen>
           plateNumber: _driver!.plateNumber,
           status: _driver!.status,
           isOnline: value,
+          ratingAvg: _driver!.ratingAvg,
+          ratingCount: _driver!.ratingCount,
         );
       });
       _syncLocationTimer();

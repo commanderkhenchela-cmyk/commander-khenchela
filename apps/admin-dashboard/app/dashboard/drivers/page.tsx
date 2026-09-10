@@ -36,7 +36,7 @@ export default async function DriversPage({
   let query = supabase
     .from("drivers")
     .select(
-      "id, full_name, phone, vehicle_type, plate_number, status, is_online, created_at",
+      "id, full_name, phone, vehicle_type, plate_number, status, is_online, created_at, rating_avg, rating_count",
     )
     .order("created_at", { ascending: false });
 
@@ -81,7 +81,14 @@ export default async function DriversPage({
                 {DRIVER_VEHICLE_TYPE_ICONS[d.vehicle_type]}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-semibold truncate">{d.full_name}</p>
+                <p className="font-semibold truncate">
+                  {d.full_name}
+                  {d.rating_count > 0 && (
+                    <span className="ms-2 text-xs font-normal text-black/60">
+                      ⭐ {d.rating_avg.toFixed(1)} ({d.rating_count})
+                    </span>
+                  )}
+                </p>
                 <p className="text-sm text-black/60 truncate">
                   {DRIVER_VEHICLE_TYPE_LABELS[d.vehicle_type]}
                   {d.plate_number ? ` (${d.plate_number})` : ""} — {d.phone}

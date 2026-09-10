@@ -7,6 +7,8 @@ import '../l10n/app_localizations.dart';
 import '../models/ride_request.dart';
 import '../utils/distance.dart';
 import '../widgets/live_tracking_map.dart';
+import '../widgets/rating_badge.dart';
+import '../widgets/review_stars.dart';
 
 const _rideColumns =
     'id, status, fare, fare_method, created_at, accepted_at, started_at, completed_at, driver_id, '
@@ -25,7 +27,7 @@ class RideDetailScreen extends StatefulWidget {
 }
 
 class _RideDetailScreenState extends State<RideDetailScreen> {
-  late Future<RideRequest> _future;
+  late Future<_RidePageData> _future;
   bool _isCancelling = false;
   RealtimeChannel? _channel;
 
@@ -39,9 +41,11 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _future = _fetch().then((ride) {
-      if (ride.canTrackDriverLive) _ensureDriverTracking(ride.driverId!);
-      return ride;
+    _future = _fetch().then((data) {
+      if (data.ride.canTrackDriverLive) {
+        _ensureDriverTracking(data.ride.driverId!);
+      }
+      return data;
     });
     _subscribeToChanges();
   }
@@ -67,7 +71,10 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
     try {
       final row = await Supabase.instance.client
           .from('drivers')
-          .select('id, full_name, phone, vehicle_type, plate_number, current_lat, current_lng')
+          .select(
+            'id, full_name, phone, vehicle_type, plate_number, current_lat, '
+            'current_lng, rating_avg, rating_count',
+          )
           .eq('id', driverId)
           .maybeSingle();
       if (mounted && row != null) setState(() => _driverRow = row);
@@ -94,7 +101,10 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
           callback: (_) async {
             final row = await Supabase.instance.client
                 .from('drivers')
-                .select('id, full_name, phone, vehicle_type, plate_number, current_lat, current_lng')
+                .select(
+                  'id, full_name, phone, vehicle_type, plate_number, '
+                  'current_lat, current_lng, rating_avg, rating_count',
+                )
                 .eq('id', driverId)
                 .maybeSingle();
             if (mounted && row != null) setState(() => _driverRow = row);
@@ -118,11 +128,11 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
           callback: (_) {
             if (mounted) {
               setState(() {
-                _future = _fetch().then((ride) {
-                  if (ride.canTrackDriverLive) {
-                    _ensureDriverTracking(ride.driverId!);
+                _future = _fetch().then((data) {
+                  if (data.ride.canTrackDriverLive) {
+                    _ensureDriverTracking(data.ride.driverId!);
                   }
-                  return ride;
+                  return data;
                 });
               });
             }
@@ -131,13 +141,68 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
         .subscribe();
   }
 
-  Future<RideRequest> _fetch() async {
-    final row = await Supabase.instance.client
+  /// يجلب الرحلة + تقييمها الحالي إن وُجد معًا — نفس نمط
+  /// OrderDetailScreen._fetchOrder (order_detail_screen.dart) بالحرف.
+  Future<_RidePageData> _fetch() async {
+    final client = Supabase.instance.client;
+
+    final rideFuture = client
         .from('ride_requests')
         .select(_rideColumns)
         .eq('id', widget.rideId)
         .single();
-    return RideRequest.fromMap(row);
+
+    final reviewFuture = client
+        .from('driver_reviews')
+        .select('id, rating, comment')
+        .eq('ride_request_id', widget.rideId)
+        .maybeSingle();
+
+    final (rideRow, reviewRow) = await (rideFuture, reviewFuture).wait;
+
+    return _RidePageData(
+      ride: RideRequest.fromMap(rideRow),
+      review: reviewRow == null ? null : DriverReview.fromMap(reviewRow),
+    );
+  }
+
+  Future<void> _submitReview(int rating, String? comment) async {
+    final data = await _future;
+    final driverId = data.ride.driverId;
+    if (driverId == null) return; // احتياط — completed يستلزم موصّلًا مُعيَّنًا دائمًا.
+
+    try {
+      await Supabase.instance.client.from('driver_reviews').insert({
+        'ride_request_id': widget.rideId,
+        'customer_id': Supabase.instance.client.auth.currentUser!.id,
+        'driver_id': driverId,
+        'rating': rating,
+        if (comment != null && comment.trim().isNotEmpty)
+          'comment': comment.trim(),
+      });
+
+      if (!mounted) return;
+      setState(() => _future = _fetch());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).reviewSubmittedThanks),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).reviewSubmitError)),
+      );
+    }
+  }
+
+  Future<void> _openReviewDialog() async {
+    final result = await showDialog<_RideReviewInput>(
+      context: context,
+      builder: (dialogContext) => const _RideReviewDialog(),
+    );
+    if (result == null) return;
+    await _submitReview(result.rating, result.comment);
   }
 
   Future<void> _cancel() async {
@@ -282,6 +347,10 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
     final phone = row['phone'] as String?;
     final plateNumber = row['plate_number'] as String?;
     final etaText = _etaTextFor(ride, row, l10n);
+    // نفس شرط RatingBadge فـ merchant_card.dart: لا نعرض "0.0" وهميًا
+    // لسائق بلا تقييمات بعد (rating_count = 0 لكل موصّل جديد افتراضيًا).
+    final ratingCount = (row['rating_count'] as num?)?.toInt() ?? 0;
+    final ratingAvg = (row['rating_avg'] as num?)?.toDouble() ?? 0;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -304,9 +373,23 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      name ?? '',
-                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            name ?? '',
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (ratingCount > 0) ...[
+                          const SizedBox(width: 8),
+                          RatingBadge(
+                            ratingAvg: ratingAvg,
+                            ratingCount: ratingCount,
+                          ),
+                        ],
+                      ],
                     ),
                     if (phone != null)
                       Text(
@@ -381,6 +464,59 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
     await launchUrl(Uri.parse('tel:$phone'));
   }
 
+  /// بطاقة تقييم السائق — تظهر فقط لرحلة مكتملة فعليًا
+  /// (ride.canBeReviewed)، نفس نمط قسم التقييم فـ OrderDetailScreen
+  /// بالحرف (order_detail_screen.dart): دعوة للتقييم إن لم يُقيَّم بعد،
+  /// أو عرض التقييم المُرسَل مسبقًا.
+  Widget _buildReviewSection(
+    ThemeData theme,
+    RideRequest ride,
+    DriverReview? review,
+    AppLocalizations l10n,
+  ) {
+    if (!ride.canBeReviewed) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: review == null
+              ? Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.reviewDriverPromptMessage,
+                        style: theme.textTheme.titleMedium,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: _openReviewDialog,
+                      child: Text(l10n.rateNowAction),
+                    ),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.yourRatingLabel,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 6),
+                    ReviewStars(rating: review.rating, size: 22),
+                    if (review.comment != null) ...[
+                      const SizedBox(height: 8),
+                      Text(review.comment!),
+                    ],
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -389,7 +525,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.requestRideTitle)),
       body: SafeArea(
-        child: FutureBuilder<RideRequest>(
+        child: FutureBuilder<_RidePageData>(
           future: _future,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -399,8 +535,16 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
               return Center(child: Text(l10n.myOrdersLoadError));
             }
 
-            final ride = snapshot.data!;
+            final data = snapshot.data!;
+            final ride = data.ride;
+            final review = data.review;
             final statusColor = _statusColor(context, ride.status);
+            // خريطة التتبّع + بطاقة الموصّل ذواتا معنى فقط أثناء الرحلة
+            // الفعلية (accepted/in_progress) — بعد الاكتمال/الإلغاء تصبح
+            // بيانات آخر موقع معروف مضلِّلة، والمكان الأصح لها هو قسم
+            // التقييم بدلًا منها (_buildReviewSection أدناه).
+            final showDriverTracking =
+                ride.status == 'accepted' || ride.status == 'in_progress';
 
             return ListView(
               padding: const EdgeInsets.all(16),
@@ -430,8 +574,11 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildMap(ride),
-                _buildDriverCard(theme, ride, l10n),
+                if (showDriverTracking) ...[
+                  _buildMap(ride),
+                  _buildDriverCard(theme, ride, l10n),
+                ],
+                _buildReviewSection(theme, ride, review, l10n),
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -502,6 +649,88 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
           },
         ),
       ),
+    );
+  }
+}
+
+/// حزمة بيانات الشاشة: تفاصيل الرحلة + تقييمها الحالي إن وُجد (null قبل
+/// أن تُقيَّم الرحلة من طرف العميل). نفس بنية _OrderPageData
+/// (order_detail_screen.dart) بالحرف.
+class _RidePageData {
+  final RideRequest ride;
+  final DriverReview? review;
+
+  const _RidePageData({required this.ride, this.review});
+}
+
+/// نتيجة حوار التقييم — rating إجباري (1-5)، comment اختياري. نفس بنية
+/// _ReviewInput (order_detail_screen.dart)، مكرَّرة هنا محليًا (لا مشاركة
+/// class عبر ملفات) لأن كلا الشاشتين تحتفظ بمنطقها الخاص مستقلًّا، نفس
+/// نمط بقية هذا المشروع (كل شاشة تعرّف حواراتها/عناصرها الخاصة).
+class _RideReviewInput {
+  final int rating;
+  final String? comment;
+
+  const _RideReviewInput({required this.rating, this.comment});
+}
+
+/// حوار اختيار تقييم (1-5 نجوم) + تعليق اختياري لسائق رحلة — نفس نمط
+/// _ReviewDialog (order_detail_screen.dart) بالحرف، لكن لا نص خاص بالمحل
+/// فيه (عنوان عام "قيّم تجربتك" يصلح للسائق أيضًا).
+class _RideReviewDialog extends StatefulWidget {
+  const _RideReviewDialog();
+
+  @override
+  State<_RideReviewDialog> createState() => _RideReviewDialogState();
+}
+
+class _RideReviewDialogState extends State<_RideReviewDialog> {
+  int _rating = 5;
+  final _commentController = TextEditingController();
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return AlertDialog(
+      title: Text(l10n.rateExperienceTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ReviewStars(
+            rating: _rating,
+            size: 36,
+            onChanged: (value) => setState(() => _rating = value),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _commentController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: l10n.commentOptionalHint,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.cancelAction),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(
+            _RideReviewInput(rating: _rating, comment: _commentController.text),
+          ),
+          child: Text(l10n.submitAction),
+        ),
+      ],
     );
   }
 }

@@ -316,6 +316,7 @@
   "rideStatusCancelled": "Annulée",
   "myRidesTitle": "Mes courses",
   "noRidesMessage": "Aucune course pour le moment",
+  "reviewDriverPromptMessage": "Comment s'est passée votre expérience avec le chauffeur ?",
 
   "requestCraftsmanTitle": "Demander un artisan",
   "requestCraftsmanIntro": "Demandez un artisan (plombier, électricien, peintre...) — notre équipe examine et vous met en relation par téléphone.",
