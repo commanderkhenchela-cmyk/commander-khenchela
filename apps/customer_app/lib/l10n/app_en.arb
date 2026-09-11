@@ -299,6 +299,7 @@
   "deliveryRequestStatusCancelled": "Cancelled",
   "myDeliveryRequestsTitle": "My requests",
   "noDeliveryRequestsMessage": "No delivery requests yet",
+  "noActiveDeliveryRequestsMessage": "No active delivery requests right now",
 
   "requestRideTitle": "Request a ride",
   "requestRideIntro": "Request a ride from a pickup point to your destination — a driver will accept and take you.",
@@ -316,6 +317,7 @@
   "rideStatusCancelled": "Cancelled",
   "myRidesTitle": "My rides",
   "noRidesMessage": "No rides yet",
+  "noActiveRidesMessage": "No active rides right now",
   "reviewDriverPromptMessage": "How was your experience with the driver?",
 
   "requestCraftsmanTitle": "Request a craftsman",
@@ -337,6 +339,7 @@
   "assignedCraftsmanLabel": "Assigned craftsman",
   "myCraftsmanRequestsTitle": "Craftsman requests",
   "noCraftsmanRequestsMessage": "No craftsman requests yet",
+  "noActiveCraftsmanRequestsMessage": "No active craftsman requests right now",
 
   "deliveryRequestTypeSend": "Send a package",
   "deliveryRequestTypeReceive": "Receive a package",

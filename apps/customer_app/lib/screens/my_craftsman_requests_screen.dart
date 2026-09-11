@@ -3,15 +3,21 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/craftsman_request.dart';
+import '../theme/design_tokens.dart';
 import '../utils/craft_type_icon.dart';
+import '../utils/pagination.dart';
 import '../widgets/empty_list_message.dart';
 import 'craftsman_request_detail_screen.dart';
 
+const _finalStatuses = {'completed', 'cancelled'};
 const _listColumns =
     'id, craft_type, description, status, assigned_craftsman_name, '
     'assigned_craftsman_phone, created_at, assigned_at, completed_at';
 
-/// شاشة "طلبات الحرفيين" — نفس هيكل MyDeliveryRequestsScreen بالحرف.
+/// شاشة "طلبات الحرفيين" — نفس بنية MyOrdersScreen بالحرف (تبويب
+/// "الحالية" بلا ترقيم صفحي + تبويب "السابقة" مُرقَّم فعليًا عبر
+/// .range()) — راجع تعليقات my_orders_screen.dart للمنطق الكامل، هنا
+/// نفس الشيء بالضبط على craftsman_requests بدل orders.
 class MyCraftsmanRequestsScreen extends StatefulWidget {
   const MyCraftsmanRequestsScreen({super.key});
 
@@ -22,13 +28,24 @@ class MyCraftsmanRequestsScreen extends StatefulWidget {
 
 class _MyCraftsmanRequestsScreenState
     extends State<MyCraftsmanRequestsScreen> {
-  late Future<List<CraftsmanRequest>> _future;
+  static const _pastPageSize = 15;
+
+  Future<List<CraftsmanRequest>>? _activeFuture;
+
+  final List<CraftsmanRequest> _past = [];
+  bool _hasMorePast = true;
+  bool _isInitialLoadingPast = true;
+  bool _isLoadingMorePast = false;
+  bool _loadMorePastError = false;
+  Object? _initialPastError;
+
   RealtimeChannel? _channel;
 
   @override
   void initState() {
     super.initState();
-    _future = _fetch();
+    _activeFuture = _fetchActive();
+    _loadPastPage();
     _subscribeToChanges();
   }
 
@@ -56,16 +73,19 @@ class _MyCraftsmanRequestsScreenState
             value: userId,
           ),
           callback: (_) {
-            if (mounted) setState(() => _future = _fetch());
+            if (!mounted) return;
+            setState(() => _activeFuture = _fetchActive());
+            _restartPast();
           },
         )
         .subscribe();
   }
 
-  Future<List<CraftsmanRequest>> _fetch() async {
+  Future<List<CraftsmanRequest>> _fetchActive() async {
     final data = await Supabase.instance.client
         .from('craftsman_requests')
         .select(_listColumns)
+        .not('status', 'in', '(${_finalStatuses.join(',')})')
         .order('created_at', ascending: false);
 
     return (data as List)
@@ -73,66 +93,194 @@ class _MyCraftsmanRequestsScreenState
         .toList();
   }
 
-  void _refresh() => setState(() => _future = _fetch());
+  void _refreshActive() => setState(() => _activeFuture = _fetchActive());
+
+  void _restartPast() {
+    setState(() {
+      _past.clear();
+      _hasMorePast = true;
+      _isInitialLoadingPast = true;
+      _loadMorePastError = false;
+      _initialPastError = null;
+    });
+    _loadPastPage();
+  }
+
+  Future<void> _loadPastPage() async {
+    if (_isLoadingMorePast || !_hasMorePast) return;
+
+    setState(() {
+      _isLoadingMorePast = true;
+      _loadMorePastError = false;
+    });
+
+    try {
+      final from = _past.length;
+      final data = await Supabase.instance.client
+          .from('craftsman_requests')
+          .select(_listColumns)
+          .inFilter('status', _finalStatuses.toList())
+          .order('created_at', ascending: false)
+          .order('id', ascending: false)
+          .range(from, from + _pastPageSize - 1);
+
+      final items = (data as List)
+          .map((row) => CraftsmanRequest.fromMap(row as Map<String, dynamic>))
+          .toList();
+
+      if (!mounted) return;
+      setState(() {
+        _past.addAll(items);
+        _hasMorePast = hasMorePages(
+          fetchedCount: items.length,
+          pageSize: _pastPageSize,
+        );
+        _isInitialLoadingPast = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        if (_past.isEmpty) {
+          _initialPastError = e;
+          _isInitialLoadingPast = false;
+        } else {
+          _loadMorePastError = true;
+        }
+      });
+    } finally {
+      if (mounted) setState(() => _isLoadingMorePast = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.myCraftsmanRequestsTitle)),
-      body: SafeArea(
-        child: FutureBuilder<List<CraftsmanRequest>>(
-          future: _future,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(l10n.myOrdersLoadError),
-                    const SizedBox(height: 12),
-                    OutlinedButton(
-                      onPressed: _refresh,
-                      child: Text(l10n.retry),
-                    ),
-                  ],
-                ),
-              );
-            }
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.myCraftsmanRequestsTitle),
+          bottom: TabBar(
+            tabs: [
+              Tab(text: l10n.activeOrdersTab),
+              Tab(text: l10n.pastOrdersTab),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            FutureBuilder<List<CraftsmanRequest>>(
+              future: _activeFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return _ErrorState(onRetry: _refreshActive);
+                }
+                return _RequestsList(
+                  requests: snapshot.data ?? [],
+                  emptyMessage: l10n.noActiveCraftsmanRequestsMessage,
+                  onRefresh: () async => _refreshActive(),
+                  onReturned: _refreshActive,
+                );
+              },
+            ),
+            _buildPastTab(l10n),
+          ],
+        ),
+      ),
+    );
+  }
 
-            final requests = snapshot.data ?? [];
+  Widget _buildPastTab(AppLocalizations l10n) {
+    if (_isInitialLoadingPast) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-            if (requests.isEmpty) {
-              return RefreshIndicator(
-                onRefresh: () async => _refresh(),
-                child: ListView(
-                  children: [
-                    EmptyListMessage(
-                      icon: Icons.handyman_outlined,
-                      message: l10n.noCraftsmanRequestsMessage,
-                    ),
-                  ],
-                ),
-              );
-            }
+    if (_initialPastError != null) {
+      return _ErrorState(onRetry: _restartPast);
+    }
 
-            return RefreshIndicator(
-              onRefresh: () async => _refresh(),
-              child: ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: requests.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 12),
-                itemBuilder: (context, index) =>
-                    _RequestCard(request: requests[index], onReturned: _refresh),
+    if (_past.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: () async => _restartPast(),
+        child: ListView(
+          children: [
+            EmptyListMessage(
+              icon: Icons.handyman_outlined,
+              message: l10n.noCraftsmanRequestsMessage,
+            ),
+          ],
+        ),
+      );
+    }
+
+    final hasMore = _hasMorePast;
+
+    return RefreshIndicator(
+      onRefresh: () async => _restartPast(),
+      child: ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: _past.length + (hasMore ? 1 : 0),
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          if (index == _past.length) {
+            return Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
+              child: _LoadMoreFooter(
+                isLoading: _isLoadingMorePast,
+                hasError: _loadMorePastError,
+                onTap: _loadPastPage,
+                l10n: l10n,
               ),
             );
-          },
+          }
+          return _RequestCard(request: _past[index], onReturned: _restartPast);
+        },
+      ),
+    );
+  }
+}
+
+class _RequestsList extends StatelessWidget {
+  final List<CraftsmanRequest> requests;
+  final String emptyMessage;
+  final Future<void> Function() onRefresh;
+  final VoidCallback onReturned;
+
+  const _RequestsList({
+    required this.requests,
+    required this.emptyMessage,
+    required this.onRefresh,
+    required this.onReturned,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (requests.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: onRefresh,
+        child: ListView(
+          children: [
+            EmptyListMessage(
+              icon: Icons.handyman_outlined,
+              message: emptyMessage,
+            ),
+          ],
         ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: requests.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) =>
+            _RequestCard(request: requests[index], onReturned: onReturned),
       ),
     );
   }
@@ -173,6 +321,7 @@ class _RequestCard extends StatelessWidget {
 
     return Card(
       margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: AppRadius.lgAll),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () async {
@@ -237,7 +386,7 @@ class _RequestCard extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: AppRadius.pillAll,
                 ),
                 child: Text(
                   CraftsmanRequest.statusLabel(request.status, l10n),
@@ -249,6 +398,95 @@ class _RequestCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// نفس نمط _LoadMoreFooter فـ my_orders_screen.dart بالحرف.
+class _LoadMoreFooter extends StatelessWidget {
+  final bool isLoading;
+  final bool hasError;
+  final VoidCallback onTap;
+  final AppLocalizations l10n;
+
+  const _LoadMoreFooter({
+    required this.isLoading,
+    required this.hasError,
+    required this.onTap,
+    required this.l10n,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    if (isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+
+    if (hasError) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        child: Center(
+          child: Column(
+            children: [
+              Text(
+                l10n.loadMoreError,
+                style: TextStyle(color: theme.colorScheme.error),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              OutlinedButton(onPressed: onTap, child: Text(l10n.retry)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: Center(
+        child: OutlinedButton(
+          onPressed: onTap,
+          child: Text(l10n.loadMoreAction),
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  final VoidCallback onRetry;
+
+  const _ErrorState({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.wifi_off_rounded, size: 48, color: Colors.black45),
+            const SizedBox(height: 16),
+            Text(l10n.myOrdersLoadError, textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: onRetry, child: Text(l10n.retry)),
+          ],
         ),
       ),
     );

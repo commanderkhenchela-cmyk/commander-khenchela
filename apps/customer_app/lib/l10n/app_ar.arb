@@ -737,6 +737,8 @@
   "@myDeliveryRequestsTitle": {"description": "عنوان شاشة/زر قائمة طلبات اطلب أي شيء الخاصة بالعميل"},
   "noDeliveryRequestsMessage": "لا توجد طلبات توصيل حرّة بعد",
   "@noDeliveryRequestsMessage": {"description": "رسالة القائمة الفارغة فـ طلباتي الحرة"},
+  "noActiveDeliveryRequestsMessage": "لا توجد طلبات حرّة نشطة حاليًا",
+  "@noActiveDeliveryRequestsMessage": {"description": "رسالة تبويب الطلبات الحرة النشطة الفارغ"},
 
   "requestRideTitle": "طلب رحلة",
   "@requestRideTitle": {"description": "عنوان خدمة/شاشة طلب رحلة Taxi"},
@@ -770,6 +772,8 @@
   "@myRidesTitle": {"description": "عنوان شاشة/زر قائمة رحلات Taxi الخاصة بالعميل"},
   "noRidesMessage": "لا توجد رحلات بعد",
   "@noRidesMessage": {"description": "رسالة القائمة الفارغة فـ رحلاتي"},
+  "noActiveRidesMessage": "لا توجد رحلات نشطة حاليًا",
+  "@noActiveRidesMessage": {"description": "رسالة تبويب الرحلات النشطة الفارغ"},
   "reviewDriverPromptMessage": "كيف كانت تجربتك مع السائق؟",
   "@reviewDriverPromptMessage": {"description": "سؤال يدعو العميل لتقييم السائق بعد اكتمال الرحلة"},
 
@@ -811,6 +815,8 @@
   "@myCraftsmanRequestsTitle": {"description": "عنوان شاشة/زر قائمة طلبات الحرفيين الخاصة بالعميل"},
   "noCraftsmanRequestsMessage": "لا توجد طلبات حرفيين بعد",
   "@noCraftsmanRequestsMessage": {"description": "رسالة القائمة الفارغة فـ طلبات الحرفيين"},
+  "noActiveCraftsmanRequestsMessage": "لا توجد طلبات حرفيين نشطة حاليًا",
+  "@noActiveCraftsmanRequestsMessage": {"description": "رسالة تبويب طلبات الحرفيين النشطة الفارغ"},
 
   "deliveryRequestTypeSend": "إرسال طلبية",
   "@deliveryRequestTypeSend": {"description": "اتجاه طلب اطلب أي شيء: العميل يملك الغرض ويرسله"},
