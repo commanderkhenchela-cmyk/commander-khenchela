@@ -10,6 +10,7 @@ import '../services/location_service.dart';
 import '../theme/design_tokens.dart';
 import '../utils/pagination.dart';
 import '../utils/nearest_merchants.dart';
+import '../widgets/load_more_footer.dart';
 import '../widgets/merchant_card.dart';
 import '../widgets/merchant_smart_section.dart';
 import '../widgets/search_field.dart';
@@ -427,7 +428,7 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-                  child: _LoadMoreFooter(
+                  child: LoadMoreFooter(
                     isLoading: _isLoadingMore,
                     hasError: _loadMoreError,
                     onTap: _loadPage,
@@ -458,69 +459,6 @@ class _MerchantsSections {
 }
 
 
-/// عنصر "تحميل المزيد" أسفل قائمة المحلات — نفس نمط _LoadMoreControl في
-/// search_screen.dart بالضبط (زر عادي / مؤشر تحميل / خطأ + إعادة محاولة
-/// للصفحة الفاشلة فقط).
-class _LoadMoreFooter extends StatelessWidget {
-  final bool isLoading;
-  final bool hasError;
-  final VoidCallback onTap;
-  final AppLocalizations l10n;
-
-  const _LoadMoreFooter({
-    required this.isLoading,
-    required this.hasError,
-    required this.onTap,
-    required this.l10n,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    if (isLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-        child: Center(
-          child: SizedBox(
-            width: 22,
-            height: 22,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      );
-    }
-
-    if (hasError) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-        child: Center(
-          child: Column(
-            children: [
-              Text(
-                l10n.loadMoreError,
-                style: TextStyle(color: theme.colorScheme.error),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              OutlinedButton(onPressed: onTap, child: Text(l10n.retry)),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: Center(
-        child: OutlinedButton(
-          onPressed: onTap,
-          child: Text(l10n.loadMoreAction),
-        ),
-      ),
-    );
-  }
-}
 
 /// عرض Skeleton بسيط بدل مؤشر تحميل دائري وحيد — يعطي إحساسًا فوريًا
 /// بشكل الصفحة القادمة بدل شاشة فارغة أثناء التحميل.

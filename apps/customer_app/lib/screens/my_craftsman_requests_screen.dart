@@ -7,6 +7,7 @@ import '../theme/design_tokens.dart';
 import '../utils/craft_type_icon.dart';
 import '../utils/pagination.dart';
 import '../widgets/empty_list_message.dart';
+import '../widgets/load_more_footer.dart';
 import '../widgets/state_message.dart';
 import 'craftsman_request_detail_screen.dart';
 
@@ -230,7 +231,7 @@ class _MyCraftsmanRequestsScreenState
           if (index == _past.length) {
             return Padding(
               padding: const EdgeInsets.only(top: AppSpacing.xs),
-              child: _LoadMoreFooter(
+              child: LoadMoreFooter(
                 isLoading: _isLoadingMorePast,
                 hasError: _loadMorePastError,
                 onTap: _loadPastPage,
@@ -405,65 +406,4 @@ class _RequestCard extends StatelessWidget {
   }
 }
 
-/// نفس نمط _LoadMoreFooter فـ my_orders_screen.dart بالحرف.
-class _LoadMoreFooter extends StatelessWidget {
-  final bool isLoading;
-  final bool hasError;
-  final VoidCallback onTap;
-  final AppLocalizations l10n;
-
-  const _LoadMoreFooter({
-    required this.isLoading,
-    required this.hasError,
-    required this.onTap,
-    required this.l10n,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    if (isLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-        child: Center(
-          child: SizedBox(
-            width: 22,
-            height: 22,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      );
-    }
-
-    if (hasError) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-        child: Center(
-          child: Column(
-            children: [
-              Text(
-                l10n.loadMoreError,
-                style: TextStyle(color: theme.colorScheme.error),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              OutlinedButton(onPressed: onTap, child: Text(l10n.retry)),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: Center(
-        child: OutlinedButton(
-          onPressed: onTap,
-          child: Text(l10n.loadMoreAction),
-        ),
-      ),
-    );
-  }
-}
 

@@ -13,6 +13,7 @@ import '../../../screens/product_detail_screen.dart';
 import '../../../theme/design_tokens.dart';
 import '../../../utils/merchant_category_icon.dart';
 import '../../../utils/pagination.dart';
+import '../../../widgets/load_more_footer.dart';
 import '../../../widgets/merchant_card.dart';
 import '../../../widgets/search_field.dart';
 import '../../../widgets/state_message.dart';
@@ -509,7 +510,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             ),
                           if (showProducts && data.hasMoreProducts) ...[
                             const SizedBox(height: AppSpacing.sm),
-                            _LoadMoreControl(
+                            LoadMoreFooter(
                               isLoading: _isLoadingMoreProducts,
                               hasError: _loadMoreProductsError,
                               onTap: _loadMoreProducts,
@@ -872,66 +873,6 @@ class _ProductResultTile extends StatelessWidget {
 /// عنصر "تحميل المزيد" أسفل قائمة المنتجات — 3 حالات: زر عادي، مؤشر
 /// تحميل أثناء جلب الصفحة التالية، أو رسالة خطأ + إعادة محاولة عند
 /// فشل الصفحة الإضافية تحديدًا (لا يؤثر على النتائج المحمَّلة أصلًا).
-class _LoadMoreControl extends StatelessWidget {
-  final bool isLoading;
-  final bool hasError;
-  final VoidCallback onTap;
-  final AppLocalizations l10n;
-
-  const _LoadMoreControl({
-    required this.isLoading,
-    required this.hasError,
-    required this.onTap,
-    required this.l10n,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    if (isLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-        child: Center(
-          child: SizedBox(
-            width: 22,
-            height: 22,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      );
-    }
-
-    if (hasError) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-        child: Center(
-          child: Column(
-            children: [
-              Text(
-                l10n.loadMoreError,
-                style: TextStyle(color: theme.colorScheme.error),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              OutlinedButton(onPressed: onTap, child: Text(l10n.retry)),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: Center(
-        child: OutlinedButton(
-          onPressed: onTap,
-          child: Text(l10n.loadMoreAction),
-        ),
-      ),
-    );
-  }
-}
 
 
 /// Skeleton بسيط أثناء انتظار نتائج البحث — بديل عن مؤشر تحميل وحيد،
