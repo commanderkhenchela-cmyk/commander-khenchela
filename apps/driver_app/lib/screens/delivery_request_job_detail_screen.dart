@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/delivery_request_job.dart';
 import '../services/delivery_request_service.dart';
+import '../widgets/navigate_button.dart';
 import '../widgets/state_message.dart';
 
 /// تفاصيل طلب "اطلب أي شيء" مقبول من الموصّل — تُفتح فقط لطلب مقبول
@@ -103,6 +104,18 @@ class _DeliveryRequestJobDetailScreenState
                     '${request.communeName} — ${request.addressText}',
                   if (request.customerPhone != null) request.customerPhone!,
                 ],
+                // هذا العنوان هو النقطة الوحيدة ذات إحداثيات حقيقية —
+                // الوجهة الأخرى (destinationText) مجرّد نص كتبه العميل.
+                action: request.status == 'accepted'
+                    ? NavigateButton(
+                        label: 'التنقّل لهذا العنوان',
+                        lat: request.addressLat,
+                        lng: request.addressLng,
+                        fallbackAddressText: request.addressText == null
+                            ? null
+                            : '${request.communeName} — ${request.addressText}',
+                      )
+                    : null,
               ),
               if (request.isSend && request.destinationText != null) ...[
                 const SizedBox(height: 12),
@@ -202,11 +215,13 @@ class _SectionCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final List<String> lines;
+  final Widget? action;
 
   const _SectionCard({
     required this.icon,
     required this.title,
     required this.lines,
+    this.action,
   });
 
   @override
@@ -227,6 +242,7 @@ class _SectionCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             for (final line in lines) Text(line),
+            if (action != null) ...[const SizedBox(height: 10), action!],
           ],
         ),
       ),

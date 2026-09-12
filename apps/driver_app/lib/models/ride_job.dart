@@ -11,8 +11,12 @@ class RideJob {
   final String? pickupAddressText;
   final String? pickupCommuneName;
   final String? pickupPhone;
+  final double? pickupLat;
+  final double? pickupLng;
   final String? dropoffAddressText;
   final String? dropoffCommuneName;
+  final double? dropoffLat;
+  final double? dropoffLng;
 
   const RideJob({
     required this.id,
@@ -23,8 +27,12 @@ class RideJob {
     this.pickupAddressText,
     this.pickupCommuneName,
     this.pickupPhone,
+    this.pickupLat,
+    this.pickupLng,
     this.dropoffAddressText,
     this.dropoffCommuneName,
+    this.dropoffLat,
+    this.dropoffLng,
   });
 
   factory RideJob.fromMap(Map<String, dynamic> map) {
@@ -42,9 +50,13 @@ class RideJob {
       pickupCommuneName:
           (pickup?['communes'] as Map<String, dynamic>?)?['name'] as String?,
       pickupPhone: pickup?['phone'] as String?,
+      pickupLat: (pickup?['latitude'] as num?)?.toDouble(),
+      pickupLng: (pickup?['longitude'] as num?)?.toDouble(),
       dropoffAddressText: dropoff?['address_text'] as String?,
       dropoffCommuneName:
           (dropoff?['communes'] as Map<String, dynamic>?)?['name'] as String?,
+      dropoffLat: (dropoff?['latitude'] as num?)?.toDouble(),
+      dropoffLng: (dropoff?['longitude'] as num?)?.toDouble(),
     );
   }
 

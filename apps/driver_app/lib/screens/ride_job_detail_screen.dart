@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/ride_job.dart';
 import '../services/ride_request_service.dart';
+import '../widgets/navigate_button.dart';
 import '../widgets/state_message.dart';
 
 /// تفاصيل رحلة Taxi واحدة من منظور الموصّل — زر واحد مطابق للحالة
@@ -115,6 +116,17 @@ class _RideJobDetailScreenState extends State<RideJobDetailScreen> {
                     '${ride.pickupCommuneName} — ${ride.pickupAddressText}',
                   if (ride.pickupPhone != null) ride.pickupPhone!,
                 ],
+                // التنقّل لنقطة الانطلاق مفيد فقط بعد قبول الرحلة، قبل استلام الراكب.
+                action: ride.status == 'accepted'
+                    ? NavigateButton(
+                        label: 'التنقّل لنقطة الانطلاق',
+                        lat: ride.pickupLat,
+                        lng: ride.pickupLng,
+                        fallbackAddressText: ride.pickupAddressText == null
+                            ? null
+                            : '${ride.pickupCommuneName} — ${ride.pickupAddressText}',
+                      )
+                    : null,
               ),
               const SizedBox(height: 12),
               _SectionCard(
@@ -124,6 +136,17 @@ class _RideJobDetailScreenState extends State<RideJobDetailScreen> {
                   if (ride.dropoffCommuneName != null && ride.dropoffAddressText != null)
                     '${ride.dropoffCommuneName} — ${ride.dropoffAddressText}',
                 ],
+                // التنقّل للوجهة مفيد فقط بعد استلام الراكب فعليًا (الرحلة جارية).
+                action: ride.status == 'in_progress'
+                    ? NavigateButton(
+                        label: 'التنقّل للوجهة',
+                        lat: ride.dropoffLat,
+                        lng: ride.dropoffLng,
+                        fallbackAddressText: ride.dropoffAddressText == null
+                            ? null
+                            : '${ride.dropoffCommuneName} — ${ride.dropoffAddressText}',
+                      )
+                    : null,
               ),
               const SizedBox(height: 12),
               Card(
@@ -192,11 +215,13 @@ class _SectionCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final List<String> lines;
+  final Widget? action;
 
   const _SectionCard({
     required this.icon,
     required this.title,
     required this.lines,
+    this.action,
   });
 
   @override
@@ -217,6 +242,7 @@ class _SectionCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             for (final line in lines) Text(line),
+            if (action != null) ...[const SizedBox(height: 10), action!],
           ],
         ),
       ),

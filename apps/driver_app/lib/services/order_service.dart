@@ -49,7 +49,7 @@ class OrderService {
         .from('orders')
         .select(
           '$_jobColumns, '
-          'addresses(address_text, phone, communes(name)), '
+          'addresses(address_text, phone, latitude, longitude, communes(name)), '
           'order_items(quantity, products(name))',
         )
         .eq('id', orderId)

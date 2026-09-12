@@ -16,6 +16,8 @@ class DeliveryRequestJob {
   final String? addressText;
   final String? communeName;
   final String? customerPhone;
+  final double? addressLat;
+  final double? addressLng;
 
   const DeliveryRequestJob({
     required this.id,
@@ -30,6 +32,8 @@ class DeliveryRequestJob {
     this.addressText,
     this.communeName,
     this.customerPhone,
+    this.addressLat,
+    this.addressLng,
   });
 
   bool get isSend => requestType == 'send';
@@ -54,6 +58,8 @@ class DeliveryRequestJob {
       addressText: address?['address_text'] as String?,
       communeName: commune?['name'] as String?,
       customerPhone: address?['phone'] as String?,
+      addressLat: (address?['latitude'] as num?)?.toDouble(),
+      addressLng: (address?['longitude'] as num?)?.toDouble(),
     );
   }
 

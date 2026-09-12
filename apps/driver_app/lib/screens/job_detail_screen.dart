@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/job_order.dart';
 import '../services/order_service.dart';
+import '../widgets/navigate_button.dart';
 import '../widgets/state_message.dart';
 
 /// تفاصيل طلبية واحدة من منظور الموصّل: معلومات المحل (الاستلام)،
@@ -116,6 +117,15 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     order.merchantAddressText!,
                   if (order.merchantPhone != null) order.merchantPhone!,
                 ],
+                // التنقّل للاستلام مفيد فقط قبل الاستلام الفعلي.
+                action: order.status == 'ready_for_pickup'
+                    ? NavigateButton(
+                        label: 'التنقّل للمحل',
+                        lat: order.merchantLat,
+                        lng: order.merchantLng,
+                        fallbackAddressText: order.merchantAddressText,
+                      )
+                    : null,
               ),
               const SizedBox(height: 12),
               _SectionCard(
@@ -125,6 +135,16 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   '${detail.communeName} — ${detail.customerAddressText}',
                   if (detail.customerPhone != null) detail.customerPhone!,
                 ],
+                // التنقّل للعميل مفيد فقط بعد الاستلام من المحل فعليًا.
+                action: order.status == 'picked_up' || order.status == 'out_for_delivery'
+                    ? NavigateButton(
+                        label: 'التنقّل للعميل',
+                        lat: detail.customerLat,
+                        lng: detail.customerLng,
+                        fallbackAddressText:
+                            '${detail.communeName} — ${detail.customerAddressText}',
+                      )
+                    : null,
               ),
               const SizedBox(height: 12),
               _SectionCard(
@@ -204,11 +224,13 @@ class _SectionCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final List<String> lines;
+  final Widget? action;
 
   const _SectionCard({
     required this.icon,
     required this.title,
     required this.lines,
+    this.action,
   });
 
   @override
@@ -232,6 +254,7 @@ class _SectionCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             for (final line in lines) Text(line),
+            if (action != null) ...[const SizedBox(height: 10), action!],
           ],
         ),
       ),

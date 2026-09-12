@@ -12,8 +12,8 @@ class RideRequestService {
 
   static const _columns =
       'id, status, fare, driver_earning_share, created_at, '
-      'pickup_address:addresses!pickup_address_id(address_text, phone, communes(name)), '
-      'dropoff_address:addresses!dropoff_address_id(address_text, phone, communes(name))';
+      'pickup_address:addresses!pickup_address_id(address_text, phone, latitude, longitude, communes(name)), '
+      'dropoff_address:addresses!dropoff_address_id(address_text, phone, latitude, longitude, communes(name))';
 
   static Future<List<RideJob>> fetchAvailable() async {
     final rows = await _client

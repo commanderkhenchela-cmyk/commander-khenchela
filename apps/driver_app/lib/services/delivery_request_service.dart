@@ -18,7 +18,7 @@ class DeliveryRequestService {
       'id, description, status, request_type, destination_text, delivery_fee, '
       'driver_earning_share, created_at, accepted_at';
   static const _detailColumns =
-      '$_baseColumns, addresses(address_text, phone, communes(name))';
+      '$_baseColumns, addresses(address_text, phone, latitude, longitude, communes(name))';
 
   /// طلبات pending وبلا موصّل بعد — أي موصّل موافَق عليه يقدر يقبلها.
   static Future<List<DeliveryRequestJob>> fetchAvailable() async {

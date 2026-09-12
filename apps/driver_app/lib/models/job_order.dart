@@ -93,6 +93,8 @@ class JobDetail {
   final String customerAddressText;
   final String? customerPhone;
   final String communeName;
+  final double? customerLat;
+  final double? customerLng;
   final List<JobItem> items;
 
   const JobDetail({
@@ -100,6 +102,8 @@ class JobDetail {
     required this.customerAddressText,
     required this.customerPhone,
     required this.communeName,
+    required this.customerLat,
+    required this.customerLng,
     required this.items,
   });
 
@@ -113,6 +117,8 @@ class JobDetail {
       customerAddressText: address['address_text'] as String,
       customerPhone: address['phone'] as String?,
       communeName: commune['name'] as String,
+      customerLat: (address['latitude'] as num?)?.toDouble(),
+      customerLng: (address['longitude'] as num?)?.toDouble(),
       items: itemRows
           .map((row) => JobItem.fromMap(row as Map<String, dynamic>))
           .toList(),
