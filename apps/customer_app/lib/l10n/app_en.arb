@@ -351,5 +351,7 @@
 
   "muteAdTooltip": "Mute",
   "unmuteAdTooltip": "Unmute",
-  "removeRecentSearchTooltip": "Remove from recent searches"
+  "removeRecentSearchTooltip": "Remove from recent searches",
+  "rateStarsAction": "Rate {stars} stars",
+  "ratingValueLabel": "Rating: {stars} out of 5 stars"
 }

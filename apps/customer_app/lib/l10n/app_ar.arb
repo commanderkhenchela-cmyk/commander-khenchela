@@ -838,5 +838,19 @@
   "unmuteAdTooltip": "إلغاء كتم الصوت",
   "@unmuteAdTooltip": {"description": "تلميح زر إلغاء كتم صوت إعلان الفيديو (يظهر حين يكون الصوت مكتومًا حاليًا)"},
   "removeRecentSearchTooltip": "إزالة من عمليات البحث الأخيرة",
-  "@removeRecentSearchTooltip": {"description": "تلميح زر إزالة عبارة بحث واحدة من قائمة البحث الأخيرة"}
+  "@removeRecentSearchTooltip": {"description": "تلميح زر إزالة عبارة بحث واحدة من قائمة البحث الأخيرة"},
+  "rateStarsAction": "قيّم بـ {stars} نجوم",
+  "@rateStarsAction": {
+    "description": "تسمية صوتية لزر نجمة تفاعلية واحدة فـ اختيار التقييم (1-5)",
+    "placeholders": {
+      "stars": {"type": "int"}
+    }
+  },
+  "ratingValueLabel": "التقييم: {stars} من 5 نجوم",
+  "@ratingValueLabel": {
+    "description": "تسمية صوتية لعرض تقييم محفوظ بالفعل (غير تفاعلي)",
+    "placeholders": {
+      "stars": {"type": "int"}
+    }
+  }
 }

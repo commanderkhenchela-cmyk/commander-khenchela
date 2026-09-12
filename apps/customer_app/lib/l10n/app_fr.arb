@@ -351,5 +351,7 @@
 
   "muteAdTooltip": "Couper le son",
   "unmuteAdTooltip": "Rétablir le son",
-  "removeRecentSearchTooltip": "Retirer des recherches récentes"
+  "removeRecentSearchTooltip": "Retirer des recherches récentes",
+  "rateStarsAction": "Noter {stars} étoiles",
+  "ratingValueLabel": "Note : {stars} sur 5 étoiles"
 }
