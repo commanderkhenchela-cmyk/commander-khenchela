@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/notification_item.dart';
+import '../widgets/empty_list_message.dart';
+import '../widgets/state_message.dart';
 import 'craftsman_request_detail_screen.dart';
 import 'delivery_request_detail_screen.dart';
 import 'order_detail_screen.dart';
@@ -147,29 +149,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           }
 
           if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.wifi_off_rounded,
-                      size: 48,
-                      color: Colors.black45,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.notificationsLoadError,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _refresh,
-                      child: Text(l10n.retry),
-                    ),
-                  ],
-                ),
+            return StateMessage(
+              icon: Icons.wifi_off_rounded,
+              message: l10n.notificationsLoadError,
+              action: ElevatedButton(
+                onPressed: _refresh,
+                child: Text(l10n.retry),
               ),
             );
           }
@@ -184,13 +169,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               },
               child: ListView(
                 children: [
-                  const SizedBox(height: 80),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Text(
-                      l10n.noNotificationsMessage,
-                      textAlign: TextAlign.center,
-                    ),
+                  EmptyListMessage(
+                    icon: Icons.notifications_none_rounded,
+                    message: l10n.noNotificationsMessage,
                   ),
                 ],
               ),

@@ -6,6 +6,7 @@ import '../models/ride_request.dart';
 import '../theme/design_tokens.dart';
 import '../utils/pagination.dart';
 import '../widgets/empty_list_message.dart';
+import '../widgets/state_message.dart';
 import 'ride_detail_screen.dart';
 
 const _finalStatuses = {'completed', 'cancelled'};
@@ -175,7 +176,7 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return _ErrorState(onRetry: _refreshActive);
+                  return StateMessage(icon: Icons.wifi_off_rounded, message: l10n.myOrdersLoadError, action: ElevatedButton(onPressed: _refreshActive, child: Text(l10n.retry)));
                 }
                 return _RidesList(
                   rides: snapshot.data ?? [],
@@ -198,7 +199,7 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
     }
 
     if (_initialPastError != null) {
-      return _ErrorState(onRetry: _restartPast);
+      return StateMessage(icon: Icons.wifi_off_rounded, message: l10n.myOrdersLoadError, action: ElevatedButton(onPressed: _restartPast, child: Text(l10n.retry)));
     }
 
     if (_past.isEmpty) {
@@ -449,29 +450,3 @@ class _LoadMoreFooter extends StatelessWidget {
   }
 }
 
-class _ErrorState extends StatelessWidget {
-  final VoidCallback onRetry;
-
-  const _ErrorState({required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.wifi_off_rounded, size: 48, color: Colors.black45),
-            const SizedBox(height: 16),
-            Text(l10n.myOrdersLoadError, textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: onRetry, child: Text(l10n.retry)),
-          ],
-        ),
-      ),
-    );
-  }
-}

@@ -15,6 +15,7 @@ import '../../../utils/merchant_category_icon.dart';
 import '../../../utils/pagination.dart';
 import '../../../widgets/merchant_card.dart';
 import '../../../widgets/search_field.dart';
+import '../../../widgets/state_message.dart';
 import '../data/recent_searches_service.dart';
 import '../data/search_stats_service.dart';
 import '../domain/product_search_result.dart';
@@ -391,7 +392,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 if (stillLoading || !(noRecent && noPopular)) {
                   return const SizedBox.shrink();
                 }
-                return _CenterMessage(
+                return StateMessage(
                   icon: Icons.search_rounded,
                   message: l10n.searchEmptyPrompt,
                 );
@@ -413,11 +414,13 @@ class _SearchScreenState extends State<SearchScreen> {
         }
 
         if (snapshot.hasError) {
-          return _CenterMessage(
+          return StateMessage(
             icon: Icons.wifi_off_rounded,
             message: l10n.connectionErrorMessage,
-            actionLabel: l10n.retry,
-            onAction: _refresh,
+            action: ElevatedButton(
+              onPressed: _refresh,
+              child: Text(l10n.retry),
+            ),
           );
         }
 
@@ -470,7 +473,7 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             Expanded(
               child: !hasAnyResults
-                  ? _CenterMessage(
+                  ? StateMessage(
                       icon: Icons.search_off_rounded,
                       message: l10n.noResultsFor(_query),
                     )
@@ -932,48 +935,6 @@ class _LoadMoreControl extends StatelessWidget {
   }
 }
 
-class _CenterMessage extends StatelessWidget {
-  final IconData icon;
-  final String message;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  const _CenterMessage({
-    required this.icon,
-    required this.message,
-    this.actionLabel,
-    this.onAction,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 56, color: theme.colorScheme.muted),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.muted,
-              ),
-            ),
-            if (actionLabel != null) ...[
-              const SizedBox(height: AppSpacing.lg),
-              ElevatedButton(onPressed: onAction, child: Text(actionLabel!)),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 /// Skeleton بسيط أثناء انتظار نتائج البحث — بديل عن مؤشر تحميل وحيد،
 /// نفس فلسفة _HomeLoadingSkeleton في home_screen.dart.

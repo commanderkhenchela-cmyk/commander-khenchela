@@ -6,6 +6,7 @@ import '../models/order.dart';
 import '../models/order_detail.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/review_stars.dart';
+import '../widgets/state_message.dart';
 
 /// شاشة تفاصيل طلب واحد — تعرض المنتجات والعنوان، وتسمح للعميل بإلغاء
 /// طلبه بنفسه طالما لم يوافق عليه التاجر بعد (pending فقط)، وبتقييم
@@ -184,30 +185,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           }
 
           if (snapshot.hasError || !snapshot.hasData) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.wifi_off_rounded,
-                      size: 48,
-                      color: Colors.black45,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.orderDetailsLoadError,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () =>
-                          setState(() => _orderFuture = _fetchOrder()),
-                      child: Text(l10n.retry),
-                    ),
-                  ],
-                ),
+            return StateMessage(
+              icon: Icons.wifi_off_rounded,
+              message: l10n.orderDetailsLoadError,
+              action: ElevatedButton(
+                onPressed: () =>
+                    setState(() => _orderFuture = _fetchOrder()),
+                child: Text(l10n.retry),
               ),
             );
           }

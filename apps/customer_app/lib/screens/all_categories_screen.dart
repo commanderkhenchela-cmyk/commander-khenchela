@@ -6,6 +6,7 @@ import '../models/merchant_category.dart';
 import '../theme/design_tokens.dart';
 import '../utils/merchant_category_icon.dart';
 import '../widgets/category_grid_tile.dart';
+import '../widgets/state_message.dart';
 import 'account_screen.dart';
 import 'merchants_screen.dart';
 
@@ -187,18 +188,20 @@ class _AllCategoriesScreenState extends State<AllCategoriesScreen>
           }
 
           if (snapshot.hasError) {
-            return _StateMessage(
+            return StateMessage(
               icon: Icons.wifi_off_rounded,
               message: l10n.categoriesLoadError,
-              actionLabel: l10n.retry,
-              onAction: _refresh,
+              action: ElevatedButton(
+                onPressed: _refresh,
+                child: Text(l10n.retry),
+              ),
             );
           }
 
           final data = snapshot.data!;
 
           if (data.categories.isEmpty) {
-            return _StateMessage(
+            return StateMessage(
               icon: Icons.category_outlined,
               message: l10n.noCategoriesMessage,
             );
@@ -344,54 +347,6 @@ class _StaggeredEntrance extends StatelessWidget {
           end: Offset.zero,
         ).animate(curved),
         child: child,
-      ),
-    );
-  }
-}
-
-/// حالة موحَّدة لعرض رسالة في منتصف الشاشة: فارغة أو خطأ.
-class _StateMessage extends StatelessWidget {
-  final IconData icon;
-  final String message;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  const _StateMessage({
-    required this.icon,
-    required this.message,
-    this.actionLabel,
-    this.onAction,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 56,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-            if (actionLabel != null) ...[
-              const SizedBox(height: 16),
-              ElevatedButton(onPressed: onAction, child: Text(actionLabel!)),
-            ],
-          ],
-        ),
       ),
     );
   }

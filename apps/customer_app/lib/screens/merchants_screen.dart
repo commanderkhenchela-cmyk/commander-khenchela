@@ -13,6 +13,7 @@ import '../utils/nearest_merchants.dart';
 import '../widgets/merchant_card.dart';
 import '../widgets/merchant_smart_section.dart';
 import '../widgets/search_field.dart';
+import '../widgets/state_message.dart';
 import 'account_screen.dart';
 import 'merchant_products_screen.dart';
 
@@ -311,16 +312,18 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
     if (_isInitialLoading) return const _MerchantsLoadingSkeleton();
 
     if (_initialError != null) {
-      return _StateMessage(
+      return StateMessage(
         icon: Icons.wifi_off_rounded,
         message: l10n.merchantsLoadError,
-        actionLabel: l10n.retry,
-        onAction: () => _restart(_query),
+        action: ElevatedButton(
+          onPressed: () => _restart(_query),
+          child: Text(l10n.retry),
+        ),
       );
     }
 
     if (_visible.isEmpty) {
-      return _StateMessage(
+      return StateMessage(
         icon: _query.isEmpty
             ? Icons.storefront_outlined
             : Icons.search_off_rounded,
@@ -459,53 +462,6 @@ class _MerchantsSections {
   });
 }
 
-/// حالة موحَّدة لعرض رسالة في منتصف الشاشة: فارغة، خطأ، أو بحث بلا نتائج.
-class _StateMessage extends StatelessWidget {
-  final IconData icon;
-  final String message;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  const _StateMessage({
-    required this.icon,
-    required this.message,
-    this.actionLabel,
-    this.onAction,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 56,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-            if (actionLabel != null) ...[
-              const SizedBox(height: 16),
-              ElevatedButton(onPressed: onAction, child: Text(actionLabel!)),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 /// عنصر "تحميل المزيد" أسفل قائمة المحلات — نفس نمط _LoadMoreControl في
 /// search_screen.dart بالضبط (زر عادي / مؤشر تحميل / خطأ + إعادة محاولة

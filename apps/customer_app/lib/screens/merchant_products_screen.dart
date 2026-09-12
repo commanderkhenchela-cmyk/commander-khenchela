@@ -9,6 +9,7 @@ import '../services/cart_service.dart';
 import '../services/merchant_views_service.dart';
 import '../theme/design_tokens.dart';
 import '../widgets/merchant_logo.dart';
+import '../widgets/state_message.dart';
 import 'cart_screen.dart';
 import 'product_detail_screen.dart';
 
@@ -203,33 +204,16 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
                 }
 
                 if (snapshot.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.wifi_off_rounded,
-                            size: 48,
-                            color: Colors.black45,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            l10n.merchantProductsLoadError,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                _productsFuture = _fetchProducts();
-                              });
-                            },
-                            child: Text(l10n.retry),
-                          ),
-                        ],
-                      ),
+                  return StateMessage(
+                    icon: Icons.wifi_off_rounded,
+                    message: l10n.merchantProductsLoadError,
+                    action: ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _productsFuture = _fetchProducts();
+                        });
+                      },
+                      child: Text(l10n.retry),
                     ),
                   );
                 }
@@ -237,7 +221,10 @@ class _MerchantProductsScreenState extends State<MerchantProductsScreen> {
                 final products = snapshot.data ?? [];
 
                 if (products.isEmpty) {
-                  return Center(child: Text(l10n.noProductsMessage));
+                  return StateMessage(
+                    icon: Icons.shopping_bag_outlined,
+                    message: l10n.noProductsMessage,
+                  );
                 }
 
                 final grouped = _groupByCategory(products);

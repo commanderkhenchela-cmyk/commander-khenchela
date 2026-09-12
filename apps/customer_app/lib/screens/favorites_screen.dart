@@ -6,6 +6,7 @@ import '../l10n/app_localizations.dart';
 import '../models/merchant.dart';
 import '../services/favorites_controller.dart';
 import '../widgets/merchant_card.dart';
+import '../widgets/state_message.dart';
 import 'merchant_products_screen.dart';
 
 /// شاشة "مفضّلتي" — قائمة كل المحلات التي أضافها العميل من زر القلب في
@@ -81,7 +82,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             }
 
             if (snapshot.hasError) {
-              return _CenterMessage(
+              return StateMessage(
                 icon: Icons.wifi_off_rounded,
                 message: l10n.favoritesLoadError,
                 action: OutlinedButton(
@@ -94,7 +95,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             final merchants = snapshot.data ?? [];
 
             if (merchants.isEmpty) {
-              return _CenterMessage(
+              return StateMessage(
                 icon: Icons.favorite_border_rounded,
                 message: l10n.noFavoritesMessage,
                 action: OutlinedButton(
@@ -118,44 +119,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               },
             );
           },
-        ),
-      ),
-    );
-  }
-}
-
-class _CenterMessage extends StatelessWidget {
-  final IconData icon;
-  final String message;
-  final Widget? action;
-
-  const _CenterMessage({required this.icon, required this.message, this.action});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 56,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-            if (action != null) ...[const SizedBox(height: 16), action!],
-          ],
         ),
       ),
     );

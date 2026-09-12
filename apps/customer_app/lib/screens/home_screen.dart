@@ -18,8 +18,8 @@ import '../widgets/home/home_categories_section.dart';
 import '../widgets/home/home_loading_skeleton.dart';
 import '../widgets/home/home_search_bar.dart';
 import '../widgets/home/home_services_section.dart';
-import '../widgets/home/home_state_message.dart';
 import '../widgets/merchant_smart_section.dart';
+import '../widgets/state_message.dart';
 import '../widgets/suspended_account_banner.dart';
 import 'account_screen.dart';
 import 'all_categories_screen.dart';
@@ -421,11 +421,13 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             if (snapshot.hasError) {
-              return HomeStateMessage(
+              return StateMessage(
                 icon: Icons.wifi_off_rounded,
                 message: l10n.homeLoadError,
-                actionLabel: l10n.retry,
-                onAction: _refresh,
+                action: ElevatedButton(
+                  onPressed: _refresh,
+                  child: Text(l10n.retry),
+                ),
               );
             }
 
@@ -457,11 +459,13 @@ class _HomeScreenState extends State<HomeScreen> {
             // حالة فارغة حقيقية واحدة ومميَّزة (لا "قريبًا" مكرَّرة على كل
             // قسم) — تظهر فقط إذا لم يوجد أي محتوى حقيقي إطلاقًا بالصفحة.
             if (!hasAnyContent) {
-              return HomeStateMessage(
+              return StateMessage(
                 icon: Icons.storefront_outlined,
                 message: l10n.homeEmptyMessage(widget.locationName),
-                actionLabel: l10n.retry,
-                onAction: _refresh,
+                action: ElevatedButton(
+                  onPressed: _refresh,
+                  child: Text(l10n.retry),
+                ),
               );
             }
 

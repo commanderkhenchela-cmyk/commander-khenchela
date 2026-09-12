@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../l10n/app_localizations.dart';
 import '../models/address.dart';
 import '../theme/design_tokens.dart';
+import '../widgets/state_message.dart';
 import 'address_form_screen.dart';
 
 /// شاشة "عناويني" — تعرض كل عناوين العميل المحفوظة.
@@ -139,20 +140,12 @@ class _AddressListScreenState extends State<AddressListScreen> {
           }
 
           if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(l10n.addressesLoadError, textAlign: TextAlign.center),
-                    const SizedBox(height: 16),
-                    OutlinedButton(
-                      onPressed: _refresh,
-                      child: Text(l10n.retry),
-                    ),
-                  ],
-                ),
+            return StateMessage(
+              icon: Icons.wifi_off_rounded,
+              message: l10n.addressesLoadError,
+              action: OutlinedButton(
+                onPressed: _refresh,
+                child: Text(l10n.retry),
               ),
             );
           }
@@ -160,22 +153,9 @@ class _AddressListScreenState extends State<AddressListScreen> {
           final addresses = snapshot.data ?? [];
 
           if (addresses.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.location_on_outlined,
-                      size: 56,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(l10n.noAddressesMessage, textAlign: TextAlign.center),
-                  ],
-                ),
-              ),
+            return StateMessage(
+              icon: Icons.location_on_outlined,
+              message: l10n.noAddressesMessage,
             );
           }
 

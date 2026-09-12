@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 /// حالة فارغة موحَّدة لقوائم قابلة لسحب-التحديث (RefreshIndicator) —
-/// أيقونة رمادية خافتة + رسالة، نفس لغة _CenterMessage فـ
-/// favorites_screen.dart، بدل نص وحيد بلا سياق بصري. تُوضَع كعنصر أول
-/// داخل ListView (لا Center/Expanded) حتى يبقى RefreshIndicator فعّالًا
-/// حتى مع قائمة فارغة.
+/// أيقونة رمادية خافتة + رسالة، نفس لغة StateMessage (widgets/
+/// state_message.dart) بصريًا، بدل نص وحيد بلا سياق بصري. تُوضَع كعنصر
+/// أول داخل ListView (لا Center/Expanded) حتى يبقى RefreshIndicator
+/// فعّالًا حتى مع قائمة فارغة — هذا بالضبط ما يميّزها عن StateMessage
+/// (تُوسِّط نفسها Center، تُستخدَم فقط حين لا يوجد RefreshIndicator
+/// محيط أصلًا، مثل حالات الخطأ أو شاشات تفاصيل مفردة).
 class EmptyListMessage extends StatelessWidget {
   final IconData icon;
   final String message;
