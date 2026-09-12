@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/delivery_request_job.dart';
 import '../services/delivery_request_service.dart';
+import '../widgets/state_message.dart';
 
 /// تفاصيل طلب "اطلب أي شيء" مقبول من الموصّل — تُفتح فقط لطلب مقبول
 /// (أو مسلَّم/ملغى) فعليًا، أبدًا لطلب pending فـ المجمع (راجع تعليق
@@ -70,20 +71,12 @@ class _DeliveryRequestJobDetailScreenState
           }
 
           if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('تعذّر تحميل تفاصيل الطلب.'),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: _refresh,
-                      child: const Text('إعادة المحاولة'),
-                    ),
-                  ],
-                ),
+            return StateMessage(
+              icon: Icons.wifi_off_rounded,
+              message: 'تعذّر تحميل تفاصيل الطلب.',
+              action: ElevatedButton(
+                onPressed: _refresh,
+                child: const Text('إعادة المحاولة'),
               ),
             );
           }

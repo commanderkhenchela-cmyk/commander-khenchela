@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/delivery_request_job.dart';
 import '../services/delivery_request_service.dart';
+import '../widgets/empty_list_message.dart';
 import 'delivery_request_job_detail_screen.dart';
 
 /// شاشة "طلبات عامة" (اطلب أي شيء) — نفس هيكل HomeScreen (تبويبان:
@@ -191,17 +192,10 @@ class _RequestsListState extends State<_RequestsList> {
 
           if (snapshot.hasError) {
             return ListView(
-              children: [
-                const SizedBox(height: 80),
-                const Icon(
-                  Icons.wifi_off_rounded,
-                  size: 48,
-                  color: Colors.black45,
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'تعذّر تحميل الطلبات. اسحب للأسفل لإعادة المحاولة.',
-                  textAlign: TextAlign.center,
+              children: const [
+                EmptyListMessage(
+                  icon: Icons.wifi_off_rounded,
+                  message: 'تعذّر تحميل الطلبات. اسحب للأسفل لإعادة المحاولة.',
                 ),
               ],
             );
@@ -212,8 +206,10 @@ class _RequestsListState extends State<_RequestsList> {
           if (requests.isEmpty) {
             return ListView(
               children: [
-                const SizedBox(height: 80),
-                Text(widget.emptyMessage, textAlign: TextAlign.center),
+                EmptyListMessage(
+                  icon: Icons.local_shipping_outlined,
+                  message: widget.emptyMessage,
+                ),
               ],
             );
           }

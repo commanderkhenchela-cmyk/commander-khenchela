@@ -10,6 +10,7 @@ import '../services/driver_service.dart';
 import '../services/location_service.dart';
 import '../services/order_service.dart';
 import '../utils/distance.dart';
+import '../widgets/empty_list_message.dart';
 import '../widgets/suspended_account_banner.dart';
 import 'account_screen.dart';
 import 'delivery_requests_home_screen.dart';
@@ -492,17 +493,10 @@ class _JobsListState extends State<_JobsList> {
 
           if (snapshot.hasError) {
             return ListView(
-              children: [
-                const SizedBox(height: 80),
-                const Icon(
-                  Icons.wifi_off_rounded,
-                  size: 48,
-                  color: Colors.black45,
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'تعذّر تحميل الطلبات. اسحب للأسفل لإعادة المحاولة.',
-                  textAlign: TextAlign.center,
+              children: const [
+                EmptyListMessage(
+                  icon: Icons.wifi_off_rounded,
+                  message: 'تعذّر تحميل الطلبات. اسحب للأسفل لإعادة المحاولة.',
                 ),
               ],
             );
@@ -513,8 +507,10 @@ class _JobsListState extends State<_JobsList> {
           if (jobs.isEmpty) {
             return ListView(
               children: [
-                const SizedBox(height: 80),
-                Text(widget.emptyMessage, textAlign: TextAlign.center),
+                EmptyListMessage(
+                  icon: Icons.receipt_long_outlined,
+                  message: widget.emptyMessage,
+                ),
               ],
             );
           }

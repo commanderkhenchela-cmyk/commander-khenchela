@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/notification_item.dart';
+import '../widgets/state_message.dart';
 
 /// شاشة "إشعاراتي" — نفس شاشة تطبيق الزبون حرفيًا (نموذج البيانات
 /// وطريقة الجلب متطابقان)، تُملأ من طرف شبكة الإشعارات (المرحلتان 0
@@ -62,33 +63,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           }
 
           if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.wifi_off_rounded,
-                      size: 48,
-                      color: Colors.black45,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'تعذّر تحميل الإشعارات. تحقق من اتصالك بالإنترنت.',
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _notificationsFuture = _fetchNotifications();
-                        });
-                      },
-                      child: const Text('إعادة المحاولة'),
-                    ),
-                  ],
-                ),
+            return StateMessage(
+              icon: Icons.wifi_off_rounded,
+              message: 'تعذّر تحميل الإشعارات. تحقق من اتصالك بالإنترنت.',
+              action: ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _notificationsFuture = _fetchNotifications();
+                  });
+                },
+                child: const Text('إعادة المحاولة'),
               ),
             );
           }
@@ -96,14 +80,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           final notifications = snapshot.data ?? [];
 
           if (notifications.isEmpty) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'لا توجد إشعارات بعد.',
-                  textAlign: TextAlign.center,
-                ),
-              ),
+            return const StateMessage(
+              icon: Icons.notifications_none_rounded,
+              message: 'لا توجد إشعارات بعد.',
             );
           }
 

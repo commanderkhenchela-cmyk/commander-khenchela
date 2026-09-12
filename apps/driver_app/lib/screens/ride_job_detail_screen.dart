@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/ride_job.dart';
 import '../services/ride_request_service.dart';
+import '../widgets/state_message.dart';
 
 /// تفاصيل رحلة Taxi واحدة من منظور الموصّل — زر واحد مطابق للحالة
 /// الحالية بالضبط، نفس فلسفة JobDetailScreen: pending -> "قبول"،
@@ -91,20 +92,12 @@ class _RideJobDetailScreenState extends State<RideJobDetailScreen> {
           }
 
           if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('تعذّر تحميل تفاصيل الرحلة.'),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: _refresh,
-                      child: const Text('إعادة المحاولة'),
-                    ),
-                  ],
-                ),
+            return StateMessage(
+              icon: Icons.wifi_off_rounded,
+              message: 'تعذّر تحميل تفاصيل الرحلة.',
+              action: ElevatedButton(
+                onPressed: _refresh,
+                child: const Text('إعادة المحاولة'),
               ),
             );
           }

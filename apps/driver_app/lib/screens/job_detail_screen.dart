@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/job_order.dart';
 import '../services/order_service.dart';
+import '../widgets/state_message.dart';
 
 /// تفاصيل طلبية واحدة من منظور الموصّل: معلومات المحل (الاستلام)،
 /// معلومات العميل (التسليم)، المبلغ الإجمالي وحالة الدفع (Cash on
@@ -90,20 +91,12 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
           }
 
           if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('تعذّر تحميل تفاصيل الطلب.'),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: _refresh,
-                      child: const Text('إعادة المحاولة'),
-                    ),
-                  ],
-                ),
+            return StateMessage(
+              icon: Icons.wifi_off_rounded,
+              message: 'تعذّر تحميل تفاصيل الطلب.',
+              action: ElevatedButton(
+                onPressed: _refresh,
+                child: const Text('إعادة المحاولة'),
               ),
             );
           }
