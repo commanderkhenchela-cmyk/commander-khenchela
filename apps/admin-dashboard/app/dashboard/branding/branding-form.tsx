@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
+import { compressImage } from "@/lib/compress-image";
 import type { AppBranding } from "@/lib/types";
 
 const MAX_LOGO_BYTES = 2 * 1024 * 1024; // 2 ميغابايت — الشعار ملف صغير
@@ -53,12 +54,13 @@ export default function BrandingForm({ branding }: { branding: AppBranding }) {
     let logoUrl = branding.logo_url;
 
     if (logoFile) {
-      const ext = logoFile.name.split(".").pop() ?? "png";
+      const uploadFile = await compressImage(logoFile, { maxDimension: 512 });
+      const ext = uploadFile.name.split(".").pop() ?? "png";
       const path = `logo-${Date.now()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("branding-assets")
-        .upload(path, logoFile, { upsert: true });
+        .upload(path, uploadFile, { upsert: true });
 
       if (uploadError) {
         setError("تعذّر رفع الشعار.");

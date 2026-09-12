@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
+import { compressImage } from "@/lib/compress-image";
 import type { Merchant } from "@/lib/types";
 import { FieldError } from "@/components/ui/input";
 import { PictureIcon } from "@/components/ui/icons";
@@ -32,12 +33,13 @@ export default function StoreImagesForm({ merchant }: { merchant: Merchant }) {
     setUploading(kind);
 
     const supabase = createClient();
-    const ext = file.name.split(".").pop() ?? "jpg";
+    const uploadFile = await compressImage(file);
+    const ext = uploadFile.name.split(".").pop() ?? "jpg";
     const path = `${merchant.id}/${kind}-${Date.now()}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from("merchant-images")
-      .upload(path, file, { upsert: true });
+      .upload(path, uploadFile, { upsert: true });
 
     if (uploadError) {
       setError("تعذّر رفع الصورة.");

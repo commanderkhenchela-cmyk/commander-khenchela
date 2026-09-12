@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { compressImage } from "@/lib/compress-image";
 import type { Advertisement } from "@/lib/types";
 
 const MAX_VIDEO_BYTES = 50 * 1024 * 1024; // 50 ميغابايت — نفس حد الـ Storage bucket
@@ -59,12 +60,15 @@ export default function AdForm({ ad }: { ad?: Advertisement }) {
 
   async function uploadToAdMedia(file: File, prefix: string) {
     const supabase = createClient();
-    const ext = file.name.split(".").pop() ?? "bin";
+    // لا تأثير على الفيديو (compressImage تتجاهل أي ملف ليس صورة) —
+    // فقط الصورة المصغّرة تُضغَط فعليًا هنا.
+    const uploadFile = await compressImage(file, { maxDimension: 800 });
+    const ext = uploadFile.name.split(".").pop() ?? "bin";
     const path = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from("ad-media")
-      .upload(path, file);
+      .upload(path, uploadFile);
 
     if (uploadError) throw uploadError;
 

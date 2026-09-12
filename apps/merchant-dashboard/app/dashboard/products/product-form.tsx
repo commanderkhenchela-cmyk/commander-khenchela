@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
+import { compressImage } from "@/lib/compress-image";
 import type { Category, Product } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label, Select, Textarea } from "@/components/ui/input";
@@ -65,12 +66,13 @@ export default function ProductForm({
   ): Promise<string | null> {
     if (!imageFile) return null;
 
-    const ext = imageFile.name.split(".").pop() ?? "jpg";
+    const uploadFile = await compressImage(imageFile);
+    const ext = uploadFile.name.split(".").pop() ?? "jpg";
     const path = `${merchantId}/${productId}-${Date.now()}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from("product-images")
-      .upload(path, imageFile, { upsert: true });
+      .upload(path, uploadFile, { upsert: true });
 
     if (uploadError) {
       throw new Error("تعذّر رفع الصورة");
