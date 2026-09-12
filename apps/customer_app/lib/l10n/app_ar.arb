@@ -831,5 +831,12 @@
   "deliveryRequestSendDescriptionHint": "مثال: طرد صغير، كيس ملابس، ظرف مستندات...",
   "@deliveryRequestSendDescriptionHint": {"description": "نص توضيحي داخل حقل وصف الغرض المُرسَل"},
   "deliveryRequestEmptyDestinationError": "حدّد وجهة التسليم أولًا.",
-  "@deliveryRequestEmptyDestinationError": {"description": "رسالة خطأ create_delivery_request: وجهة التسليم فارغة فـ وضع الإرسال"}
+  "@deliveryRequestEmptyDestinationError": {"description": "رسالة خطأ create_delivery_request: وجهة التسليم فارغة فـ وضع الإرسال"},
+
+  "muteAdTooltip": "كتم الصوت",
+  "@muteAdTooltip": {"description": "تلميح زر كتم صوت إعلان الفيديو (يظهر حين يكون الصوت مفعَّلًا حاليًا)"},
+  "unmuteAdTooltip": "إلغاء كتم الصوت",
+  "@unmuteAdTooltip": {"description": "تلميح زر إلغاء كتم صوت إعلان الفيديو (يظهر حين يكون الصوت مكتومًا حاليًا)"},
+  "removeRecentSearchTooltip": "إزالة من عمليات البحث الأخيرة",
+  "@removeRecentSearchTooltip": {"description": "تلميح زر إزالة عبارة بحث واحدة من قائمة البحث الأخيرة"}
 }

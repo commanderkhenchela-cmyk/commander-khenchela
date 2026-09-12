@@ -347,5 +347,9 @@
   "deliveryRequestDestinationLabel": "Destination de la livraison",
   "deliveryRequestDestinationHint": "Nom, adresse et numéro de téléphone du destinataire",
   "deliveryRequestSendDescriptionHint": "ex. : un petit colis, un sac de vêtements, une enveloppe de documents...",
-  "deliveryRequestEmptyDestinationError": "Précisez d'abord la destination de la livraison."
+  "deliveryRequestEmptyDestinationError": "Précisez d'abord la destination de la livraison.",
+
+  "muteAdTooltip": "Couper le son",
+  "unmuteAdTooltip": "Rétablir le son",
+  "removeRecentSearchTooltip": "Retirer des recherches récentes"
 }

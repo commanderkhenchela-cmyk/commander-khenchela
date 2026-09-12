@@ -608,12 +608,15 @@ class _SearchChip extends StatelessWidget {
             Text(label),
             if (onDismiss != null) ...[
               const SizedBox(width: AppSpacing.xs),
-              InkWell(
-                onTap: onDismiss,
-                child: Icon(
-                  Icons.close_rounded,
-                  size: 16,
-                  color: theme.colorScheme.muted,
+              Tooltip(
+                message: AppLocalizations.of(context).removeRecentSearchTooltip,
+                child: InkWell(
+                  onTap: onDismiss,
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 16,
+                    color: theme.colorScheme.muted,
+                  ),
                 ),
               ),
             ],

@@ -347,5 +347,9 @@
   "deliveryRequestDestinationLabel": "Delivery destination",
   "deliveryRequestDestinationHint": "Recipient's name, address, and phone number",
   "deliveryRequestSendDescriptionHint": "e.g. a small package, a bag of clothes, a document envelope...",
-  "deliveryRequestEmptyDestinationError": "Specify the delivery destination first."
+  "deliveryRequestEmptyDestinationError": "Specify the delivery destination first.",
+
+  "muteAdTooltip": "Mute",
+  "unmuteAdTooltip": "Unmute",
+  "removeRecentSearchTooltip": "Remove from recent searches"
 }

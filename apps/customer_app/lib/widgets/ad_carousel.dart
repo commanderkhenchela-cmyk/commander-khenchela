@@ -382,6 +382,9 @@ class _AdVideoPageState extends State<_AdVideoPage>
                 icon: _muted
                     ? Icons.volume_off_rounded
                     : Icons.volume_up_rounded,
+                tooltip: _muted
+                    ? AppLocalizations.of(context).unmuteAdTooltip
+                    : AppLocalizations.of(context).muteAdTooltip,
                 onTap: _toggleMute,
               ),
             ),
@@ -422,21 +425,29 @@ class _CtaButton extends StatelessWidget {
 
 class _IconChip extends StatelessWidget {
   final IconData icon;
+  final String tooltip;
   final VoidCallback onTap;
 
-  const _IconChip({required this.icon, required this.onTap});
+  const _IconChip({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.black45,
-      shape: const CircleBorder(),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Padding(
-          padding: const EdgeInsets.all(7),
-          child: Icon(icon, color: Colors.white, size: 16),
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.black45,
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: Padding(
+            padding: const EdgeInsets.all(7),
+            child: Icon(icon, color: Colors.white, size: 16),
+          ),
         ),
       ),
     );

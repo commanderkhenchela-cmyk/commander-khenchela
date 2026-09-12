@@ -452,6 +452,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
               if (phone != null)
                 IconButton(
                   icon: const Icon(Icons.call_outlined),
+                  tooltip: l10n.callLabel,
                   onPressed: () => _call(phone),
                 ),
             ],
