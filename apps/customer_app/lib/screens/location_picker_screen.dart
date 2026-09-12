@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/location_service.dart';
+import '../theme/design_tokens.dart';
 
 /// مركز خنشلة تقريبيًا — نقطة بداية افتراضية بحتة (لا معنى دقيق لها)
 /// تُستخدَم فقط حين لا نملك أي إحداثية أخرى (لا عنوان قائم يُعدَّل، ولا
@@ -106,7 +107,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
               top: 16,
               child: Card(
                 child: Padding(
-                  padding: EdgeInsets.all(8),
+                  padding: EdgeInsets.all(AppSpacing.sm),
                   child: SizedBox(
                     width: 20,
                     height: 20,

@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/ride_request.dart';
+import '../theme/design_tokens.dart';
 import '../utils/distance.dart';
 import '../widgets/live_tracking_map.dart';
 import '../widgets/rating_badge.dart';
@@ -300,7 +301,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
     if (markers.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
       child: LiveTrackingMap(markers: markers),
     );
   }
@@ -353,10 +354,10 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
     final ratingAvg = (row['rating_avg'] as num?)?.toDouble() ?? 0;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Row(
             children: [
               CircleAvatar(
@@ -402,7 +403,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
                       ),
                     if (etaText != null)
                       Padding(
-                        padding: const EdgeInsets.only(top: 4),
+                        padding: const EdgeInsets.only(top: AppSpacing.xs),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -424,7 +425,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
                       ),
                     if (plateNumber != null && plateNumber.isNotEmpty)
                       Container(
-                        margin: const EdgeInsets.only(top: 4),
+                        margin: const EdgeInsets.only(top: AppSpacing.xs),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 2,
@@ -477,10 +478,10 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
     if (!ride.canBeReviewed) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: review == null
               ? Row(
                   children: [
@@ -547,7 +548,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
                 ride.status == 'accepted' || ride.status == 'in_progress';
 
             return ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -556,7 +557,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
                   ),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: AppRadius.pillAll,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -581,7 +582,7 @@ class _RideDetailScreenState extends State<RideDetailScreen> {
                 _buildReviewSection(theme, ride, review, l10n),
                 Card(
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
