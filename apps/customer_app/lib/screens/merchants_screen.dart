@@ -17,11 +17,6 @@ import '../widgets/state_message.dart';
 import 'account_screen.dart';
 import 'merchant_products_screen.dart';
 
-const _merchantColumns =
-    'id, store_name, phone, communes(name), latitude, longitude, '
-    'logo_url, cover_url, rating_avg, rating_count, is_open, status_overridden_at, '
-    'merchant_business_hours(day_of_week, open_time, close_time, is_closed)';
-
 /// شاشة قائمة المحلات — تُفتح من HomeScreen أو AllCategoriesScreen، إما
 /// لتصنيف محدَّد (categoryId) أو لكل المحلات (categoryId = null، بطاقة
 /// "كل المحلات"). تجلب فقط المحلات الموافَق عليها من طرف Admin
@@ -134,7 +129,7 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
       final client = Supabase.instance.client;
       var query = client
           .from('merchants')
-          .select(_merchantColumns)
+          .select(Merchant.selectColumns)
           .eq('status', 'approved');
       if (widget.categoryId != null) {
         query = query.eq('category_id', widget.categoryId!);
@@ -192,7 +187,7 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
 
     final featuredFuture = client
         .from('merchants')
-        .select(_merchantColumns)
+        .select(Merchant.selectColumns)
         .eq('status', 'approved')
         .eq('category_id', categoryId)
         .eq('is_featured', true)
@@ -201,7 +196,7 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
 
     final topOrderedFuture = client
         .from('merchants')
-        .select(_merchantColumns)
+        .select(Merchant.selectColumns)
         .eq('status', 'approved')
         .eq('category_id', categoryId)
         .gt('orders_count', 0)
@@ -210,7 +205,7 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
 
     final newestFuture = client
         .from('merchants')
-        .select(_merchantColumns)
+        .select(Merchant.selectColumns)
         .eq('status', 'approved')
         .eq('category_id', categoryId)
         .order('created_at', ascending: false)
@@ -223,7 +218,7 @@ class _MerchantsScreenState extends State<MerchantsScreen> {
     // بيانات خنشلة الحالي بدل تحميل التصنيف كاملًا لأجل هذين القسمين.
     final poolFuture = client
         .from('merchants')
-        .select(_merchantColumns)
+        .select(Merchant.selectColumns)
         .eq('status', 'approved')
         .eq('category_id', categoryId)
         .order('store_name')

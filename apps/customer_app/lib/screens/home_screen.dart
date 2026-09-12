@@ -78,11 +78,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<_HomeData> _fetchHomeData() async {
     final client = Supabase.instance.client;
-    const merchantColumns =
-        'id, store_name, phone, communes(name), latitude, longitude, '
-        'logo_url, cover_url, rating_avg, rating_count, is_open, status_overridden_at, '
-        'merchant_business_hours(day_of_week, open_time, close_time, is_closed)';
-
     final sectionsFuture = client
         .from('home_sections')
         .select('id, section_key, title, sort_order')
@@ -119,7 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final featuredFuture = client
         .from('merchants')
-        .select(merchantColumns)
+        .select(Merchant.selectColumns)
         .eq('status', 'approved')
         .eq('is_featured', true)
         .order('store_name')
@@ -127,14 +122,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final newestFuture = client
         .from('merchants')
-        .select(merchantColumns)
+        .select(Merchant.selectColumns)
         .eq('status', 'approved')
         .order('created_at', ascending: false)
         .limit(10);
 
     final topOrderedFuture = client
         .from('merchants')
-        .select(merchantColumns)
+        .select(Merchant.selectColumns)
         .eq('status', 'approved')
         .gt('orders_count', 0)
         .order('orders_count', ascending: false)
@@ -142,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final mostViewedFuture = client
         .from('merchants')
-        .select(merchantColumns)
+        .select(Merchant.selectColumns)
         .eq('status', 'approved')
         .gt('views_count', 0)
         .order('views_count', ascending: false)
@@ -155,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // بقية الشاشات)، ويمنع جلب كل جدول المحلات لمجرّد إيجاد الأقرب.
     final nearbyPoolFuture = client
         .from('merchants')
-        .select(merchantColumns)
+        .select(Merchant.selectColumns)
         .eq('status', 'approved')
         .not('latitude', 'is', null)
         .limit(60);

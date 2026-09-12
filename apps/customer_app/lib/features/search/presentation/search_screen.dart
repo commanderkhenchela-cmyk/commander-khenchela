@@ -119,14 +119,9 @@ class _SearchScreenState extends State<SearchScreen> {
   Future<_SearchResults> _search(String query) async {
     final client = Supabase.instance.client;
     final pattern = '%$query%';
-    const merchantColumns =
-        'id, store_name, phone, communes(name), latitude, longitude, '
-        'logo_url, cover_url, rating_avg, rating_count, is_open, status_overridden_at, '
-        'merchant_business_hours(day_of_week, open_time, close_time, is_closed)';
-
     final merchantsFuture = client
         .from('merchants')
-        .select(merchantColumns)
+        .select(Merchant.selectColumns)
         .eq('status', 'approved')
         .ilike('store_name', pattern)
         .order('store_name')

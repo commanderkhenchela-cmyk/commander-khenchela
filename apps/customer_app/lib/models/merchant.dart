@@ -17,6 +17,16 @@ class Merchant {
   final bool isManuallyOpen;
   final DateTime? statusOverriddenAt;
 
+  /// سلسلة أعمدة select() الموحَّدة لبناء كائن Merchant كامل (تشمل
+  /// merchant_business_hours لحساب isOpenNow) — كانت مكرَّرة حرفيًا فـ 4
+  /// شاشات (merchants_screen، home_screen، search_screen،
+  /// favorites_screen)، الآن مصدر واحد يمنع تباعدها بصمت عند تعديل
+  /// مستقبلي فـ شاشة واحدة فقط.
+  static const selectColumns =
+      'id, store_name, phone, communes(name), latitude, longitude, '
+      'logo_url, cover_url, rating_avg, rating_count, is_open, status_overridden_at, '
+      'merchant_business_hours(day_of_week, open_time, close_time, is_closed)';
+
   const Merchant({
     required this.id,
     required this.storeName,
