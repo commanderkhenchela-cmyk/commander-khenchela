@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -106,11 +108,37 @@ class _RequestsList extends StatefulWidget {
 class _RequestsListState extends State<_RequestsList> {
   late Future<List<DeliveryRequestJob>> _future;
   bool _isAccepting = false;
+  RealtimeChannel? _channel;
 
   @override
   void initState() {
     super.initState();
     _future = widget.fetcher();
+    _subscribeToChanges();
+  }
+
+  /// بلا أي filter عمدًا — نفس منطق _JobsListState فـ home_screen.dart
+  /// بالحرف (delivery_requests جدول مجمّع، وRLS هي من تحصر الرؤية فعليًا).
+  void _subscribeToChanges() {
+    _channel = Supabase.instance.client
+        .channel('driver-delivery-requests-${widget.available}')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'delivery_requests',
+          callback: (_) {
+            if (mounted) unawaited(_refresh());
+          },
+        )
+        .subscribe();
+  }
+
+  @override
+  void dispose() {
+    if (_channel != null) {
+      Supabase.instance.client.removeChannel(_channel!);
+    }
+    super.dispose();
   }
 
   Future<void> _refresh() async {

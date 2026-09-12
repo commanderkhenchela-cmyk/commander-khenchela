@@ -384,6 +384,7 @@ class _JobsList extends StatefulWidget {
 class _JobsListState extends State<_JobsList> {
   late Future<List<JobOrder>> _future;
   Position? _currentPosition;
+  RealtimeChannel? _channel;
 
   @override
   void initState() {
@@ -398,6 +399,33 @@ class _JobsListState extends State<_JobsList> {
         }),
       );
     }
+    _subscribeToChanges();
+  }
+
+  /// بلا أي filter عمدًا — orders جدول مجمّع (يراه كل الموصّلين
+  /// المعتمَدين)، وRLS (orders_select_driver_pool/orders_select_driver_own)
+  /// هي من تحصر فعليًا أي صفّ يصل هذا الجهاز؛ نفس مبدأ كل استماعات
+  /// المشروع: إعادة جلب صريحة عند أي حدث بدل الثقة بشكل payload مباشرة.
+  void _subscribeToChanges() {
+    _channel = Supabase.instance.client
+        .channel('driver-orders-${widget.claimable}')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'orders',
+          callback: (_) {
+            if (mounted) unawaited(_refresh());
+          },
+        )
+        .subscribe();
+  }
+
+  @override
+  void dispose() {
+    if (_channel != null) {
+      Supabase.instance.client.removeChannel(_channel!);
+    }
+    super.dispose();
   }
 
   Future<void> _refresh() async {
