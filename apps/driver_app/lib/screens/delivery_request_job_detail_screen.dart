@@ -9,6 +9,7 @@ import '../services/delivery_request_service.dart';
 import '../services/location_service.dart';
 import '../widgets/live_tracking_map.dart';
 import '../widgets/navigate_button.dart';
+import '../widgets/section_card.dart';
 import '../widgets/state_message.dart';
 
 /// تفاصيل طلب "اطلب أي شيء" مقبول من الموصّل — تُفتح فقط لطلب مقبول
@@ -179,13 +180,13 @@ class _DeliveryRequestJobDetailScreenState
               if (request.status == 'accepted') _buildMap(request),
               _TypeBadge(request: request),
               const SizedBox(height: 12),
-              _SectionCard(
+              SectionCard(
                 icon: Icons.description_outlined,
                 title: 'ماذا يريد العميل',
                 lines: [request.description],
               ),
               const SizedBox(height: 12),
-              _SectionCard(
+              SectionCard(
                 icon: Icons.person_pin_circle_rounded,
                 title: request.isSend ? 'نقطة الاستلام من العميل' : 'التسليم للعميل',
                 lines: [
@@ -209,7 +210,7 @@ class _DeliveryRequestJobDetailScreenState
               ),
               if (request.isSend && request.destinationText != null) ...[
                 const SizedBox(height: 12),
-                _SectionCard(
+                SectionCard(
                   icon: Icons.call_made_rounded,
                   title: 'الوجهة (إلى من/أين يُرسَل)',
                   lines: [request.destinationText!],
@@ -294,45 +295,6 @@ class _TypeBadge extends StatelessWidget {
               DeliveryRequestJob.requestTypeLabel(request.requestType),
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SectionCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final List<String> lines;
-  final Widget? action;
-
-  const _SectionCard({
-    required this.icon,
-    required this.title,
-    required this.lines,
-    this.action,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: theme.colorScheme.primary, size: 20),
-                const SizedBox(width: 8),
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-              ],
-            ),
-            const SizedBox(height: 8),
-            for (final line in lines) Text(line),
-            if (action != null) ...[const SizedBox(height: 10), action!],
           ],
         ),
       ),

@@ -9,6 +9,7 @@ import '../services/location_service.dart';
 import '../services/ride_request_service.dart';
 import '../widgets/live_tracking_map.dart';
 import '../widgets/navigate_button.dart';
+import '../widgets/section_card.dart';
 import '../widgets/state_message.dart';
 
 /// تفاصيل رحلة Taxi واحدة من منظور الموصّل — زر واحد مطابق للحالة
@@ -214,7 +215,7 @@ class _RideJobDetailScreenState extends State<RideJobDetailScreen> {
             children: [
               if (ride.status == 'accepted' || ride.status == 'in_progress')
                 _buildMap(ride),
-              _SectionCard(
+              SectionCard(
                 icon: Icons.trip_origin_rounded,
                 title: 'نقطة الانطلاق',
                 lines: [
@@ -235,7 +236,7 @@ class _RideJobDetailScreenState extends State<RideJobDetailScreen> {
                     : null,
               ),
               const SizedBox(height: 12),
-              _SectionCard(
+              SectionCard(
                 icon: Icons.location_on_rounded,
                 title: 'الوجهة',
                 lines: [
@@ -316,46 +317,6 @@ class _RideJobDetailScreenState extends State<RideJobDetailScreen> {
     );
   }
 }
-
-class _SectionCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final List<String> lines;
-  final Widget? action;
-
-  const _SectionCard({
-    required this.icon,
-    required this.title,
-    required this.lines,
-    this.action,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: theme.colorScheme.primary, size: 20),
-                const SizedBox(width: 8),
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-              ],
-            ),
-            const SizedBox(height: 8),
-            for (final line in lines) Text(line),
-            if (action != null) ...[const SizedBox(height: 10), action!],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _ActionButton extends StatelessWidget {
   final String status;
   final bool isSubmitting;

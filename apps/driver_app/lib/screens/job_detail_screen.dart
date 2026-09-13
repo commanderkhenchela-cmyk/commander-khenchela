@@ -9,6 +9,7 @@ import '../services/location_service.dart';
 import '../services/order_service.dart';
 import '../widgets/live_tracking_map.dart';
 import '../widgets/navigate_button.dart';
+import '../widgets/section_card.dart';
 import '../widgets/state_message.dart';
 
 /// تفاصيل طلبية واحدة من منظور الموصّل: معلومات المحل (الاستلام)،
@@ -214,7 +215,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   order.status == 'picked_up' ||
                   order.status == 'out_for_delivery')
                 _buildMap(detail),
-              _SectionCard(
+              SectionCard(
                 icon: Icons.storefront_rounded,
                 title: 'الاستلام من المحل',
                 lines: [
@@ -234,7 +235,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     : null,
               ),
               const SizedBox(height: 12),
-              _SectionCard(
+              SectionCard(
                 icon: Icons.person_pin_circle_rounded,
                 title: 'التسليم للعميل',
                 lines: [
@@ -253,7 +254,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     : null,
               ),
               const SizedBox(height: 12),
-              _SectionCard(
+              SectionCard(
                 icon: Icons.receipt_long_rounded,
                 title: 'الطلب',
                 lines: [
@@ -325,49 +326,6 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     );
   }
 }
-
-class _SectionCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final List<String> lines;
-  final Widget? action;
-
-  const _SectionCard({
-    required this.icon,
-    required this.title,
-    required this.lines,
-    this.action,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: theme.colorScheme.primary, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            for (final line in lines) Text(line),
-            if (action != null) ...[const SizedBox(height: 10), action!],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _ActionButton extends StatelessWidget {
   final String status;
   final bool isSubmitting;
