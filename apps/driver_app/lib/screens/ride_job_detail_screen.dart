@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/ride_job.dart';
+import '../services/location_service.dart';
 import '../services/ride_request_service.dart';
+import '../widgets/live_tracking_map.dart';
 import '../widgets/navigate_button.dart';
 import '../widgets/state_message.dart';
 
@@ -23,14 +28,70 @@ class _RideJobDetailScreenState extends State<RideJobDetailScreen> {
   late Future<RideJob> _future;
   bool _isSubmitting = false;
 
+  // خريطة تتبّع مصغّرة: موقع الموصّل الحيّ (GPS محلي مباشر، بلا عبور
+  // قاعدة البيانات — نفس فلسفة LocationService: لا استثناء أبدًا) + نقطتا
+  // الانطلاق/الوجهة. تعمل فقط أثناء accepted/in_progress، مطابقةً لشرط
+  // NavigateButton، ونفس شرط showDriverTracking فـ ride_detail_screen.dart
+  // (customer_app) بالحرف.
+  Timer? _locationTimer;
+  double? _selfLat;
+  double? _selfLng;
+
   @override
   void initState() {
     super.initState();
-    _future = RideRequestService.fetchDetail(widget.requestId);
+    _future = RideRequestService.fetchDetail(widget.requestId).then((data) {
+      _syncLocationTimer(data.status);
+      return data;
+    });
+  }
+
+  @override
+  void dispose() {
+    _locationTimer?.cancel();
+    super.dispose();
+  }
+
+  void _syncLocationTimer(String status) {
+    final active = status == 'accepted' || status == 'in_progress';
+    if (!active) {
+      _locationTimer?.cancel();
+      _locationTimer = null;
+      return;
+    }
+    if (_locationTimer != null) return;
+
+    _locationTimer = Timer.periodic(const Duration(seconds: 15), (_) async {
+      final position = await LocationService.getCurrentPosition();
+      if (position == null || !mounted) return;
+      setState(() {
+        _selfLat = position.latitude;
+        _selfLng = position.longitude;
+      });
+    });
+
+    // نبضة فورية عند بدء التتبّع، بدل انتظار أول 15 ثانية.
+    unawaited(_pingSelfLocationOnce());
+  }
+
+  Future<void> _pingSelfLocationOnce() async {
+    final position = await LocationService.getCurrentPosition();
+    if (position == null || !mounted) return;
+    setState(() {
+      _selfLat = position.latitude;
+      _selfLng = position.longitude;
+    });
   }
 
   Future<void> _refresh() async {
-    setState(() => _future = RideRequestService.fetchDetail(widget.requestId));
+    setState(
+      () => _future = RideRequestService.fetchDetail(widget.requestId).then((
+        data,
+      ) {
+        _syncLocationTimer(data.status);
+        return data;
+      }),
+    );
   }
 
   String _friendlyError(Object e, String fallback) {
@@ -81,6 +142,49 @@ class _RideJobDetailScreenState extends State<RideJobDetailScreen> {
   Future<void> _complete() =>
       _run(RideRequestService.complete, 'تعذّر إنهاء الرحلة.');
 
+  /// خريطة مصغّرة بنقطتي الانطلاق/الوجهة + موقع الموصّل الحيّ إن توفّر —
+  /// تبقى فارغة (لا شيء) بصمت إن لم تتوفر أي إحداثية إطلاقًا، نفس فلسفة
+  /// NavigateButton. نسخة خاصة بهذه الشاشة، نفس نمط _buildMap فـ
+  /// ride_detail_screen.dart (customer_app) بالحرف.
+  Widget _buildMap(RideJob ride) {
+    final markers = <TrackingMarker>[];
+
+    if (ride.pickupLat != null && ride.pickupLng != null) {
+      markers.add(
+        TrackingMarker(
+          point: LatLng(ride.pickupLat!, ride.pickupLng!),
+          icon: Icons.trip_origin_rounded,
+          color: Colors.green.shade700,
+        ),
+      );
+    }
+    if (ride.dropoffLat != null && ride.dropoffLng != null) {
+      markers.add(
+        TrackingMarker(
+          point: LatLng(ride.dropoffLat!, ride.dropoffLng!),
+          icon: Icons.location_on_rounded,
+          color: Colors.red.shade700,
+        ),
+      );
+    }
+    if (_selfLat != null && _selfLng != null) {
+      markers.add(
+        TrackingMarker(
+          point: LatLng(_selfLat!, _selfLng!),
+          icon: Icons.my_location_rounded,
+          color: Colors.blue.shade700,
+        ),
+      );
+    }
+
+    if (markers.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: LiveTrackingMap(markers: markers),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -108,6 +212,8 @@ class _RideJobDetailScreenState extends State<RideJobDetailScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              if (ride.status == 'accepted' || ride.status == 'in_progress')
+                _buildMap(ride),
               _SectionCard(
                 icon: Icons.trip_origin_rounded,
                 title: 'نقطة الانطلاق',

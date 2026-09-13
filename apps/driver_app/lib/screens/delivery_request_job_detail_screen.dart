@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/delivery_request_job.dart';
 import '../services/delivery_request_service.dart';
+import '../services/location_service.dart';
+import '../widgets/live_tracking_map.dart';
 import '../widgets/navigate_button.dart';
 import '../widgets/state_message.dart';
 
@@ -25,15 +30,67 @@ class _DeliveryRequestJobDetailScreenState
   late Future<DeliveryRequestJob> _future;
   bool _isSubmitting = false;
 
+  // خريطة تتبّع مصغّرة: موقع الموصّل الحيّ (GPS محلي مباشر) + عنوان
+  // الاستلام/التسليم — راجع تعليق مماثل فـ ride_job_detail_screen.dart
+  // لتفاصيل الفلسفة.
+  Timer? _locationTimer;
+  double? _selfLat;
+  double? _selfLng;
+
   @override
   void initState() {
     super.initState();
-    _future = DeliveryRequestService.fetchDetail(widget.requestId);
+    _future = DeliveryRequestService.fetchDetail(widget.requestId).then((
+      data,
+    ) {
+      _syncLocationTimer(data.status);
+      return data;
+    });
+  }
+
+  @override
+  void dispose() {
+    _locationTimer?.cancel();
+    super.dispose();
+  }
+
+  void _syncLocationTimer(String status) {
+    final active = status == 'accepted';
+    if (!active) {
+      _locationTimer?.cancel();
+      _locationTimer = null;
+      return;
+    }
+    if (_locationTimer != null) return;
+
+    _locationTimer = Timer.periodic(const Duration(seconds: 15), (_) async {
+      final position = await LocationService.getCurrentPosition();
+      if (position == null || !mounted) return;
+      setState(() {
+        _selfLat = position.latitude;
+        _selfLng = position.longitude;
+      });
+    });
+
+    unawaited(_pingSelfLocationOnce());
+  }
+
+  Future<void> _pingSelfLocationOnce() async {
+    final position = await LocationService.getCurrentPosition();
+    if (position == null || !mounted) return;
+    setState(() {
+      _selfLat = position.latitude;
+      _selfLng = position.longitude;
+    });
   }
 
   Future<void> _refresh() async {
     setState(
-      () => _future = DeliveryRequestService.fetchDetail(widget.requestId),
+      () => _future = DeliveryRequestService.fetchDetail(widget.requestId)
+          .then((data) {
+            _syncLocationTimer(data.status);
+            return data;
+          }),
     );
   }
 
@@ -58,6 +115,38 @@ class _DeliveryRequestJobDetailScreenState
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+
+  /// خريطة مصغّرة بعنوان الاستلام/التسليم + موقع الموصّل الحيّ إن توفّر —
+  /// نفس نمط _buildMap فـ ride_job_detail_screen.dart بالحرف.
+  Widget _buildMap(DeliveryRequestJob request) {
+    final markers = <TrackingMarker>[];
+
+    if (request.addressLat != null && request.addressLng != null) {
+      markers.add(
+        TrackingMarker(
+          point: LatLng(request.addressLat!, request.addressLng!),
+          icon: Icons.location_on_rounded,
+          color: Colors.red.shade700,
+        ),
+      );
+    }
+    if (_selfLat != null && _selfLng != null) {
+      markers.add(
+        TrackingMarker(
+          point: LatLng(_selfLat!, _selfLng!),
+          icon: Icons.my_location_rounded,
+          color: Colors.blue.shade700,
+        ),
+      );
+    }
+
+    if (markers.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: LiveTrackingMap(markers: markers),
+    );
   }
 
   @override
@@ -87,6 +176,7 @@ class _DeliveryRequestJobDetailScreenState
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              if (request.status == 'accepted') _buildMap(request),
               _TypeBadge(request: request),
               const SizedBox(height: 12),
               _SectionCard(

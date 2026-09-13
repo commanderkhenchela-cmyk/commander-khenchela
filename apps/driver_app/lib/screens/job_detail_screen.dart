@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/job_order.dart';
+import '../services/location_service.dart';
 import '../services/order_service.dart';
+import '../widgets/live_tracking_map.dart';
 import '../widgets/navigate_button.dart';
 import '../widgets/state_message.dart';
 
@@ -23,14 +28,69 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   late Future<JobDetail> _future;
   bool _isSubmitting = false;
 
+  // خريطة تتبّع مصغّرة: موقع الموصّل الحيّ (GPS محلي مباشر) + المحل/العميل
+  // — راجع تعليق مماثل فـ ride_job_detail_screen.dart لتفاصيل الفلسفة.
+  Timer? _locationTimer;
+  double? _selfLat;
+  double? _selfLng;
+
   @override
   void initState() {
     super.initState();
-    _future = OrderService.fetchJobDetail(widget.orderId);
+    _future = OrderService.fetchJobDetail(widget.orderId).then((data) {
+      _syncLocationTimer(data.order.status);
+      return data;
+    });
+  }
+
+  @override
+  void dispose() {
+    _locationTimer?.cancel();
+    super.dispose();
+  }
+
+  void _syncLocationTimer(String status) {
+    final active =
+        status == 'ready_for_pickup' ||
+        status == 'picked_up' ||
+        status == 'out_for_delivery';
+    if (!active) {
+      _locationTimer?.cancel();
+      _locationTimer = null;
+      return;
+    }
+    if (_locationTimer != null) return;
+
+    _locationTimer = Timer.periodic(const Duration(seconds: 15), (_) async {
+      final position = await LocationService.getCurrentPosition();
+      if (position == null || !mounted) return;
+      setState(() {
+        _selfLat = position.latitude;
+        _selfLng = position.longitude;
+      });
+    });
+
+    unawaited(_pingSelfLocationOnce());
+  }
+
+  Future<void> _pingSelfLocationOnce() async {
+    final position = await LocationService.getCurrentPosition();
+    if (position == null || !mounted) return;
+    setState(() {
+      _selfLat = position.latitude;
+      _selfLng = position.longitude;
+    });
   }
 
   Future<void> _refresh() async {
-    setState(() => _future = OrderService.fetchJobDetail(widget.orderId));
+    setState(
+      () => _future = OrderService.fetchJobDetail(widget.orderId).then((
+        data,
+      ) {
+        _syncLocationTimer(data.order.status);
+        return data;
+      }),
+    );
   }
 
   /// رسالة الخطأ الحقيقية عند توفّرها: RPC/trigger يرفضان بـ `raise
@@ -80,6 +140,48 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     }
   }
 
+  /// خريطة مصغّرة بموقع المحل/العميل + موقع الموصّل الحيّ إن توفّر — نفس
+  /// نمط _buildMap فـ ride_job_detail_screen.dart بالحرف.
+  Widget _buildMap(JobDetail detail) {
+    final order = detail.order;
+    final markers = <TrackingMarker>[];
+
+    if (order.merchantLat != null && order.merchantLng != null) {
+      markers.add(
+        TrackingMarker(
+          point: LatLng(order.merchantLat!, order.merchantLng!),
+          icon: Icons.trip_origin_rounded,
+          color: Colors.green.shade700,
+        ),
+      );
+    }
+    if (detail.customerLat != null && detail.customerLng != null) {
+      markers.add(
+        TrackingMarker(
+          point: LatLng(detail.customerLat!, detail.customerLng!),
+          icon: Icons.location_on_rounded,
+          color: Colors.red.shade700,
+        ),
+      );
+    }
+    if (_selfLat != null && _selfLng != null) {
+      markers.add(
+        TrackingMarker(
+          point: LatLng(_selfLat!, _selfLng!),
+          icon: Icons.my_location_rounded,
+          color: Colors.blue.shade700,
+        ),
+      );
+    }
+
+    if (markers.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: LiveTrackingMap(markers: markers),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -108,6 +210,10 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              if (order.status == 'ready_for_pickup' ||
+                  order.status == 'picked_up' ||
+                  order.status == 'out_for_delivery')
+                _buildMap(detail),
               _SectionCard(
                 icon: Icons.storefront_rounded,
                 title: 'الاستلام من المحل',
