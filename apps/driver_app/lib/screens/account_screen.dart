@@ -4,6 +4,7 @@ import '../models/driver.dart';
 import '../services/auth_service.dart';
 import '../services/driver_service.dart';
 import 'splash_screen.dart';
+import 'wallet_screen.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -88,6 +89,14 @@ class _AccountScreenState extends State<AccountScreen> {
                 ],
                 const SizedBox(height: 32),
               ],
+              OutlinedButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const WalletScreen()),
+                ),
+                icon: const Icon(Icons.account_balance_wallet_outlined),
+                label: const Text('محفظتي'),
+              ),
+              const SizedBox(height: 12),
               OutlinedButton(
                 onPressed: _logout,
                 child: const Text('تسجيل الخروج'),

@@ -1,12 +1,14 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminContext } from "@/lib/admin-context";
-import type { Driver } from "@/lib/types";
+import type { Driver, DriverWalletTransaction } from "@/lib/types";
 import {
   DRIVER_VEHICLE_TYPE_ICONS,
   DRIVER_VEHICLE_TYPE_LABELS,
+  DRIVER_WALLET_TRANSACTION_LABELS,
 } from "@/lib/types";
 import DriverActions from "./driver-actions";
+import DriverWalletTopupForm from "./driver-wallet-topup-form";
 import EntityActivityLog from "@/components/entity-activity-log";
 
 export default async function DriverDetailPage({
@@ -54,6 +56,26 @@ export default async function DriverDetailPage({
     .not("status", "in", "(delivered,cancelled,rejected)");
 
   const d = driver as Driver;
+
+  const canViewWallet = context.hasCapability("wallet.view");
+  const canManageWallet = context.hasCapability("wallet.manage");
+
+  let walletTransactions: DriverWalletTransaction[] = [];
+  let walletBalance = 0;
+  if (canViewWallet) {
+    // نفس نمط صفحة تفاصيل التاجر بالحرف: نجلب كل السجل لحساب رصيد دقيق،
+    // ونعرض أحدث 30 حركة فقط.
+    const { data: transactions } = await supabase
+      .from("driver_wallet_transactions")
+      .select(
+        "id, driver_id, type, amount, note, order_id, ride_request_id, delivery_request_id, created_at",
+      )
+      .eq("driver_id", id)
+      .order("created_at", { ascending: false });
+    const all = (transactions ?? []) as DriverWalletTransaction[];
+    walletTransactions = all.slice(0, 30);
+    walletBalance = all.reduce((sum, row) => sum + Number(row.amount), 0);
+  }
 
   return (
     <div className="max-w-lg">
@@ -114,6 +136,67 @@ export default async function DriverDetailPage({
         <p className="font-semibold mb-3">الإجراء</p>
         <DriverActions driverId={d.id} status={d.status} />
       </div>
+
+      {canViewWallet && (
+        <div className="rounded-xl border border-border bg-card p-5 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="font-semibold">محفظة الموصّل</p>
+            <span
+              className={`text-lg font-bold ${
+                walletBalance < 0 ? "text-error" : "text-primary"
+              }`}
+            >
+              {walletBalance.toFixed(2)} دج
+            </span>
+          </div>
+          <p className="text-xs text-black/50 mb-3">
+            لا يوجد بوابة دفع إلكترونية — الدفع يتم في المكتب. الرصيد =
+            مجموع كل الحركات أدناه (إيداعات + عمولات المهام المُنجَزة
+            تلقائيًا − أي خصم يدوي). العمولة تُخصَم من أي مهمة (طلبية،
+            رحلة Taxi، أو طلب &quot;اطلب أي شيء&quot;) عند اكتمالها فعليًا.
+          </p>
+
+          {canManageWallet && (
+            <div className="grid gap-2 mb-4 sm:grid-cols-2">
+              <DriverWalletTopupForm driverId={d.id} kind="topup" />
+              <DriverWalletTopupForm driverId={d.id} kind="deduction" />
+            </div>
+          )}
+
+          {walletTransactions.length === 0 ? (
+            <p className="text-sm text-black/50">لا توجد حركات مسجَّلة بعد.</p>
+          ) : (
+            <div className="grid gap-2">
+              {walletTransactions.map((t) => (
+                <div
+                  key={t.id}
+                  className="flex items-center justify-between gap-3 text-sm border-b border-border last:border-b-0 pb-2 last:pb-0"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium">
+                      {DRIVER_WALLET_TRANSACTION_LABELS[t.type]}
+                    </p>
+                    {t.note && (
+                      <p className="text-xs text-black/50 truncate">{t.note}</p>
+                    )}
+                    <p className="text-xs text-black/40">
+                      {new Date(t.created_at).toLocaleString("ar-DZ")}
+                    </p>
+                  </div>
+                  <span
+                    className={`shrink-0 font-semibold ${
+                      t.amount >= 0 ? "text-primary" : "text-error"
+                    }`}
+                  >
+                    {t.amount >= 0 ? "+" : ""}
+                    {t.amount.toFixed(2)} دج
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <EntityActivityLog tableName="drivers" recordId={d.id} />
     </div>

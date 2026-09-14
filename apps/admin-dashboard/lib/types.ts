@@ -551,6 +551,28 @@ export const WALLET_TRANSACTION_LABELS: Record<WalletTransactionType, string> = 
   commission: "عمولة طلب",
 };
 
+/// حركة محفظة موصّل واحدة — راجع migration 20260918000000_driver_wallet.
+/// نفس فلسفة WalletTransaction بالحرف، لكن بثلاثة أعمدة مرجعية اختيارية
+/// بدل واحد (order_id) — الموصّل يخدم فـ ثلاث مهام مستقلة (طلبيات/Taxi/
+/// اطلب أي شيء)، حركة "commission" واحدة مرتبطة بواحد منها بالضبط.
+export interface DriverWalletTransaction {
+  id: string;
+  driver_id: string;
+  type: WalletTransactionType;
+  amount: number;
+  note: string | null;
+  order_id: string | null;
+  ride_request_id: string | null;
+  delivery_request_id: string | null;
+  created_at: string;
+}
+
+export const DRIVER_WALLET_TRANSACTION_LABELS: Record<WalletTransactionType, string> = {
+  topup: "إيداع (دفعة مكتب)",
+  deduction: "خصم يدوي",
+  commission: "عمولة مهمّة",
+};
+
 /** إشعار واحد — نفس جدول notifications المستخدَم في تطبيق الزبون
  * (راجع migration 20260819050823 وشبكة الإشعارات 20260822000000).
  * تُنشأ فقط من طرف السيرفر، RLS تحصر القراءة على صاحبها. */
