@@ -1,28 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/branding_service.dart';
 import '../services/contact_service.dart';
 import '../widgets/app_logo.dart';
 import 'home_screen.dart';
-import 'welcome_screen.dart';
 
-const String _prefsWilayaConfirmedKey = 'wilaya_confirmed';
-
-/// شاشة البداية — تُعرض لحظة فتح التطبيق، وتقرّر أين يذهب المستخدم:
-/// - أول مرة يفتح فيها التطبيق → شاشة الترحيب (Welcome)
-/// - سبق أن أكّد ولايته من قبل → مباشرة لقائمة المحلات، بدون تكرار نفس
-///   خطوات الإعداد في كل مرة يفتح فيها التطبيق.
+/// شاشة البداية — تُعرض لحظة فتح التطبيق، ثم تنتقل مباشرة لقائمة المحلات
+/// (لا شاشة ترحيب/تأكيد ولاية وسيطة — طُلب حذفهما نهائيًا من التدفّق،
+/// V1 يعمل فـ خنشلة فقط أصلًا فلا معنى حقيقي لخطوة "تأكيد" لا تُغيّر شيئًا).
 ///
-/// هذه الشاشة تحمل الآن العمل الحقيقي فعليًا — هوية التطبيق (BrandingService)
+/// هذه الشاشة تحمل العمل الحقيقي فعليًا — هوية التطبيق (BrandingService)
 /// وبيانات التواصل (ContactService) تُحمَّلان هنا (شبكة، حتى 4 ثوانٍ لكل
-/// واحدة)، بالتوازي مع قراءة تفضيل الولاية المحلي. مؤشّر التحميل الظاهر
-/// أسفل الشعار يعكس هذا العمل الحقيقي، لا انتظارًا صوريًا. الحد الأدنى
-/// الصغير لعرض الشعار (احترافية العلامة، نفس ما تفعله كل تطبيقات
-/// الـSuper Apps العالمية) يبقى كـ"أرضية" فقط — إن انتهى التحميل الحقيقي
-/// أبكر منه، ينتظر التطبيق اكتمال حركة الشعار فقط لا أكثر؛ إن استغرق
-/// التحميل أطول (شبكة بطيئة)، يبقى المؤشر ظاهرًا حتى يكتمل فعليًا.
+/// واحدة). مؤشّر التحميل الظاهر أسفل الشعار يعكس هذا العمل الحقيقي، لا
+/// انتظارًا صوريًا. الحد الأدنى الصغير لعرض الشعار (احترافية العلامة،
+/// نفس ما تفعله كل تطبيقات الـSuper Apps العالمية) يبقى كـ"أرضية" فقط —
+/// إن انتهى التحميل الحقيقي أبكر منه، ينتظر التطبيق اكتمال حركة الشعار
+/// فقط لا أكثر؛ إن استغرق التحميل أطول (شبكة بطيئة)، يبقى المؤشر ظاهرًا
+/// حتى يكتمل فعليًا.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -78,18 +73,11 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _decideNextScreen() async {
     final started = DateTime.now();
 
-    // العمل الحقيقي بالتوازي: هوية التطبيق + بيانات التواصل (شبكة) مع
-    // تفضيل الولاية المحلي (SharedPreferences) — الثلاثة معًا، لا
-    // بالتتابع، حتى لا نجمع مهلهما (4+4 ثوانٍ) بدل الأسوأ بينهما فقط.
-    // نفس نمط (a, b).wait المستخدَم فعليًا فـ ride_detail_screen.dart.
-    final wilayaConfirmedFuture = SharedPreferences.getInstance().then(
-      (prefs) => prefs.getBool(_prefsWilayaConfirmedKey) ?? false,
-    );
-    final (wilayaConfirmed, _, _) = await (
-      wilayaConfirmedFuture,
-      BrandingService.load(),
-      ContactService.load(),
-    ).wait;
+    // العمل الحقيقي بالتوازي: هوية التطبيق + بيانات التواصل (شبكة) —
+    // معًا لا بالتتابع، حتى لا نجمع مهلتيهما (4+4 ثوانٍ) بدل الأسوأ
+    // بينهما فقط. نفس نمط (a, b).wait المستخدَم فعليًا فـ
+    // ride_detail_screen.dart.
+    await (BrandingService.load(), ContactService.load()).wait;
 
     final elapsed = DateTime.now().difference(started);
     final remaining = _minDisplayDuration - elapsed;
@@ -101,11 +89,8 @@ class _SplashScreenState extends State<SplashScreen>
 
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (routeContext) => wilayaConfirmed
-            ? HomeScreen(
-                locationName: AppLocalizations.of(routeContext).wilayaName,
-              )
-            : const WelcomeScreen(),
+        builder: (routeContext) =>
+            HomeScreen(locationName: AppLocalizations.of(routeContext).wilayaName),
       ),
     );
   }

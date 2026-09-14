@@ -39,7 +39,7 @@ Future<void> main() async {
   // الآن: الشاشة المُصمَّمة تظهر فورًا، ومؤشّر التحميل عليها يعكس عملًا
   // حقيقيًا قيد التنفيذ لا انتظارًا صوريًا ثابتًا. الضمان نفسه محفوظ:
   // SplashScreen تنتظر اكتمال التحميلين قبل الانتقال، فلا تُبنى
-  // WelcomeScreen/HomeScreen (تستهلكان BrandingService) قبل اكتمالهما.
+  // HomeScreen (تستهلك BrandingService) قبل اكتمالهما.
   await Future.wait([themeController.load(), localeController.load()]);
 
   // إشعارات Push (PHASE 11) — لا تُنتظَر أبدًا قبل أول رسم للواجهة (قد
