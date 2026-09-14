@@ -171,6 +171,17 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
         _descriptionController.text.trim().isNotEmpty &&
         (!_isSend || _destinationController.text.trim().isNotEmpty);
 
+    // خطوة "تسجيل الدخول" تظهر فقط للزائر غير المسجَّل (فيها فعليًا زر
+    // فعل يحتاجه). لمستخدم مسجَّل دخوله بالفعل، إبقاؤها مجرّد بطاقة
+    // "✅ مسجَّل الدخول" ثابتة بلا أي فعل — تكرار بلا فائدة، فتُحذَف كليًا
+    // من العرض له بدل تعطيله. الخطوات التالية تُرقَّم ديناميكيًا حسب
+    // ظهورها من عدمه، فلا تُفقَد التسلسل الرقمي المرئي (1، 2، 3...).
+    final showLoginStep = !_isSignedIn;
+    final addressStepNumber = showLoginStep ? 2 : 1;
+    final destinationStepNumber = addressStepNumber + 1;
+    final descriptionStepNumber =
+        _isSend ? destinationStepNumber + 1 : addressStepNumber + 1;
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.requestAnythingTitle)),
       body: SafeArea(
@@ -178,7 +189,9 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             RequestIntroHeader(
-              icon: Icons.local_shipping_outlined,
+              // صندوق عام لا شاحنة تحديدًا — "اطلب أي شيء" يغطّي أي غرض
+              // (مستند، طرد صغير، طلبية طعام...)، لا نقل بالشاحنات حصرًا.
+              icon: Icons.inventory_2_outlined,
               text: l10n.requestAnythingIntro,
             ),
             const SizedBox(height: 20),
@@ -202,20 +215,20 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
                   setState(() => _requestType = selection.first),
             ),
             const SizedBox(height: 16),
+            if (showLoginStep) ...[
+              StepCard(
+                stepNumber: 1,
+                title: l10n.loginStepTitle,
+                isDone: false,
+                child: ElevatedButton(
+                  onPressed: _goToLogin,
+                  child: Text(l10n.loginOrSignupAction),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             StepCard(
-              stepNumber: 1,
-              title: l10n.loginStepTitle,
-              isDone: _isSignedIn,
-              child: _isSignedIn
-                  ? Text(l10n.signedInLabel)
-                  : ElevatedButton(
-                      onPressed: _goToLogin,
-                      child: Text(l10n.loginOrSignupAction),
-                    ),
-            ),
-            const SizedBox(height: 12),
-            StepCard(
-              stepNumber: 2,
+              stepNumber: addressStepNumber,
               title: _isSend
                   ? l10n.deliveryRequestPickupLabel
                   : l10n.deliveryAddressLabel,
@@ -249,7 +262,7 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
             if (_isSend) ...[
               const SizedBox(height: 12),
               StepCard(
-                stepNumber: 3,
+                stepNumber: destinationStepNumber,
                 title: l10n.deliveryRequestDestinationLabel,
                 isDone: _destinationController.text.trim().isNotEmpty,
                 child: TextField(
@@ -266,7 +279,7 @@ class _RequestAnythingScreenState extends State<RequestAnythingScreen> {
             ],
             const SizedBox(height: 12),
             StepCard(
-              stepNumber: _isSend ? 4 : 3,
+              stepNumber: descriptionStepNumber,
               title: l10n.deliveryRequestDescriptionLabel,
               isDone: _descriptionController.text.trim().isNotEmpty,
               child: TextField(
