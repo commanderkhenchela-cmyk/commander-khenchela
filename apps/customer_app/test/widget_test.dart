@@ -30,11 +30,11 @@ void main() {
     // شاشة البداية تظهر أولًا (تحمل اسم التطبيق أيضًا)
     expect(find.text('كوموندي خنشلة'), findsOneWidget);
 
-    // ننتظر مدة عرض شاشة البداية (حد أدنى ~1.1 ثانية + حركة الشعار +
+    // ننتظر مدة عرض شاشة البداية (حد أدنى 5 ثوانٍ + حركة الشعار +
     // تحميل الهوية/التواصل) قبل الانتقال — راجع splash_screen.dart.
     // شاشة الترحيب/تأكيد الولاية محذوفتان نهائيًا من التدفّق: الانتقال
     // يذهب مباشرة لقائمة المحلات (HomeScreen).
-    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(seconds: 6));
     await tester.pumpAndSettle();
 
     expect(find.text('كوموندي خنشلة'), findsOneWidget);

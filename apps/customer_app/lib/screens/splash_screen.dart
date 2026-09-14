@@ -12,12 +12,13 @@ import 'home_screen.dart';
 ///
 /// هذه الشاشة تحمل العمل الحقيقي فعليًا — هوية التطبيق (BrandingService)
 /// وبيانات التواصل (ContactService) تُحمَّلان هنا (شبكة، حتى 4 ثوانٍ لكل
-/// واحدة). مؤشّر التحميل الظاهر أسفل الشعار يعكس هذا العمل الحقيقي، لا
-/// انتظارًا صوريًا. الحد الأدنى الصغير لعرض الشعار (احترافية العلامة،
-/// نفس ما تفعله كل تطبيقات الـSuper Apps العالمية) يبقى كـ"أرضية" فقط —
-/// إن انتهى التحميل الحقيقي أبكر منه، ينتظر التطبيق اكتمال حركة الشعار
-/// فقط لا أكثر؛ إن استغرق التحميل أطول (شبكة بطيئة)، يبقى المؤشر ظاهرًا
-/// حتى يكتمل فعليًا.
+/// واحدة). شريط التقدّم 0%→100% أسفل الشعار (طلب صريح من المستخدم) مربوط
+/// بمدة عرض ثابتة 5 ثوانٍ (_minDisplayDuration) — نفس مدة العلامة
+/// التجارية، لا أكثر ولا أقل فـ الحالة العادية. **صدق العرض محفوظ**: لو
+/// التحميل الحقيقي انتهى قبل 5 ثوانٍ، الشريط يكمّل طبيعيًا لـ100% مع
+/// نهاية الـ5 ثوانٍ (لا قفزة مفاجئة)؛ لو تأخّرت الشبكة فعليًا لأكثر من
+/// 5 ثوانٍ (حالة نادرة)، الشريط يتوقّف عند 99% (لا يكذب بـ100% وهمية)
+/// حتى يكتمل التحميل الحقيقي فعلًا، ثم يقفز لـ100% قبل الانتقال مباشرة.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -26,13 +27,21 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  static const _minDisplayDuration = Duration(milliseconds: 1100);
+    with TickerProviderStateMixin {
+  static const _minDisplayDuration = Duration(seconds: 5);
 
   late final AnimationController _controller;
   late final Animation<double> _logoFade;
   late final Animation<double> _logoScale;
   late final Animation<double> _textFade;
+
+  // شريط التقدّم 0%→100% — مؤقِّت منفصل عن حركة الشعار (900ms)، يمتد
+  // على كامل مدة العرض الدنيا (5 ثوانٍ) ليعكس تقدّمًا مقروءًا وواقعيًا،
+  // لا حركة سريعة منتهية خلال أقل من ثانية.
+  late final AnimationController _progressController;
+  late final Animation<double> _progress;
+
+  bool _dataReady = false;
 
   @override
   void initState() {
@@ -60,13 +69,24 @@ class _SplashScreenState extends State<SplashScreen>
       curve: const Interval(0.35, 1.0, curve: Curves.easeOut),
     );
 
+    _progressController = AnimationController(
+      vsync: this,
+      duration: _minDisplayDuration,
+    );
+    _progress = CurvedAnimation(
+      parent: _progressController,
+      curve: Curves.easeOutCubic,
+    );
+
     _controller.forward();
+    _progressController.forward();
     _decideNextScreen();
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _progressController.dispose();
     super.dispose();
   }
 
@@ -78,6 +98,7 @@ class _SplashScreenState extends State<SplashScreen>
     // بينهما فقط. نفس نمط (a, b).wait المستخدَم فعليًا فـ
     // ride_detail_screen.dart.
     await (BrandingService.load(), ContactService.load()).wait;
+    if (mounted) setState(() => _dataReady = true);
 
     final elapsed = DateTime.now().difference(started);
     final remaining = _minDisplayDuration - elapsed;
@@ -103,8 +124,15 @@ class _SplashScreenState extends State<SplashScreen>
       backgroundColor: theme.colorScheme.primary,
       body: Center(
         child: AnimatedBuilder(
-          animation: _controller,
+          animation: Listenable.merge([_controller, _progressController]),
           builder: (context, child) {
+            // صدق العرض: لا نكشف 100% إلا فعلًا جاهزين للانتقال — لو
+            // الشريط وصل نهايته قبل اكتمال التحميل الحقيقي (شبكة بطيئة)،
+            // يتوقّف عند 99% بدل قفزة وهمية لـ100%.
+            final progressValue = _dataReady
+                ? _progress.value
+                : _progress.value.clamp(0.0, 0.99);
+
             return Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -146,7 +174,7 @@ class _SplashScreenState extends State<SplashScreen>
                 const SizedBox(height: 40),
                 FadeTransition(
                   opacity: _textFade,
-                  child: const _LoadingIndicator(),
+                  child: _LoadingIndicator(progress: progressValue),
                 ),
               ],
             );
@@ -157,31 +185,40 @@ class _SplashScreenState extends State<SplashScreen>
   }
 }
 
-/// مؤشر تحميل صغير جدًا وأنيق أسفل شاشة البداية — دائري رفيع بدل نص
-/// "Loading..." وحيد، بلا أي مبالغة (نفس فلسفة الطلب: Premium لا Flashy).
+/// شريط تقدّم 0%→100% أسفل شاشة البداية — رفيع وأنيق، مع نسبة رقمية
+/// (Tabular Figures حتى لا "يهتزّ" عرض الرقم مع تغيّره) بدل مؤشّر دائري
+/// مجرّد، طلب صريح من المستخدم لتحميل مقروء وملموس.
 class _LoadingIndicator extends StatelessWidget {
-  const _LoadingIndicator();
+  final double progress;
+
+  const _LoadingIndicator({required this.progress});
 
   @override
   Widget build(BuildContext context) {
+    final percent = (progress * 100).round();
+
     return Column(
       children: [
         SizedBox(
-          width: 18,
-          height: 18,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation(
-              Colors.white.withValues(alpha: 0.8),
+          width: 160,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 4,
+              backgroundColor: Colors.white.withValues(alpha: 0.25),
+              valueColor: const AlwaysStoppedAnimation(Colors.white),
             ),
           ),
         ),
         const SizedBox(height: 10),
         Text(
-          AppLocalizations.of(context).loading,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.7),
-            fontSize: 12,
+          '$percent%',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            fontFeatures: [FontFeature.tabularFigures()],
           ),
         ),
       ],
