@@ -210,26 +210,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final cart = context.watch<CartService>();
     final canConfirm = _isSignedIn && _addressId != null && !cart.isEmpty;
 
+    // خطوة "تسجيل الدخول" تظهر فقط للزائر غير المسجَّل — للمستخدم
+    // المسجَّل دخوله بالفعل تختفي كليًا (كانت بطاقة "✅ مسجَّل الدخول"
+    // ثابتة بلا أي فعل، تكرار بلا فائدة) والخطوات التالية تُرقَّم
+    // ديناميكيًا من 1 بدل 2 فصاعدًا.
+    final showLoginStep = !_isSignedIn;
+    final addressStepNumber = showLoginStep ? 2 : 1;
+    final reviewStepNumber = addressStepNumber + 1;
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.checkoutTitle)),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            if (showLoginStep) ...[
+              _StepCard(
+                stepNumber: 1,
+                title: l10n.loginStepTitle,
+                isDone: false,
+                child: ElevatedButton(
+                  onPressed: _goToLogin,
+                  child: Text(l10n.loginOrSignupAction),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             _StepCard(
-              stepNumber: 1,
-              title: l10n.loginStepTitle,
-              isDone: _isSignedIn,
-              child: _isSignedIn
-                  ? Text(l10n.signedInLabel)
-                  : ElevatedButton(
-                      onPressed: _goToLogin,
-                      child: Text(l10n.loginOrSignupAction),
-                    ),
-            ),
-            const SizedBox(height: 12),
-            _StepCard(
-              stepNumber: 2,
+              stepNumber: addressStepNumber,
               title: l10n.deliveryAddressLabel,
               isDone: _addressId != null,
               child: !_isSignedIn
@@ -260,7 +268,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             const SizedBox(height: 12),
             _StepCard(
-              stepNumber: 3,
+              stepNumber: reviewStepNumber,
               title: l10n.reviewConfirmStepTitle,
               isDone: false,
               child: Column(

@@ -160,6 +160,14 @@ class _RequestCraftsmanScreenState extends State<RequestCraftsmanScreen> {
         _craftType != null &&
         _descriptionController.text.trim().isNotEmpty;
 
+    // خطوة "تسجيل الدخول" تظهر فقط للزائر غير المسجَّل — للمستخدم
+    // المسجَّل دخوله بالفعل تختفي كليًا والخطوات التالية تُرقَّم
+    // ديناميكيًا من 1 بدل 2 فصاعدًا.
+    final showLoginStep = !_isSignedIn;
+    final craftTypeStepNumber = showLoginStep ? 2 : 1;
+    final addressStepNumber = craftTypeStepNumber + 1;
+    final descriptionStepNumber = addressStepNumber + 1;
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.requestCraftsmanTitle)),
       body: SafeArea(
@@ -171,20 +179,20 @@ class _RequestCraftsmanScreenState extends State<RequestCraftsmanScreen> {
               text: l10n.requestCraftsmanIntro,
             ),
             const SizedBox(height: 20),
+            if (showLoginStep) ...[
+              StepCard(
+                stepNumber: 1,
+                title: l10n.loginStepTitle,
+                isDone: false,
+                child: ElevatedButton(
+                  onPressed: _goToLogin,
+                  child: Text(l10n.loginOrSignupAction),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             StepCard(
-              stepNumber: 1,
-              title: l10n.loginStepTitle,
-              isDone: _isSignedIn,
-              child: _isSignedIn
-                  ? Text(l10n.signedInLabel)
-                  : ElevatedButton(
-                      onPressed: _goToLogin,
-                      child: Text(l10n.loginOrSignupAction),
-                    ),
-            ),
-            const SizedBox(height: 12),
-            StepCard(
-              stepNumber: 2,
+              stepNumber: craftTypeStepNumber,
               title: l10n.craftTypeLabel,
               isDone: _craftType != null,
               child: Wrap(
@@ -205,7 +213,7 @@ class _RequestCraftsmanScreenState extends State<RequestCraftsmanScreen> {
             ),
             const SizedBox(height: 12),
             StepCard(
-              stepNumber: 3,
+              stepNumber: addressStepNumber,
               title: l10n.deliveryAddressLabel,
               isDone: _addressId != null,
               child: !_isSignedIn
@@ -236,7 +244,7 @@ class _RequestCraftsmanScreenState extends State<RequestCraftsmanScreen> {
             ),
             const SizedBox(height: 12),
             StepCard(
-              stepNumber: 4,
+              stepNumber: descriptionStepNumber,
               title: l10n.deliveryRequestDescriptionLabel,
               isDone: _descriptionController.text.trim().isNotEmpty,
               child: TextField(

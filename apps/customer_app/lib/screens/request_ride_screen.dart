@@ -126,6 +126,13 @@ class _RequestRideScreenState extends State<RequestRideScreen> {
         _dropoffAddressId != null &&
         _pickupAddressId != _dropoffAddressId;
 
+    // خطوة "تسجيل الدخول" تظهر فقط للزائر غير المسجَّل — للمستخدم
+    // المسجَّل دخوله بالفعل تختفي كليًا والخطوات التالية تُرقَّم
+    // ديناميكيًا من 1 بدل 2 فصاعدًا.
+    final showLoginStep = !_isSignedIn;
+    final pickupStepNumber = showLoginStep ? 2 : 1;
+    final dropoffStepNumber = pickupStepNumber + 1;
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.requestRideTitle)),
       body: SafeArea(
@@ -137,20 +144,20 @@ class _RequestRideScreenState extends State<RequestRideScreen> {
               text: l10n.requestRideIntro,
             ),
             const SizedBox(height: 20),
+            if (showLoginStep) ...[
+              StepCard(
+                stepNumber: 1,
+                title: l10n.loginStepTitle,
+                isDone: false,
+                child: ElevatedButton(
+                  onPressed: _goToLogin,
+                  child: Text(l10n.loginOrSignupAction),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             StepCard(
-              stepNumber: 1,
-              title: l10n.loginStepTitle,
-              isDone: _isSignedIn,
-              child: _isSignedIn
-                  ? Text(l10n.signedInLabel)
-                  : ElevatedButton(
-                      onPressed: _goToLogin,
-                      child: Text(l10n.loginOrSignupAction),
-                    ),
-            ),
-            const SizedBox(height: 12),
-            StepCard(
-              stepNumber: 2,
+              stepNumber: pickupStepNumber,
               title: l10n.ridePickupLabel,
               isDone: _pickupAddressId != null,
               child: !_isSignedIn
@@ -179,7 +186,7 @@ class _RequestRideScreenState extends State<RequestRideScreen> {
             ),
             const SizedBox(height: 12),
             StepCard(
-              stepNumber: 3,
+              stepNumber: dropoffStepNumber,
               title: l10n.rideDropoffLabel,
               isDone: _dropoffAddressId != null,
               child: !_isSignedIn
