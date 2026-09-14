@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/branding_service.dart';
+import '../services/contact_service.dart';
 import '../widgets/app_logo.dart';
 import 'home_screen.dart';
 import 'welcome_screen.dart';
@@ -14,13 +15,14 @@ const String _prefsWilayaConfirmedKey = 'wilaya_confirmed';
 /// - سبق أن أكّد ولايته من قبل → مباشرة لقائمة المحلات، بدون تكرار نفس
 ///   خطوات الإعداد في كل مرة يفتح فيها التطبيق.
 ///
-/// لا "انتظار مصطنع" هنا: التحميل الثقيل الفعلي (هوية التطبيق، الإعدادات،
-/// اتصال Supabase) يحدث بالكامل في main() *قبل* ظهور هذه الشاشة أصلًا —
-/// العمل الحقيقي المتبقي هنا هو فقط قراءة تفضيل محلي (SharedPreferences)،
-/// شبه فوري دائمًا. المدة الوحيدة المضبوطة هي حد أدنى صغير لعرض الشعار
-/// (احترافية العلامة، نفس ما تفعله كل تطبيقات الـSuper Apps العالمية)،
-/// وليست انتظارًا ثابتًا بمعزل عن حالة التحميل الفعلية — إن انتهى العمل
-/// الحقيقي أبكر، ينتقل التطبيق بمجرد اكتمال حركة الشعار فقط، لا أكثر.
+/// هذه الشاشة تحمل الآن العمل الحقيقي فعليًا — هوية التطبيق (BrandingService)
+/// وبيانات التواصل (ContactService) تُحمَّلان هنا (شبكة، حتى 4 ثوانٍ لكل
+/// واحدة)، بالتوازي مع قراءة تفضيل الولاية المحلي. مؤشّر التحميل الظاهر
+/// أسفل الشعار يعكس هذا العمل الحقيقي، لا انتظارًا صوريًا. الحد الأدنى
+/// الصغير لعرض الشعار (احترافية العلامة، نفس ما تفعله كل تطبيقات
+/// الـSuper Apps العالمية) يبقى كـ"أرضية" فقط — إن انتهى التحميل الحقيقي
+/// أبكر منه، ينتظر التطبيق اكتمال حركة الشعار فقط لا أكثر؛ إن استغرق
+/// التحميل أطول (شبكة بطيئة)، يبقى المؤشر ظاهرًا حتى يكتمل فعليًا.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -76,8 +78,18 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _decideNextScreen() async {
     final started = DateTime.now();
 
-    final prefs = await SharedPreferences.getInstance();
-    final wilayaConfirmed = prefs.getBool(_prefsWilayaConfirmedKey) ?? false;
+    // العمل الحقيقي بالتوازي: هوية التطبيق + بيانات التواصل (شبكة) مع
+    // تفضيل الولاية المحلي (SharedPreferences) — الثلاثة معًا، لا
+    // بالتتابع، حتى لا نجمع مهلهما (4+4 ثوانٍ) بدل الأسوأ بينهما فقط.
+    // نفس نمط (a, b).wait المستخدَم فعليًا فـ ride_detail_screen.dart.
+    final wilayaConfirmedFuture = SharedPreferences.getInstance().then(
+      (prefs) => prefs.getBool(_prefsWilayaConfirmedKey) ?? false,
+    );
+    final (wilayaConfirmed, _, _) = await (
+      wilayaConfirmedFuture,
+      BrandingService.load(),
+      ContactService.load(),
+    ).wait;
 
     final elapsed = DateTime.now().difference(started);
     final remaining = _minDisplayDuration - elapsed;

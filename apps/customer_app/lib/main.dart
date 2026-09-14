@@ -11,7 +11,6 @@ import 'l10n/app_localizations.dart';
 import 'screens/splash_screen.dart';
 import 'services/branding_service.dart';
 import 'services/cart_service.dart';
-import 'services/contact_service.dart';
 import 'services/favorites_controller.dart';
 import 'services/locale_controller.dart';
 import 'services/push_notification_service.dart';
@@ -29,15 +28,19 @@ Future<void> main() async {
   final themeController = ThemeController();
   final localeController = LocaleController();
 
-  // تُحمَّل هوية التطبيق (الاسم/الشعار/الألوان، قابلة للتعديل من لوحة
-  // الإدارة) وتفضيلَي الوضع الداكن واللغة المحفوظَين قبل أول رسم
-  // للواجهة، حتى لا "تقفز" الألوان أو اللغة لاحقًا.
-  await Future.wait([
-    BrandingService.load(),
-    ContactService.load(),
-    themeController.load(),
-    localeController.load(),
-  ]);
+  // تفضيلا الوضع الداكن واللغة يُحمَّلان قبل أول رسم للواجهة — قراءتان
+  // محليّتان فوريتان (SharedPreferences، لا شبكة)، حتى لا "تقفز" الألوان
+  // أو اللغة لاحقًا.
+  //
+  // BrandingService/ContactService (شبكة، حتى 4 ثوانٍ لكل واحدة) انتقلا
+  // عمدًا لـ SplashScreen نفسها (راجع _decideNextScreen هناك) — بدل
+  // انتظارهما هنا قبل ظهور أي شيء على الشاشة (شاشة بيضاء/سوداء فارغة
+  // فعليًا أثناء الانتظار، رغم وجود شاشة بداية مصمَّمة بعناية جاهزة).
+  // الآن: الشاشة المُصمَّمة تظهر فورًا، ومؤشّر التحميل عليها يعكس عملًا
+  // حقيقيًا قيد التنفيذ لا انتظارًا صوريًا ثابتًا. الضمان نفسه محفوظ:
+  // SplashScreen تنتظر اكتمال التحميلين قبل الانتقال، فلا تُبنى
+  // WelcomeScreen/HomeScreen (تستهلكان BrandingService) قبل اكتمالهما.
+  await Future.wait([themeController.load(), localeController.load()]);
 
   // إشعارات Push (PHASE 11) — لا تُنتظَر أبدًا قبل أول رسم للواجهة (قد
   // تستغرق ثوانٍ بسبب حوار إذن النظام)، وتفشل بهدوء بالكامل إن لم يكن
