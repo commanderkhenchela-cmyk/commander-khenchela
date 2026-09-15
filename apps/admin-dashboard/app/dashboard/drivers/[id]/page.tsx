@@ -8,7 +8,7 @@ import {
   DRIVER_WALLET_TRANSACTION_LABELS,
 } from "@/lib/types";
 import DriverActions from "./driver-actions";
-import DriverWalletTopupForm from "./driver-wallet-topup-form";
+import WalletTopupForm from "@/components/wallet-topup-form";
 import EntityActivityLog from "@/components/entity-activity-log";
 
 export default async function DriverDetailPage({
@@ -158,8 +158,20 @@ export default async function DriverDetailPage({
 
           {canManageWallet && (
             <div className="grid gap-2 mb-4 sm:grid-cols-2">
-              <DriverWalletTopupForm driverId={d.id} kind="topup" />
-              <DriverWalletTopupForm driverId={d.id} kind="deduction" />
+              <WalletTopupForm
+                entityIdParamName="p_driver_id"
+                entityId={d.id}
+                kind="topup"
+                topupRpc="admin_driver_wallet_topup"
+                deductRpc="admin_driver_wallet_deduct"
+              />
+              <WalletTopupForm
+                entityIdParamName="p_driver_id"
+                entityId={d.id}
+                kind="deduction"
+                topupRpc="admin_driver_wallet_topup"
+                deductRpc="admin_driver_wallet_deduct"
+              />
             </div>
           )}
 

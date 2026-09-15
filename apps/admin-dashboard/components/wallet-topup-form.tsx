@@ -5,17 +5,28 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 /**
- * تسجيل دفعة نقدية استلمها المكتب من التاجر — نفس نمط DeliveryFeeForm
- * (RPC واحدة محكومة، لا UPDATE مباشر على أي رصيد). type="topup" و
- * type="deduction" مشتركان فـ نفس المكوّن لتفادي تكرار شبه كامل —
- * الفرق فقط اسم الدالة والنص والألوان.
+ * تسجيل دفعة نقدية استلمها المكتب من صاحب المحفظة (تاجر أو موصّل) —
+ * نفس نمط DeliveryFeeForm (RPC واحدة محكومة، لا UPDATE مباشر على أي
+ * رصيد). type="topup" وtype="deduction" مشتركان فـ نفس المكوّن لتفادي
+ * تكرار شبه كامل — الفرق فقط اسم الدالة والنص والألوان.
+ *
+ * مُوحَّد من نسختين شبه متطابقتين (merchants/[id]/wallet-topup-form.tsx
+ * وdrivers/[id]/driver-wallet-topup-form.tsx، commit 5e4e07e) — الفرق
+ * الوحيد بينهما كان اسم بارامتر المعرّف واسما الـRPC، الآن معطيات هنا.
  */
 export default function WalletTopupForm({
-  merchantId,
+  entityIdParamName,
+  entityId,
   kind,
+  topupRpc,
+  deductRpc,
 }: {
-  merchantId: string;
+  /** اسم بارامتر معرّف صاحب المحفظة فـ الـRPC — "p_merchant_id" أو "p_driver_id". */
+  entityIdParamName: string;
+  entityId: string;
   kind: "topup" | "deduction";
+  topupRpc: string;
+  deductRpc: string;
 }) {
   const router = useRouter();
   const [amount, setAmount] = useState("");
@@ -25,7 +36,7 @@ export default function WalletTopupForm({
   const [loading, setLoading] = useState(false);
 
   const isTopup = kind === "topup";
-  const rpcName = isTopup ? "admin_wallet_topup" : "admin_wallet_deduct";
+  const rpcName = isTopup ? topupRpc : deductRpc;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -42,7 +53,7 @@ export default function WalletTopupForm({
 
     const supabase = createClient();
     const { error } = await supabase.rpc(rpcName, {
-      p_merchant_id: merchantId,
+      [entityIdParamName]: entityId,
       p_amount: amountValue,
       p_note: note || null,
     });

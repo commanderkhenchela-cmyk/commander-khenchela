@@ -6,7 +6,7 @@ import { WALLET_TRANSACTION_LABELS } from "@/lib/types";
 import MerchantActions from "./merchant-actions";
 import MerchantCategorySelect from "./merchant-category-select";
 import MerchantFeaturedToggle from "./merchant-featured-toggle";
-import WalletTopupForm from "./wallet-topup-form";
+import WalletTopupForm from "@/components/wallet-topup-form";
 import CommissionOverrideForm from "./commission-override-form";
 import EntityActivityLog from "@/components/entity-activity-log";
 
@@ -147,8 +147,20 @@ export default async function MerchantDetailPage({
 
           {canManageWallet && (
             <div className="grid gap-2 mb-4 sm:grid-cols-2">
-              <WalletTopupForm merchantId={m.id} kind="topup" />
-              <WalletTopupForm merchantId={m.id} kind="deduction" />
+              <WalletTopupForm
+                entityIdParamName="p_merchant_id"
+                entityId={m.id}
+                kind="topup"
+                topupRpc="admin_wallet_topup"
+                deductRpc="admin_wallet_deduct"
+              />
+              <WalletTopupForm
+                entityIdParamName="p_merchant_id"
+                entityId={m.id}
+                kind="deduction"
+                topupRpc="admin_wallet_topup"
+                deductRpc="admin_wallet_deduct"
+              />
             </div>
           )}
 
