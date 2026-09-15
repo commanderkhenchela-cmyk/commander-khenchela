@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminContext } from "@/lib/admin-context";
 import type { RideRequest } from "@/lib/types";
-import RideRequestActions from "./ride-request-actions";
+import RequestCancelActions from "@/components/request-cancel-actions";
 import EntityActivityLog from "@/components/entity-activity-log";
 
 export default async function RideRequestDetailPage({
@@ -85,7 +85,20 @@ export default async function RideRequestDetailPage({
 
       <div className="rounded-xl border border-border bg-card p-5 mb-4">
         <p className="font-semibold mb-3">الإجراء</p>
-        <RideRequestActions requestId={r.id} status={r.status} />
+        <RequestCancelActions
+          tableName="ride_requests"
+          requestId={r.id}
+          status={r.status}
+          cancelConfirmText="تأكيد إلغاء هذه الرحلة؟"
+          cancelErrorText="تعذّر إلغاء الرحلة."
+          cancelButtonText="إلغاء الرحلة"
+          terminalMessages={{
+            completed: "اكتملت هذه الرحلة.",
+            cancelled: "أُلغيت هذه الرحلة.",
+            in_progress:
+              "الرحلة جارية الآن — لا يمكن إلغاؤها بعد صعود الراكب، فقط إتمامها من طرف الموصّل.",
+          }}
+        />
       </div>
 
       <EntityActivityLog tableName="ride_requests" recordId={r.id} />

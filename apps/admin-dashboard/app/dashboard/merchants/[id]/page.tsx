@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAdminContext } from "@/lib/admin-context";
 import type { Merchant, MerchantCategory, WalletTransaction } from "@/lib/types";
 import { WALLET_TRANSACTION_LABELS } from "@/lib/types";
-import MerchantActions from "./merchant-actions";
+import EntityStatusActions from "@/components/entity-status-actions";
 import MerchantCategorySelect from "./merchant-category-select";
 import MerchantFeaturedToggle from "./merchant-featured-toggle";
 import WalletSection from "@/components/wallet-section";
@@ -124,7 +124,12 @@ export default async function MerchantDetailPage({
 
       <div className="rounded-xl border border-border bg-card p-5 mb-4">
         <p className="font-semibold mb-3">الإجراء</p>
-        <MerchantActions merchantId={m.id} status={m.status} />
+        <EntityStatusActions
+          tableName="merchants"
+          entityId={m.id}
+          status={m.status}
+          entityLabel="المحل"
+        />
       </div>
 
       {canViewWallet && (

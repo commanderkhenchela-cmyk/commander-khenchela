@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAdminContext } from "@/lib/admin-context";
 import type { DeliveryRequest } from "@/lib/types";
 import { DELIVERY_REQUEST_TYPE_LABELS } from "@/lib/types";
-import DeliveryRequestActions from "./delivery-request-actions";
+import RequestCancelActions from "@/components/request-cancel-actions";
 import EntityActivityLog from "@/components/entity-activity-log";
 
 export default async function DeliveryRequestDetailPage({
@@ -91,7 +91,18 @@ export default async function DeliveryRequestDetailPage({
 
       <div className="rounded-xl border border-border bg-card p-5 mb-4">
         <p className="font-semibold mb-3">الإجراء</p>
-        <DeliveryRequestActions requestId={r.id} status={r.status} />
+        <RequestCancelActions
+          tableName="delivery_requests"
+          requestId={r.id}
+          status={r.status}
+          cancelConfirmText="تأكيد إلغاء هذا الطلب؟"
+          cancelErrorText="تعذّر إلغاء الطلب."
+          cancelButtonText="إلغاء الطلب"
+          terminalMessages={{
+            delivered: "اكتمل هذا الطلب.",
+            cancelled: "أُلغي هذا الطلب.",
+          }}
+        />
       </div>
 
       <EntityActivityLog tableName="delivery_requests" recordId={r.id} />

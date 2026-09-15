@@ -7,7 +7,7 @@ import {
   DRIVER_VEHICLE_TYPE_LABELS,
   DRIVER_WALLET_TRANSACTION_LABELS,
 } from "@/lib/types";
-import DriverActions from "./driver-actions";
+import EntityStatusActions from "@/components/entity-status-actions";
 import WalletSection from "@/components/wallet-section";
 import EntityActivityLog from "@/components/entity-activity-log";
 
@@ -134,7 +134,12 @@ export default async function DriverDetailPage({
 
       <div className="rounded-xl border border-border bg-card p-5 mb-4">
         <p className="font-semibold mb-3">الإجراء</p>
-        <DriverActions driverId={d.id} status={d.status} />
+        <EntityStatusActions
+          tableName="drivers"
+          entityId={d.id}
+          status={d.status}
+          entityLabel="الموصّل"
+        />
       </div>
 
       {canViewWallet && (

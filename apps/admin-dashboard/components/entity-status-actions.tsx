@@ -3,23 +3,35 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import type { DriverStatus } from "@/lib/types";
 
-export default function DriverActions({
-  driverId,
+type PendingApprovalStatus = "pending" | "approved" | "rejected";
+
+/**
+ * موافقة/رفض كيان (موصّل أو محل) بحالة pending/approved/rejected — نفس
+ * نمط WalletTopupForm/WalletSection: مُوحَّد من نسختين متطابقتين تقريبًا
+ * (driver-actions.tsx وmerchant-actions.tsx)، الفرق فقط اسم الجدول
+ * ونصوص التسميات العربية.
+ */
+export default function EntityStatusActions({
+  tableName,
+  entityId,
   status,
+  entityLabel,
 }: {
-  driverId: string;
-  status: DriverStatus;
+  tableName: "drivers" | "merchants";
+  entityId: string;
+  status: PendingApprovalStatus;
+  /** الاسم العربي المستخدَم فـ الرسائل — "الموصّل" أو "المحل". */
+  entityLabel: string;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function setStatus(newStatus: DriverStatus) {
+  async function setStatus(newStatus: PendingApprovalStatus) {
     if (
       newStatus === "rejected" &&
-      !confirm("هل أنت متأكد من رفض هذا الموصّل؟")
+      !confirm(`هل أنت متأكد من رفض هذا ${entityLabel}؟`)
     )
       return;
 
@@ -27,12 +39,12 @@ export default function DriverActions({
     setError(null);
     const supabase = createClient();
     const { error } = await supabase
-      .from("drivers")
+      .from(tableName)
       .update({ status: newStatus })
-      .eq("id", driverId);
+      .eq("id", entityId);
 
     if (error) {
-      setError("تعذّر تحديث حالة الموصّل.");
+      setError(`تعذّر تحديث حالة ${entityLabel}.`);
       setLoading(false);
       return;
     }
@@ -51,7 +63,7 @@ export default function DriverActions({
             disabled={loading}
             className="block mt-2 text-error font-medium"
           >
-            إلغاء الموافقة (رفض الموصّل)
+            إلغاء الموافقة (رفض {entityLabel})
           </button>
         )}
         {status === "rejected" && (
@@ -60,7 +72,7 @@ export default function DriverActions({
             disabled={loading}
             className="block mt-2 text-primary font-medium"
           >
-            الموافقة على الموصّل الآن
+            الموافقة على {entityLabel} الآن
           </button>
         )}
       </p>
@@ -75,14 +87,14 @@ export default function DriverActions({
           disabled={loading}
           className="rounded-lg bg-primary text-white font-semibold px-4 py-2.5 text-sm disabled:opacity-60"
         >
-          الموافقة على الموصّل
+          الموافقة على {entityLabel}
         </button>
         <button
           onClick={() => setStatus("rejected")}
           disabled={loading}
           className="rounded-lg border border-error text-error font-semibold px-4 py-2.5 text-sm disabled:opacity-60"
         >
-          رفض الموصّل
+          رفض {entityLabel}
         </button>
       </div>
       {error && <p className="text-error text-sm">{error}</p>}
